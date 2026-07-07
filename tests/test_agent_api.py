@@ -13,7 +13,7 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_agent(monkeypatch):
-    """打桩 run_agent，返回固定结果。"""
+    """打桩 run_agent 与 load_history（后者用 SyncSessionLocal 连真 PG，测试须隔离）。"""
     monkeypatch.setattr(
         agent_service, "run_agent",
         lambda user_id, message, history, document_id: {
@@ -22,6 +22,8 @@ def mock_agent(monkeypatch):
             "trace": [{"step": 0, "skill": "search_knowledge_base", "args": {}}],
         },
     )
+    # 复用会话时会调 load_history（同步、连真库），mock 掉保证测试无外部依赖
+    monkeypatch.setattr(agent_service, "load_history", lambda conversation_id: [])
 
 
 class TestAgentChat:
