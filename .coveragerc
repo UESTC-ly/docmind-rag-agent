@@ -1,0 +1,12 @@
+[run]
+# FastAPI 异步端点在事件循环/线程池里执行，默认 tracer 记不全这些行。
+# 声明并发模型后，coverage 才能正确追踪 async(greenlet) 与 to_thread 里跑过的代码。
+concurrency = greenlet,thread
+source = app
+
+[report]
+# 排除无需覆盖的样板与防御性分支
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError

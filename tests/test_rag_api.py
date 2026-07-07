@@ -70,3 +70,33 @@ class TestChat:
     async def test_chat_requires_auth(self, client, mock_rag):
         resp = await client.post("/chat/", json={"question": "q"})
         assert resp.status_code == 401
+
+
+class TestConversationHistory:
+    async def test_list_conversations(self, client, registered_user, mock_rag):
+        # 先产生两个会话
+        await client.post("/chat/", headers=registered_user["headers"], json={"question": "q1"})
+        await client.post("/chat/", headers=registered_user["headers"], json={"question": "q2"})
+        resp = await client.get("/chat/conversations", headers=registered_user["headers"])
+        assert resp.status_code == 200
+        assert len(resp.json()) == 2
+
+    async def test_get_history_returns_messages(self, client, registered_user, mock_rag):
+        chat = await client.post(
+            "/chat/", headers=registered_user["headers"], json={"question": "存储层？"}
+        )
+        conv_id = chat.json()["conversation_id"]
+        resp = await client.get(
+            f"/chat/conversations/{conv_id}", headers=registered_user["headers"]
+        )
+        assert resp.status_code == 200
+        msgs = resp.json()
+        # 一问一答两条消息
+        assert len(msgs) == 2
+
+    async def test_get_history_unknown_conversation_empty(self, client, registered_user, mock_rag):
+        resp = await client.get(
+            "/chat/conversations/9999", headers=registered_user["headers"]
+        )
+        assert resp.status_code == 200
+        assert resp.json() == []
