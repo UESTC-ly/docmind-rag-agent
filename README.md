@@ -6,6 +6,13 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （hit_rate / MRR / recall / precision）和 LLM-as-judge 生成指标
 （faithfulness / answer_relevancy）量化问答质量。
 
+配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
+登录、流式对话、文档管理、评估看板四大界面。后端 **165 个测试、94% 覆盖率**，接了
+GitHub Actions CI。
+
+**亮点**：ReAct Agent 编排 · 可插拔 Skills · 多路召回（向量 + 关键词 RRF 融合）·
+SSE 流式输出 · RAG 评估闭环 · 结构化日志（request_id 全链路追踪）。
+
 ## 目录
 
 - [架构总览](#架构总览)
@@ -15,7 +22,11 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
 - [Skills 技能系统](#skills-技能系统)
+- [多路召回](#多路召回)
+- [流式输出](#流式输出)
 - [RAG 评估模块](#rag-评估模块)
+- [前端界面](#前端界面)
+- [测试与 CI](#测试与-ci)
 - [配置项](#配置项)
 - [项目结构](#项目结构)
 - [新增一个 Skill](#新增一个-skill)
@@ -168,6 +179,7 @@ celery -A app.celery_app worker --loglevel=info
 | 文档 | `GET /documents/{id}` | 查询单个文档解析状态 |
 | 文档 | `DELETE /documents/{id}` | 删除文档（连带删 Qdrant 向量 + 级联删分块） |
 | 问答 | `POST /chat/` | 纯 RAG 问答（无 Agent） |
+| 问答 | `POST /chat/stream` | RAG 流式问答（SSE，逐 token） |
 | 问答 | `GET /chat/conversations` | 我的对话列表 |
 | 问答 | `GET /chat/conversations/{id}` | 某对话的消息历史 |
 | Agent | `POST /agent/chat` | 与 Agent 对话（Function Calling 编排） |
@@ -254,6 +266,61 @@ uv run python data/import_datasets.py --user-id 1 --only ms_marco --limit 50
 
 导入完成后，用返回的 `dataset_id` 调 `POST /eval/runs` 触发评估。
 
+## 多路召回
+
+`app/services/retrieval.py`。单一稠密向量检索抓不住精确关键词（型号、专有名词），
+所以并联一路**关键词检索**，用 **RRF（Reciprocal Rank Fusion，倒数排名融合）**
+把两路结果融合：`RRF(d) = Σ 1/(k + rank_i(d))`（k=60）。RRF 只看排名不看原始分数
+量纲，天然免归一化，是混合检索业界标配。
+
+- 融合身份用 `(document_id, chunk_index)` 复合键，避免跨文档同序号块被误合并。
+- `RETRIEVAL_MODE=hybrid`（默认）走多路；`dense` 退回纯向量检索。
+- 关键词路用命中词数打分，实现简单、sqlite 也能跑（便于测试）；生产可换 PG 全文
+  检索或 BM25，接口不变。
+
+## 流式输出
+
+`POST /chat/stream` 以 **Server-Sent Events** 逐 token 推送答案。事件流：
+`event: meta`（会话 id + 来源）→ 多个 `event: token`（逐字）→ `event: done`，
+流结束后落库。底层复用中转本就强制流式的特性（`llm_service.chat_completion_stream`
+生成器逐块 yield）。前端用 `fetch` + `ReadableStream` 手解析 SSE（`EventSource`
+无法带 `Authorization` 头，而本端点要 JWT）。
+
+## 前端界面
+
+`frontend/`，原生 HTML/CSS/JS 单页，**零构建、无 Node 工具链**，由 FastAPI
+`StaticFiles` 直接托管（API 路由优先匹配，`/` 兜底返回单页）。编辑/瑞士极简风格：
+纯白底 + 单一瑞士红强调 + sans 标题/衬线正文配对，跟随系统明暗。
+
+四大界面：
+- **登录/注册**：JWT 存 localStorage，401 自动清 token 回登录屏。
+- **流式对话**：SSE 逐字浮现（带光标动画）、来源引用卡、左侧会话历史、Enter 发送。
+- **文档管理**：拖拽上传、解析状态轮询（pending→completed 脉冲动画）、删除。
+- **评估看板**：列数据集、一键触发运行、6 指标条形可视化。
+
+工程：模块化 JS（`api/ui/chat/docs/eval/main`）、CSS 按 surface 分文件、
+compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、无 `innerHTML` 注入。
+启动 API 后浏览器访问 http://127.0.0.1:8000/ 即用。
+
+## 测试与 CI
+
+`tests/`，**165 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+
+- **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
+- **服务单测**：评估 runner、dataset_gen、Celery 任务、5 个 Skills、LLM 流式聚合——
+  mock 外部边界。
+- **路由集成测**：用内存 sqlite 替 PG、mock 掉 Celery/embedding/LLM，真实 HTTP 打
+  auth/documents/chat/agent/eval 全部端点（含 SSE 流式、评估双路径）。
+
+`.coveragerc` 配了 `concurrency=greenlet,thread`，正确追踪 async 端点在事件循环里
+执行的行。CI（`.github/workflows/ci.yml`）在 push/PR 时用 uv + Python 3.12 跑
+`pytest --cov-fail-under=90`；测试全 mock + 内存库，**CI 无需 PG/Redis/Qdrant/
+embedding**，必填配置喂假值即可。
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
+```
+
 ## 配置项
 
 全部集中在 `app/config.py`（pydantic-settings，从 `.env` 读取，大小写不敏感）。
@@ -278,7 +345,12 @@ uv run python data/import_datasets.py --user-id 1 --only ms_marco --limit 50
 | `UPLOAD_DIR` | | `./uploads` | 上传文件落盘目录 |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | | `800` / `100` | 分块字符数 / 相邻块重叠 |
 | `RETRIEVAL_TOP_K` | | `5` | 检索返回块数 |
+| `RETRIEVAL_MODE` | | `hybrid` | `hybrid`=向量+关键词 RRF；`dense`=纯向量 |
+| `RRF_K` | | `60` | RRF 融合常数 |
+| `KEYWORD_CANDIDATES` | | `20` | 关键词召回候选数 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
+| `LOG_LEVEL` | | `INFO` | 日志级别 |
+| `LOG_JSON` | | `true` | `true`=结构化 JSON（生产）；`false`=彩色文本（本地） |
 
 > 对话与 embedding 可用不同服务商（如对话用 GPT、embedding 用 DashScope）；
 > embedding 配置留空则复用对话的 key / base_url。
@@ -297,14 +369,22 @@ app/
 ├── routers/           路由层（auth / documents / chat / agent / evaluation）
 ├── services/          业务逻辑
 │   ├── auth / document / rag / agent / embedding / llm / vector_store
+│   ├── retrieval.py   多路召回（RRF 融合 + 关键词检索）
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
 ├── skills/            可插拔技能（base / registry + 5 个技能）
 ├── tasks/             Celery 异步任务（document_tasks 解析流水线）
-└── utils/             工具（security JWT / deps 依赖注入 / file_parser 解析分块）
+└── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
+frontend/              原生单页前端（FastAPI 托管，零构建）
+├── index.html
+├── styles/            tokens / base / layout / components（按 surface 分文件）
+└── js/                api / ui / chat / docs / eval / main（ES modules）
+
+tests/                 165 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
+.github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
 
 ## 新增一个 Skill（体现可插拔）
