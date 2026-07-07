@@ -1,0 +1,42 @@
+# ── Web 框架 ──────────────────────────────
+fastapi
+uvicorn[standard]
+python-multipart          # FastAPI 文件上传必需
+
+# ── 数据校验 / 配置 ───────────────────────
+pydantic[email]
+pydantic-settings
+python-dotenv
+
+# ── 数据库 ───────────────────────────────
+sqlalchemy
+asyncpg                   # 异步驱动（FastAPI）
+psycopg2-binary           # 同步驱动（Celery）
+greenlet                  # SQLAlchemy async 依赖
+
+# ── 鉴权 ─────────────────────────────────
+passlib[bcrypt]
+bcrypt==4.0.1             # 钉死：passlib 1.7.4 与 bcrypt 5.x 不兼容
+python-jose[cryptography]
+
+# ── 异步任务 ─────────────────────────────
+celery
+redis
+
+# ── 文档解析 ─────────────────────────────
+pymupdf                   # PDF
+python-docx               # Word
+
+# ── AI / 向量 ────────────────────────────
+openai
+qdrant-client
+
+# ── Agent 技能 ───────────────────────────
+ddgs                      # DuckDuckGo 联网搜索
+
+# ── 日志 ─────────────────────────────────
+loguru
+
+# ── 测试（开发依赖）──────────────────────
+pytest==9.1.1
+pytest-asyncio==1.4.0

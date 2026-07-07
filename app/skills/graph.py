@@ -1,0 +1,83 @@
+"""关系拓扑图技能：从文档抽取实体及其关系，构成知识图谱。
+
+技术点：GraphRAG。弥补纯向量检索抓不住"实体间关系"的短板。
+LLM 输出结构化的 nodes + edges，前端可用图库渲染，也提供 Mermaid 备用。
+"""
+
+import json
+
+from app.services.llm_service import chat_completion
+from app.skills._helpers import fetch_document_text
+from app.skills.base import BaseSkill, SkillContext
+from app.skills.registry import register_skill
+
+_PROMPT = """你是知识图谱抽取器。从下面文档中抽取关键实体及它们之间的关系。
+严格输出 JSON，格式：
+{{
+  "nodes": [{{"id": "实体名", "type": "人物|组织|概念|事件|地点"}}],
+  "edges": [{{"source": "实体A", "target": "实体B", "relation": "关系描述"}}]
+}}
+要求：
+- 只输出 JSON，不要解释，不要 ``` 包裹。
+- 实体去重，关系聚焦重要的，控制在 20 个节点内。
+- 用中文。
+
+文档内容：
+{content}"""
+
+
+def _to_mermaid(nodes: list[dict], edges: list[dict]) -> str:
+    """把 nodes/edges 转成 Mermaid graph 语法（备用渲染）。"""
+    lines = ["graph TD"]
+    for e in edges:
+        src = e.get("source", "")
+        tgt = e.get("target", "")
+        rel = e.get("relation", "")
+        lines.append(f'  {src}["{src}"] -->|{rel}| {tgt}["{tgt}"]')
+    return "\n".join(lines)
+
+
+@register_skill
+class GraphSkill(BaseSkill):
+    name = "generate_relation_graph"
+    description = "从指定文档抽取实体和关系，生成知识图谱/关系拓扑图。当用户想看文档中人物、概念、事件之间的关系网络时使用。"
+    parameters = {
+        "type": "object",
+        "properties": {
+            "document_id": {
+                "type": "integer",
+                "description": "要生成关系图的文档 ID",
+            }
+        },
+        "required": ["document_id"],
+    }
+
+    def run(self, context: SkillContext, **kwargs) -> dict:
+        document_id = kwargs["document_id"]
+        content = fetch_document_text(context.user_id, document_id)
+        if not content:
+            return {"error": "文档不存在或无内容", "document_id": document_id}
+
+        content = content[:8000]
+        msg = chat_completion(
+            [{"role": "user", "content": _PROMPT.format(content=content)}],
+            temperature=0.2,
+        )
+        raw = (msg.content or "").strip().removeprefix("```json").removeprefix(
+            "```"
+        ).removesuffix("```")
+
+        try:
+            data = json.loads(raw)
+            nodes = data.get("nodes", [])
+            edges = data.get("edges", [])
+        except json.JSONDecodeError:
+            return {"error": "图谱抽取结果解析失败", "raw": raw[:500]}
+
+        return {
+            "type": "relation_graph",
+            "document_id": document_id,
+            "nodes": nodes,
+            "edges": edges,
+            "mermaid": _to_mermaid(nodes, edges),
+        }

@@ -1,0 +1,28 @@
+# ── 密钥与环境 ───────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Python ───────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ── 测试 / 缓存 ──────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# ── 数据集与上传（大文件，不入库）────────
+data/*.parquet
+data/**/*.parquet
+data/manifest.json
+uploads/
+
+# ── IDE / OS ─────────────────────────────
+.DS_Store
+.idea/
+.vscode/
