@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocMind · 文档智能问答</title>
+    <link rel="stylesheet" href="/styles/tokens.css" />
+    <link rel="stylesheet" href="/styles/base.css" />
+    <link rel="stylesheet" href="/styles/layout.css" />
+    <link rel="stylesheet" href="/styles/components.css" />
+  </head>
+  <body>
+    <!-- 登录 / 注册屏 -->
+    <div class="auth" id="auth-screen">
+      <main class="auth__card">
+        <div class="auth__brand">DocMind</div>
+        <p class="auth__tagline">与你的文档对话。</p>
+        <form id="auth-form">
+          <div class="field">
+            <label for="email">邮箱</label>
+            <input class="input" type="email" id="email" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="password">密码</label>
+            <input class="input" type="password" id="password" required minlength="6" autocomplete="current-password" />
+          </div>
+          <button class="btn btn--primary" type="submit" id="auth-submit">登录</button>
+          <p class="auth__error" id="auth-error" role="alert"></p>
+        </form>
+        <p class="auth__toggle">
+          <span id="auth-hint">还没有账号？</span>
+          <button type="button" id="auth-switch">注册</button>
+        </p>
+      </main>
+    </div>
+
+    <!-- 主应用 -->
+    <div class="app" id="app" hidden>
+      <aside class="sidebar">
+        <div class="brand"><span class="brand__mark"></span> DocMind</div>
+        <nav class="nav" aria-label="主导航">
+          <button class="nav__item" data-view="chat" aria-current="page">对话</button>
+          <button class="nav__item" data-view="docs">文档</button>
+          <button class="nav__item" data-view="eval">评估</button>
+        </nav>
+        <div>
+          <p class="sidebar__section-title">会话</p>
+          <div class="nav" id="conversation-list"></div>
+        </div>
+        <div class="sidebar__foot">
+          <span id="user-email"></span>
+          <button id="logout-btn" title="退出">退出</button>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="topbar">
+          <h1 class="topbar__title" id="view-title">对话</h1>
+          <span class="topbar__sub" id="view-sub"></span>
+        </header>
+
+        <!-- 对话视图 -->
+        <section class="view" id="view-chat" data-view-panel="chat">
+          <div class="chat">
+            <div class="chat__stream" id="chat-stream"></div>
+            <form class="composer" id="composer">
+              <textarea
+                class="composer__input"
+                id="composer-input"
+                placeholder="就已上传的文档提问…（Enter 发送，Shift+Enter 换行）"
+                rows="1"
+              ></textarea>
+              <button class="btn btn--accent" type="submit" id="send-btn">发送</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- 文档视图 -->
+        <section class="view" id="view-docs" data-view-panel="docs" hidden>
+          <div class="uploader" id="uploader">
+            <p>拖入文件，或<label for="file-input" style="color: var(--color-accent); cursor: pointer"> 点击选择</label></p>
+            <p style="font-size: var(--text-xs); margin-top: var(--space-2)">支持 PDF / Word / TXT / Markdown</p>
+            <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt,.md" hidden />
+          </div>
+          <ul class="doc-list" id="doc-list"></ul>
+        </section>
+
+        <!-- 评估视图 -->
+        <section class="view" id="view-eval" data-view-panel="eval" hidden>
+          <div id="eval-content"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

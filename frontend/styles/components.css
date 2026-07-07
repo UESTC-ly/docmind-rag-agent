@@ -1,0 +1,311 @@
+/* 复用组件：按钮、表单、卡片、对话、文档、评估 */
+
+/* ── 按钮 / 表单 ─────────────────────────── */
+.field {
+  margin-bottom: var(--space-4);
+}
+.field label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-soft);
+  margin-bottom: var(--space-2);
+}
+.input {
+  width: 100%;
+  padding: var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+.input:focus {
+  border-color: var(--color-focus);
+  outline: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  transition: transform var(--duration-fast) var(--ease),
+    opacity var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn--primary {
+  background: var(--color-line-strong);
+  color: var(--color-bg);
+  width: 100%;
+}
+.btn--primary:hover {
+  opacity: 0.88;
+}
+.btn--accent {
+  background: var(--color-accent);
+  color: oklch(100% 0 0);
+}
+.btn--ghost {
+  border: var(--border);
+  color: var(--color-text-soft);
+}
+.btn--ghost:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-faint);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── 对话 ───────────────────────────────── */
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.chat__stream {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+.msg {
+  max-width: 68ch;
+  animation: rise var(--duration) var(--ease);
+}
+.msg__role {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-2);
+}
+.msg--user .msg__body {
+  font-weight: 600;
+  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+}
+.msg--assistant .msg__body {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+/* 流式光标 */
+.msg--streaming .msg__body::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  background: var(--color-accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* 来源引用卡 */
+.sources {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.source {
+  border-left: 2px solid var(--color-accent);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-alt);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: var(--text-sm);
+}
+.source__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-1);
+}
+.source__text {
+  color: var(--color-text-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 输入条 */
+.composer {
+  display: flex;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--border);
+}
+.composer__input {
+  flex: 1;
+  resize: none;
+  min-height: 48px;
+  max-height: 160px;
+  padding: var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+.composer__input:focus {
+  outline: none;
+  border-color: var(--color-focus);
+}
+
+/* ── 文档管理 ───────────────────────────── */
+.uploader {
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-faint);
+  transition: border-color var(--duration) var(--ease),
+    background var(--duration) var(--ease);
+  margin-bottom: var(--space-8);
+}
+.uploader.is-drag {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.doc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.doc {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border);
+}
+.doc__name {
+  font-weight: 600;
+}
+.doc__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+}
+.status {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: var(--border);
+}
+.status--completed {
+  color: oklch(50% 0.15 150);
+  border-color: oklch(50% 0.15 150 / 0.4);
+}
+.status--processing,
+.status--pending {
+  color: var(--color-accent);
+  border-color: oklch(55% 0.22 27 / 0.4);
+}
+.status--failed {
+  color: oklch(50% 0.2 25);
+  border-color: oklch(50% 0.2 25 / 0.4);
+}
+.status--processing::after,
+.status--pending::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 1.2s var(--ease) infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* ── 评估看板 ───────────────────────────── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0 var(--space-8);
+}
+.metric {
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.metric__label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+}
+.metric__value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: var(--space-2);
+}
+/* 迷你条形，直观呈现 0-1 指标 */
+.metric__bar {
+  height: 3px;
+  background: var(--color-line);
+  margin-top: var(--space-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.metric__bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  transform-origin: left;
+  transition: transform var(--duration) var(--ease);
+}
+
+.empty {
+  color: var(--color-text-faint);
+  font-family: var(--font-serif);
+  font-style: italic;
+  text-align: center;
+  padding: var(--space-16) 0;
+}
+.toast {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--color-line-strong);
+  color: var(--color-bg);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+}
+.toast.is-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 import app.skills  # noqa: F401  触发所有技能注册
 from app.database import Base, engine
@@ -37,3 +39,11 @@ app.include_router(eval_router.router)
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+# 前端静态托管（放在所有 API 路由之后；html=True 让 / 返回 index.html）。
+# 已注册的 API 前缀（/auth /documents /chat /agent /eval /health）优先匹配，
+# 其余路径交给前端单页。
+_FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+if _FRONTEND_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIR), html=True), name="frontend")

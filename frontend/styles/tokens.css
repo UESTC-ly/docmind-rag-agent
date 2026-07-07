@@ -1,0 +1,66 @@
+/* 设计令牌 —— 编辑/瑞士极简方向。
+   纯白底、近黑字、单一克制的瑞士红强调；标题无衬线、正文衬线的经典配对。 */
+
+:root {
+  /* 色彩：oklch 便于统一明度控制 */
+  --color-bg: oklch(99% 0 0);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-alt: oklch(97% 0.002 260);
+  --color-text: oklch(20% 0.01 260);
+  --color-text-soft: oklch(45% 0.01 260);
+  --color-text-faint: oklch(62% 0.008 260);
+  --color-line: oklch(90% 0.004 260);
+  --color-line-strong: oklch(20% 0.01 260);
+  --color-accent: oklch(55% 0.22 27); /* 瑞士红 */
+  --color-accent-soft: oklch(96% 0.03 27);
+  --color-focus: oklch(55% 0.18 250);
+
+  /* 字体：标题 sans、正文衬线；系统栈免加载、离线可用 */
+  --font-sans: "Helvetica Neue", Inter, system-ui, -apple-system, sans-serif;
+  --font-serif: Georgia, "Songti SC", "Noto Serif SC", serif;
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", monospace;
+
+  /* 字号：clamp 流式响应，标题与正文拉开尺度对比 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  --text-display: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+
+  /* 间距：8 基准的节奏 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* 其它 */
+  --radius: 2px; /* 瑞士风偏硬朗，圆角克制 */
+  --radius-lg: 6px;
+  --border: 1px solid var(--color-line);
+  --duration-fast: 120ms;
+  --duration: 240ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-pop: 0 8px 30px oklch(20% 0.01 260 / 0.08);
+  --sidebar-w: 260px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: oklch(16% 0.006 260);
+    --color-surface: oklch(19% 0.007 260);
+    --color-surface-alt: oklch(23% 0.008 260);
+    --color-text: oklch(95% 0.004 260);
+    --color-text-soft: oklch(72% 0.008 260);
+    --color-text-faint: oklch(55% 0.008 260);
+    --color-line: oklch(30% 0.008 260);
+    --color-line-strong: oklch(80% 0.006 260);
+    --color-accent: oklch(65% 0.2 27);
+    --color-accent-soft: oklch(28% 0.06 27);
+    --shadow-pop: 0 8px 30px oklch(0% 0 0 / 0.4);
+  }
+}
