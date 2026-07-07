@@ -89,3 +89,19 @@ def chat_completion(
 
     stream = _client.chat.completions.create(**kwargs)
     return _aggregate_stream(stream)
+
+
+def chat_completion_stream(messages: list[dict], temperature: float = 0.3):
+    """流式对话补全：逐块 yield 文本增量，供 SSE 端点使用（不支持 tools）。"""
+    stream = _client.chat.completions.create(
+        model=settings.chat_model,
+        messages=messages,
+        temperature=temperature,
+        stream=True,
+    )
+    for chunk in stream:
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta
+        if delta.content:
+            yield delta.content

@@ -1,4 +1,7 @@
+import json
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +14,7 @@ from app.schemas.conversation import (
     ConversationResponse,
     MessageResponse,
 )
-from app.services.rag_service import answer_question
+from app.services.rag_service import answer_question, stream_answer
 from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["问答"])
@@ -29,6 +32,36 @@ async def chat(
         question=data.question,
         conversation_id=data.conversation_id,
         document_id=data.document_id,
+    )
+
+
+@router.post("/stream", summary="RAG 流式问答（SSE）")
+async def chat_stream(
+    data: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """流式问答：以 Server-Sent Events 逐 token 推送答案。
+
+    事件流：event: meta（会话+来源）→ 多个 event: token → event: done。
+    """
+
+    async def _event_source():
+        async for evt in stream_answer(
+            db,
+            user_id=current_user.id,
+            question=data.question,
+            conversation_id=data.conversation_id,
+            document_id=data.document_id,
+        ):
+            payload = json.dumps(evt["data"], ensure_ascii=False)
+            yield f"event: {evt['event']}\ndata: {payload}\n\n"
+        await db.commit()  # 流结束后提交落库的消息
+
+    return StreamingResponse(
+        _event_source(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 

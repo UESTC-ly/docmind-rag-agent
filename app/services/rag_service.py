@@ -11,8 +11,36 @@ from app.config import settings
 from app.models.conversation import Conversation, Message, MessageRole
 from app.schemas.conversation import ChatResponse, Source
 from app.services.embedding_service import embed_query
-from app.services.llm_service import chat_completion
+from app.services.llm_service import chat_completion, chat_completion_stream
+from app.services.retrieval import fuse_dense_and_keyword, keyword_search
 from app.services.vector_store import search
+from app.utils.logging import logger
+
+
+async def retrieve(
+    db: AsyncSession, user_id: int, question: str, document_id: int | None
+) -> list[dict]:
+    """检索相关片段。hybrid 模式下走多路召回（向量 + 关键词，RRF 融合）。
+
+    向量检索是同步 I/O（放线程池）；关键词检索用当前 async session。
+    """
+    top_k = settings.retrieval_top_k
+    query_vector = await asyncio.to_thread(embed_query, question)
+    dense_hits = await asyncio.to_thread(
+        search, query_vector, user_id, top_k, document_id
+    )
+
+    if settings.retrieval_mode != "hybrid":
+        return dense_hits
+
+    keyword_hits = await keyword_search(
+        db, question, user_id, document_id, settings.keyword_candidates
+    )
+    fused = fuse_dense_and_keyword(dense_hits, keyword_hits, top_k)
+    logger.bind(
+        dense=len(dense_hits), keyword=len(keyword_hits), fused=len(fused)
+    ).info("hybrid retrieval")
+    return fused
 
 SYSTEM_PROMPT = """你是 DocMind 的文档问答助手。请严格根据下面提供的「文档片段」回答用户问题。
 规则：
@@ -65,15 +93,8 @@ async def answer_question(
         db, user_id, conversation_id, question
     )
 
-    # 1. 检索（OpenAI 调用是同步的，用 to_thread 避免阻塞事件循环）
-    query_vector = await asyncio.to_thread(embed_query, question)
-    hits = await asyncio.to_thread(
-        search,
-        query_vector,
-        user_id,
-        settings.retrieval_top_k,
-        document_id,
-    )
+    # 1. 检索（多路召回，见 retrieve）
+    hits = await retrieve(db, user_id, question, document_id)
 
     # 2. 拼 Prompt
     context = _build_context(hits) if hits else "（未检索到相关文档片段）"
@@ -110,3 +131,68 @@ async def answer_question(
     return ChatResponse(
         conversation_id=conv.id, answer=answer, sources=sources
     )
+
+
+def _build_messages(hits: list[dict], question: str) -> list[dict]:
+    context = _build_context(hits) if hits else "（未检索到相关文档片段）"
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"文档片段：\n{context}\n\n用户问题：{question}"},
+    ]
+
+
+async def stream_answer(
+    db: AsyncSession,
+    user_id: int,
+    question: str,
+    conversation_id: int | None = None,
+    document_id: int | None = None,
+):
+    """流式问答：先 yield 会话与来源，再逐 token yield 答案，最后落库。
+
+    产出一系列 SSE 事件字典：
+      {"event": "meta",  "data": {"conversation_id", "sources"}}
+      {"event": "token", "data": {"text": "..."}}   （多次）
+      {"event": "done",  "data": {}}
+    """
+    conv = await _get_or_create_conversation(db, user_id, conversation_id, question)
+    hits = await retrieve(db, user_id, question, document_id)
+    sources = [Source(**h) for h in hits]
+
+    # 先把元信息（会话 id + 来源）推给前端
+    yield {
+        "event": "meta",
+        "data": {
+            "conversation_id": conv.id,
+            "sources": [s.model_dump() for s in sources],
+        },
+    }
+
+    # 逐 token 流式生成。同步生成器放线程池逐块取，避免阻塞事件循环。
+    messages = _build_messages(hits, question)
+    parts: list[str] = []
+    gen = chat_completion_stream(messages)
+
+    def _next(iterator):
+        return next(iterator, None)
+
+    while True:
+        piece = await asyncio.to_thread(_next, gen)
+        if piece is None:
+            break
+        parts.append(piece)
+        yield {"event": "token", "data": {"text": piece}}
+
+    answer = "".join(parts)
+
+    # 全部生成完再落库（用户问题 + 助手回答）
+    db.add(Message(conversation_id=conv.id, role=MessageRole.USER, content=question))
+    db.add(
+        Message(
+            conversation_id=conv.id,
+            role=MessageRole.ASSISTANT,
+            content=answer,
+            sources=json.dumps([s.model_dump() for s in sources]),
+        )
+    )
+    yield {"event": "done", "data": {}}

@@ -37,9 +37,17 @@ class Settings(BaseSettings):
 
     # RAG 检索
     retrieval_top_k: int = 5  # 检索返回的块数
+    # 多路召回：dense=仅向量检索；hybrid=向量+关键词，RRF 融合
+    retrieval_mode: str = "hybrid"
+    rrf_k: int = 60  # RRF 融合常数，业界经验值 60，越大越弱化排名差异
+    keyword_candidates: int = 20  # 关键词召回候选数（融合前）
 
     # Agent
     agent_max_steps: int = 6  # Agent 主循环最大步数，防死循环
+
+    # 日志
+    log_level: str = "INFO"
+    log_json: bool = True  # True=结构化 JSON 日志（生产/可观测）；False=彩色文本（本地开发）
 
     class Config:
         env_file = ".env"
