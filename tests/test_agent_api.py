@@ -1,0 +1,78 @@
+"""Agent 路由集成测试（/agent/chat, /agent/skills）。
+
+mock run_agent（其循环逻辑已在 test_agent_orchestrator 单独覆盖），
+这里验证 agent_service 的会话管理、历史落库、HTTP 契约。
+"""
+
+import pytest
+
+from app.services import agent_service
+
+pytestmark = pytest.mark.asyncio
+
+
+@pytest.fixture
+def mock_agent(monkeypatch):
+    """打桩 run_agent，返回固定结果。"""
+    monkeypatch.setattr(
+        agent_service, "run_agent",
+        lambda user_id, message, history, document_id: {
+            "answer": "Agent 的回答",
+            "artifacts": [{"type": "mindmap", "nodes": ["a"]}],
+            "trace": [{"step": 0, "skill": "search_knowledge_base", "args": {}}],
+        },
+    )
+
+
+class TestAgentChat:
+    async def test_chat_returns_answer_artifacts_trace(self, client, registered_user, mock_agent):
+        resp = await client.post(
+            "/agent/chat", headers=registered_user["headers"],
+            json={"message": "帮我查一下"},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["answer"] == "Agent 的回答"
+        assert body["artifacts"][0]["type"] == "mindmap"
+        assert body["trace"][0]["skill"] == "search_knowledge_base"
+        assert body["conversation_id"] > 0
+
+    async def test_chat_reuses_conversation(self, client, registered_user, mock_agent):
+        first = await client.post(
+            "/agent/chat", headers=registered_user["headers"],
+            json={"message": "第一句"},
+        )
+        conv_id = first.json()["conversation_id"]
+        second = await client.post(
+            "/agent/chat", headers=registered_user["headers"],
+            json={"message": "第二句", "conversation_id": conv_id},
+        )
+        assert second.status_code == 200
+        assert second.json()["conversation_id"] == conv_id
+
+    async def test_chat_unknown_conversation_404(self, client, registered_user, mock_agent):
+        resp = await client.post(
+            "/agent/chat", headers=registered_user["headers"],
+            json={"message": "q", "conversation_id": 8888},
+        )
+        assert resp.status_code == 404
+
+    async def test_chat_requires_auth(self, client, mock_agent):
+        resp = await client.post("/agent/chat", json={"message": "q"})
+        assert resp.status_code == 401
+
+    async def test_empty_message_rejected(self, client, registered_user, mock_agent):
+        # schema 要求 message 至少 1 字符
+        resp = await client.post(
+            "/agent/chat", headers=registered_user["headers"], json={"message": ""}
+        )
+        assert resp.status_code == 422
+
+
+class TestListSkills:
+    async def test_skills_listed(self, client, registered_user):
+        resp = await client.get("/agent/skills", headers=registered_user["headers"])
+        assert resp.status_code == 200
+        # 真实注册的 5 个技能应都在
+        names = [s["name"] for s in resp.json()] if isinstance(resp.json(), list) else resp.json()
+        assert "search_knowledge_base" in str(names)

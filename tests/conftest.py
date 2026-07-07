@@ -11,11 +11,29 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.database import Base, get_db
 from app.main import app
 from app.utils.security import create_access_token
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
+SYNC_TEST_DB_URL = "sqlite:///:memory:"
+
+
+@pytest.fixture
+def sync_db():
+    """同步内存库 session，供 runner / dataset_gen 等同步服务测试用。"""
+    engine = create_engine(SYNC_TEST_DB_URL, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(engine, expire_on_commit=False)
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        engine.dispose()
 
 
 @pytest_asyncio.fixture
