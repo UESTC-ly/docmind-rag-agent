@@ -102,7 +102,59 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 
 ## 快速启动
 
-### 1. 启动依赖服务（PostgreSQL / Redis / Qdrant）
+### 方式一：一键启动（推荐）
+
+项目根目录提供了 `start.sh`，适合本地开发时一键拉起完整运行环境：
+
+```bash
+cd /Volumes/DevExpand/AI_proj/docmind
+./start.sh
+```
+
+脚本会自动完成：
+
+1. 清理旧的 `uvicorn` / Celery 进程；
+2. `docker-compose down --remove-orphans` 清理旧容器；
+3. 检查并启动 colima；
+4. 启动 PostgreSQL / Redis / Qdrant；
+5. 从宿主机探测 PostgreSQL 是否真正可达；
+6. 必要时清理 colima 僵尸 SSH 端口转发并重启 colima；
+7. 以 macOS 安全参数启动 Celery worker：
+   `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` + `--pool=solo`；
+8. 前台启动 `uvicorn app.main:app --reload --port 8000`。
+
+启动成功后访问：
+
+```text
+http://localhost:8000/
+```
+
+Celery 日志写入：
+
+```bash
+/tmp/docmind_celery.log
+tail -f /tmp/docmind_celery.log
+```
+
+停止 API：
+
+```text
+Ctrl+C
+```
+
+如需完整重启，直接再次运行：
+
+```bash
+./start.sh
+```
+
+> 脚本依赖本机已有 colima、docker-compose、uv，以及可用的 `.env` 配置。
+
+### 方式二：手动启动
+
+如果需要逐步排查，也可以按下面步骤手动启动。
+
+#### 1. 启动依赖服务（PostgreSQL / Redis / Qdrant）
 
 ```bash
 colima start                 # 若用 colima（macOS）
@@ -113,7 +165,7 @@ docker-compose ps            # 三个容器都 Up 即可
 `docker-compose.yml` 会拉起：PostgreSQL 16（`docmind` / `docmind123` / `docmind_db`，端口 5432）、
 Redis 7（6379）、Qdrant（6333 REST / 6334 gRPC）。
 
-### 2. 装 Python 依赖
+#### 2. 装 Python 依赖
 
 ```bash
 source .venv/bin/activate
@@ -123,29 +175,31 @@ uv pip install -r requirements.txt
 > 若要用 [RAG 评估模块](#rag-评估模块) 的公开数据集导入，还需额外装
 > `datasets pandas pyarrow`（当前未写进 `requirements.txt`，但评估脚本依赖它们）。
 
-### 3. 配置 .env
+#### 3. 配置 .env
 
 在项目根建 `.env`，至少填 `DATABASE_URL`、`SECRET_KEY`、`OPENAI_API_KEY`。
 完整字段见 [配置项](#配置项)。
 
-### 4. 启动 API 服务
+#### 4. 启动 Celery worker（另开一个终端）
+
+文档解析靠它，**必须启动**，否则上传的文档永远停在 `pending`。macOS 下必须使用
+`--pool=solo`，否则原生扩展在 fork 后可能 SIGSEGV：
 
 ```bash
-uvicorn app.main:app --reload
+source .venv/bin/activate
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES \
+  uv run celery -A app.celery_app worker --loglevel=info --pool=solo
+```
+
+#### 5. 启动 API 服务
+
+```bash
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 启动时会自动建表（`Base.metadata.create_all`，仅开发用；生产应改用 Alembic 迁移）。
 
-### 5. 启动 Celery worker（另开一个终端）
-
-文档解析靠它，**必须启动**，否则上传的文档永远停在 `pending`：
-
-```bash
-source .venv/bin/activate
-celery -A app.celery_app worker --loglevel=info
-```
-
-### 6. 打开 API 文档
+#### 6. 打开 API 文档
 
 浏览器访问 http://127.0.0.1:8000/docs ，右上角 `Authorize` 填登录拿到的 token。
 
@@ -393,4 +447,3 @@ data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + m
    声明 `name` / `description` / `parameters`（JSON Schema）并实现 `run()`
 2. 在 `app/skills/__init__.py` 加一行 import（触发装饰器注册）
 3. 完成——Agent 自动发现并可调用，核心编排代码零改动
-
