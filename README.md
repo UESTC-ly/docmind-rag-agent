@@ -104,24 +104,54 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 
 ### 方式一：一键启动（推荐）
 
-项目根目录提供了 `start.sh`，适合本地开发时一键拉起完整运行环境：
+项目根目录提供了跨平台入口脚本 `start.sh`，适合本地开发时一键拉起完整运行环境。
+脚本会自动检查 `.env`、创建 `.venv`、安装依赖，并按平台选择启动后端：
+
+| 环境 | 启动后端 |
+|---|---|
+| macOS + colima | `scripts/start-macos-colima.sh`（当前已验证稳定版） |
+| Linux / Docker Desktop / 其它可直接运行 Docker Compose 的环境 | `scripts/start-generic-docker.sh` |
+
+从 GitHub clone 后：
 
 ```bash
-cd /Volumes/DevExpand/AI_proj/docmind
+git clone https://github.com/UESTC-ly/docmind-rag-agent.git
+cd docmind-rag-agent
 ./start.sh
 ```
 
-脚本会自动完成：
+首次运行时，如果项目根目录没有 `.env`，脚本会自动从 `.env.example` 复制一份并退出。
+请先编辑 `.env`，至少填入：
 
-1. 清理旧的 `uvicorn` / Celery 进程；
-2. `docker-compose down --remove-orphans` 清理旧容器；
-3. 检查并启动 colima；
-4. 启动 PostgreSQL / Redis / Qdrant；
-5. 从宿主机探测 PostgreSQL 是否真正可达；
-6. 必要时清理 colima 僵尸 SSH 端口转发并重启 colima；
-7. 以 macOS 安全参数启动 Celery worker：
-   `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` + `--pool=solo`；
+```text
+SECRET_KEY
+OPENAI_API_KEY
+OPENAI_BASE_URL  # 使用官方 OpenAI 时可留空
+```
+
+如果不单独使用 embedding 服务，请把 `EMBEDDING_API_KEY` / `EMBEDDING_BASE_URL` 留空，
+让系统复用 `OPENAI_API_KEY` / `OPENAI_BASE_URL`。填好后再次运行：
+
+```bash
+./start.sh
+```
+
+根脚本会自动完成：
+
+1. 检查 `.env` 是否仍含示例占位值；
+2. 创建 `.venv` 并安装 / 更新 `requirements.txt` 依赖；
+3. 自动选择 macOS + colima 稳定脚本或通用 Docker 脚本；
+4. 清理旧的 `uvicorn` / Celery 进程；
+5. 启动 PostgreSQL / Redis / Qdrant；
+6. 等待 PostgreSQL 从宿主机真正可达；
+7. 以 `--pool=solo` 启动 Celery worker；
 8. 前台启动 `uvicorn app.main:app --reload --port 8000`。
+
+macOS + colima 专用脚本还会额外处理：
+
+- 检查并启动 colima；
+- 必要时清理 colima 僵尸 SSH 端口转发并重启 colima；
+- 使用 `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` 避免 macOS fork 原生扩展崩溃。
 
 启动成功后访问：
 
@@ -148,7 +178,16 @@ Ctrl+C
 ./start.sh
 ```
 
-> 脚本依赖本机已有 colima、docker-compose、uv，以及可用的 `.env` 配置。
+也可以显式指定启动后端：
+
+```bash
+./start.sh --macos-colima      # 强制使用 macOS + colima 稳定脚本
+./start.sh --generic-docker    # 强制使用通用 Docker / Docker Desktop 脚本
+./start.sh --help              # 查看参数
+```
+
+> 当前 macOS + colima 成功版本已用 Git tag `startup-macos-colima-v1` 固化。
+> 如需回到该版本：`git checkout startup-macos-colima-v1`。
 
 ### 方式二：手动启动
 
@@ -438,6 +477,8 @@ frontend/              原生单页前端（FastAPI 托管，零构建）
 
 tests/                 165 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
+start.sh               跨平台启动入口（自动检查 .env/.venv 并分发到 scripts/）
+scripts/               启动脚本后端：macOS+colima 稳定版 / 通用 Docker 版
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
 
