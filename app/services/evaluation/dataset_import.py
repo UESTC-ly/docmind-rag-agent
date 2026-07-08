@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 
-from datasets import load_dataset
 from sqlalchemy.orm import Session
 
 from app.models.document import Document, DocumentChunk, DocumentStatus
@@ -152,6 +151,8 @@ def import_ms_marco(
     只保留「有答案 且 至少一个 passage 被标记 is_selected」的题——否则
     relevant_chunk_ids 为空，recall 恒 0，样本无意义。
     """
+    from datasets import load_dataset  # 惰性导入：纯解析逻辑与测试不依赖此重型库
+
     raw = load_dataset("parquet", data_files=parquet_path, split="train")
     corpus, pending = parse_ms_marco_rows(raw, limit)
 
@@ -173,6 +174,8 @@ def import_cmrc2018(
     limit: int = 30,
 ) -> EvalDataset:
     """导入 CMRC 2018：去重 context 建段落池，每题指向自己的段落。"""
+    from datasets import load_dataset  # 惰性导入：纯解析逻辑与测试不依赖此重型库
+
     raw = load_dataset("parquet", data_files=parquet_path, split="train")
     corpus, pending = parse_cmrc_rows(raw, limit)
 
