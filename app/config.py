@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     skill_runner_max_steps: int = 8  # 单个通用 skill 内部工具循环最大步数
     skill_workspace_dir: str = "./skill_workspaces"  # 通用 skill 文件读写工作区
     skill_shell_enabled: bool = False  # shell 工具默认关闭，避免聊天入口变成 RCE
-    skill_shell_allowed_commands: str = "echo,cat,ls,pwd,grep,sed,python,python3,node,npm,uv"
+    skill_shell_allowed_commands: str = "echo,cat,ls,pwd,grep,sed"
     skill_shell_timeout_seconds: int = 10
 
     # 日志

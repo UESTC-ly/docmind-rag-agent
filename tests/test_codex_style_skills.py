@@ -92,6 +92,18 @@ class TestCodexStylePackageLoader:
         with pytest.raises(ValueError, match="description"):
             package_loader.load_skill_package("bad-skill")
 
+    def test_list_skips_invalid_package_without_breaking_startup(self, isolated_package_root):
+        _write_codex_package(isolated_package_root)
+        bad_dir = isolated_package_root / "bad-skill"
+        bad_dir.mkdir()
+        (bad_dir / "SKILL.md").write_text(
+            "---\nname: bad_skill\n---\n\nMissing description.", encoding="utf-8"
+        )
+
+        packages = package_loader.list_skill_packages()
+
+        assert [package.name for package in packages] == ["codex_note"]
+
 
 class TestGenericPackageRegistration:
     def test_registers_unbacked_codex_package_as_generic_skill(self, isolated_package_root):

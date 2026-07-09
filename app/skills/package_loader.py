@@ -195,8 +195,14 @@ def load_skill_package(slug: str) -> SkillPackage:
 def list_skill_packages() -> list[SkillPackage]:
     if not PACKAGE_ROOT.exists():
         return []
-    return [
-        load_skill_package(path.name)
-        for path in sorted(PACKAGE_ROOT.iterdir())
-        if path.is_dir()
-    ]
+    packages: list[SkillPackage] = []
+    for path in sorted(PACKAGE_ROOT.iterdir()):
+        if not path.is_dir():
+            continue
+        try:
+            packages.append(load_skill_package(path.name))
+        except (FileNotFoundError, ValueError, json.JSONDecodeError, UnicodeDecodeError):
+            # 直接 load 某个坏包时仍会抛错；自动扫描时跳过，避免一个复制失败的
+            # GitHub skill 让整个 FastAPI 应用无法启动。
+            continue
+    return packages

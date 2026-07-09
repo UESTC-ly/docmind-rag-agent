@@ -2,16 +2,18 @@
 
 一个基于 **RAG + Agent 编排**的文档智能系统。用户上传文档后，Agent 通过 OpenAI
 Function Calling 自主判断该调用哪些技能（Skills）来完成任务：知识库问答、思维导图、
-关系图谱、报告生成、联网搜索。系统还内置一套 **RAG 评估模块**，用检索指标
+关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及 v0.5.0 起支持的
+**Codex-style 通用 Skills 包**。系统还内置一套 **RAG 评估模块**，用检索指标
 （hit_rate / MRR / recall / precision）和 LLM-as-judge 生成指标
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。后端 **175 个测试、94% 覆盖率**，接了
+登录、流式对话、文档管理、评估看板四大界面。后端 **185 个测试、94% 覆盖率**，接了
 GitHub Actions CI。
 
-**亮点**：ReAct Agent 编排 · 可插拔 Skills · 多路召回（向量 + 关键词 RRF 融合）·
-SSE 流式输出 · RAG 评估闭环 · 结构化日志（request_id 全链路追踪）。
+**亮点**：ReAct Agent 编排 · Codex-style 通用 Skills · 可插拔 Python Skills ·
+多路召回（向量 + 关键词 RRF 融合）· SSE 流式输出 · RAG 评估闭环 ·
+结构化日志（request_id 全链路追踪）。
 
 ## 目录
 
@@ -47,8 +49,9 @@ SSE 流式输出 · RAG 评估闭环 · 结构化日志（request_id 全链路�
                           │ 自主调度               │
            ┌──────────────▼─────────────────────┐ │
            │  Skills（可插拔，装饰器注册）        │ │
-           │  kb_search / mindmap / graph /       │ │
-           │  report / weekly / ppt / web_search  │ │
+           │  Python Skills + Codex-style packages │ │
+           │  kb / mindmap / graph / report /      │ │
+           │  weekly / ppt / web / generic runner  │ │
            └──────────────┬─────────────────────┘ │
                           │                         │
    ┌──────────────────────▼─────────────────────────▼─────────────┐
@@ -251,38 +254,48 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v0.4.0 起采用**两层架构**：
+技能是 Agent 的能力单元。v0.5.0 起升级为**两条执行路径并存**：
 
 ```text
-Skill Package 层：SKILL.md / skill.json / templates / references
-Python 执行层：BaseSkill 子类 + run()
+Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界
+Codex-style Generic Skill：只需 SKILL.md，可选 templates / references / scripts / assets
 ```
 
-也就是说，复杂技能可以像主流 Agent Skills 一样用文件夹组织说明、模板和参考资料；
-但最终仍然通过 Python `BaseSkill` 执行，保持现有 Function Calling、测试和权限边界不变。
+也就是说，DocMind 现在既保留原来的 Python 技能，也能扫描
+`app/skills/packages/<slug>/SKILL.md` 这种主流 Agent Skills 文件夹。若 package 没有
+对应 Python 类，系统会自动注册为 `GenericPackageSkill`，由内部 ReAct runner 按
+Markdown 指令规划并调用受控工具执行。
 
-执行层仍然继承 `BaseSkill` 并实现 `run()`；`@register_skill` 装饰器把它登记进全局注册表
-（`app/skills/registry.py`）。若类上声明了 `package_slug`，注册时会从
-`app/skills/packages/<slug>/skill.json` 读取 `name` / `description` / `parameters`
-作为 OpenAI Function Calling metadata。
+通用 runner 当前内置的动作能力：
 
-| 技能名 | 文件 | 作用 | 产出 `type` |
+- `read_skill_reference` / `read_skill_template`：渐进读取 package 资料；
+- `list_files` / `read_file` / `write_file`：读写用户隔离工作区；
+- `modify_code`：在隔离工作区写入/替换代码文件；
+- `run_shell`：默认关闭，开启后仍需命令 allowlist，且不使用 `shell=True`；
+- `call_mcp` / `use_browser_tool` / `use_app_tool`：预留 adapter 扩展点，未配置时安全失败。
+
+安全边界：通用技能的文件读写默认只发生在
+`skill_workspaces/user_<id>/<skill_slug>/`，不会直接改 DocMind 仓库源码；shell 默认关闭，
+避免把 `/agent/chat` 变成远程代码执行入口。
+
+| 技能名 | 执行模式 | 作用 | 产出 `type` |
 |---|---|---|---|
-| `search_knowledge_base` | `kb_search.py` | Qdrant 语义检索，回答文档问题优先用 | `kb_search` |
-| `generate_mindmap` | `mindmap.py` | 抽取层级结构，输出 Mermaid mindmap | `mindmap` |
-| `generate_relation_graph` | `graph.py` | 抽取实体+关系（GraphRAG），输出 nodes/edges + Mermaid | `relation_graph` |
-| `generate_report` | `report.py` | 多步：检索→大纲→逐节生成→汇总成文 | `report` |
-| `generate_weekly_report` | `weekly_report.py` | 根据材料生成结构化中文周报，并提供 Markdown 下载 | `weekly_report` |
-| `generate_presentation` | `presentation.py` | 根据材料生成演示文稿结构，并提供 `.pptx` 下载 | `presentation` |
-| `web_search` | `web_search.py` | DuckDuckGo 联网搜索，知识库答不了时补充 | `web_search` |
+| `search_knowledge_base` | Python | Qdrant 语义检索，回答文档问题优先用 | `kb_search` |
+| `generate_mindmap` | Python | 抽取层级结构，输出 Mermaid mindmap | `mindmap` |
+| `generate_relation_graph` | Python | 抽取实体+关系（GraphRAG），输出 nodes/edges + Mermaid | `relation_graph` |
+| `generate_report` | Python | 多步：检索→大纲→逐节生成→汇总成文 | `report` |
+| `generate_weekly_report` | Python + Package | 根据材料生成结构化中文周报，并提供 Markdown 下载 | `weekly_report` |
+| `generate_presentation` | Python + Package | 根据材料生成演示文稿结构，并提供 `.pptx` 下载 | `presentation` |
+| `web_search` | Python | DuckDuckGo 联网搜索，知识库答不了时补充 | `web_search` |
+| `codex_note` | Generic Package | 示例 Codex-style 通用技能：按 SKILL.md 写 Markdown 笔记并打包下载 | `generic_skill` |
 
 产出 `type` 属于 `mindmap` / `relation_graph` / `report` / `weekly_report` /
-`presentation` 的结果会被收进响应的 `artifacts`，供前端渲染。带 `download` 字段的
-文件产出（如周报 Markdown、PPTX）会在前端显示下载按钮。
+`presentation`，或带 `artifact_kind=file` 的通用技能结果，会被收进响应的
+`artifacts`，供前端渲染或下载。
 
-### Skill Package 目录结构
+### 两种 Skill Package 目录结构
 
-以周报技能为例：
+Python-backed package（例如周报）：
 
 ```text
 app/skills/packages/weekly-report/
@@ -294,22 +307,31 @@ app/skills/packages/weekly-report/
     └── writing-guide.md             写作规范、参考说明
 ```
 
-Python 执行层通过：
+Codex-style generic package（例如 `codex-note`）：
 
-```python
-class WeeklyReportSkill(BaseSkill):
-    package_slug = "weekly-report"
+```text
+app/skills/packages/codex-note/
+├── SKILL.md                         必需，frontmatter 提供 name/description
+├── templates/                       可选
+│   └── note.md
+├── references/                      可选
+│   └── style.md
+├── scripts/                         可选，shell 开启且 allowlist 命中时才可运行
+└── assets/                          可选
 ```
 
-绑定 package，并在 `run()` 中读取：
+最小 `SKILL.md`：
 
-```python
-self.package_template("prompt.md", fallback)
-self.package_reference("writing-guide.md")
+```md
+---
+name: my_generic_skill
+description: Explain exactly when this skill should be used.
+---
+
+# Workflow
+
+Follow these steps and write final files into outputs/.
 ```
-
-这样可以把 prompt、模板、参考资料和真正的执行逻辑拆开：目录层负责“怎么描述能力”，
-Python 层负责“怎么安全执行能力”。
 
 ### Agent 主循环（`app/agent/orchestrator.py`）
 
@@ -404,10 +426,10 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**175 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**185 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
-- **服务单测**：评估 runner、dataset_gen、Celery 任务、7 个 Skills、LLM 流式聚合——
+- **服务单测**：评估 runner、dataset_gen、Celery 任务、8 个 Skills、LLM 流式聚合——
   mock 外部边界。
 - **路由集成测**：用内存 sqlite 替 PG、mock 掉 Celery/embedding/LLM，真实 HTTP 打
   auth/documents/chat/agent/eval 全部端点（含 SSE 流式、评估双路径）。
@@ -449,6 +471,11 @@ uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
 | `RRF_K` | | `60` | RRF 融合常数 |
 | `KEYWORD_CANDIDATES` | | `20` | 关键词召回候选数 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
+| `SKILL_RUNNER_MAX_STEPS` | | `8` | Codex-style 通用 skill 内部工具循环最大步数 |
+| `SKILL_WORKSPACE_DIR` | | `./skill_workspaces` | 通用 skill 的用户隔离文件工作区 |
+| `SKILL_SHELL_ENABLED` | | `false` | 是否允许通用 skill 调用 shell；默认关闭 |
+| `SKILL_SHELL_ALLOWED_COMMANDS` | | `echo,cat,...` | shell 开启后允许执行的命令名 allowlist |
+| `SKILL_SHELL_TIMEOUT_SECONDS` | | `10` | 单次 shell 命令超时秒数 |
 | `LOG_LEVEL` | | `INFO` | 日志级别 |
 | `LOG_JSON` | | `true` | `true`=结构化 JSON（生产）；`false`=彩色文本（本地） |
 
@@ -473,8 +500,8 @@ app/
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
-├── skills/            可插拔技能（base / registry + 7 个技能 + packages 两层架构）
-│   └── packages/      目录化 Skill Package：SKILL.md / skill.json / templates / references
+├── skills/            可插拔技能（Python Skills + Codex-style generic runner）
+│   └── packages/      目录化 Skill Package：SKILL.md / templates / references / scripts / assets
 ├── tasks/             Celery 异步任务（document_tasks 解析流水线）
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
@@ -483,20 +510,43 @@ frontend/              原生单页前端（FastAPI 托管，零构建）
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 175 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 185 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
 
 ## 新增一个 Skill（体现可插拔）
 
-简单技能可以继续只写 Python 类；复杂技能建议使用两层结构：
+现在有两种扩展方式。
 
-1. 在 `app/skills/packages/<slug>/` 下创建：
-   - `SKILL.md`
-   - `skill.json`
-   - `templates/`
-   - `references/`
+### 方式 A：复制 Codex-style 通用 Skill 包
+
+适合 prompt 工作流、文档产出、需要模板/参考资料的通用能力。
+
+1. 在 `app/skills/packages/<slug>/` 下放入至少一个 `SKILL.md`：
+   ```md
+   ---
+   name: my_generic_skill
+   description: 用户什么时候应该调用这个技能。
+   ---
+
+   # Workflow
+   1. 读取需要的 references。
+   2. 按步骤完成任务。
+   3. 如需文件产出，写入 outputs/。
+   ```
+2. 可选增加：
+   - `templates/`：提示词、文档骨架；
+   - `references/`：写作规范、API 说明、业务资料；
+   - `scripts/`：需要 shell 开启且命令 allowlist 命中后才能运行；
+   - `assets/`：模板文件、图片等资源。
+3. 重启服务，`GET /agent/skills` 会看到该技能，执行模式为 `generic_package`。
+
+### 方式 B：写 Python-backed Skill
+
+适合需要强权限边界、强确定性、数据库/向量库访问或复杂文件生成的能力。
+
+1. 在 `app/skills/packages/<slug>/` 下创建 `SKILL.md`、`skill.json`、`templates/`、`references/`。
 2. 在 `app/skills/` 新建执行层文件，写一个继承 `BaseSkill` 的类：
    ```python
    @register_skill
@@ -506,5 +556,8 @@ data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + m
        def run(self, context, **kwargs):
            ...
    ```
-3. 在 `app/skills/__init__.py` 加一行 import（触发装饰器注册）
-4. 完成——Agent 自动发现并可调用，核心编排代码零改动
+3. 在 `app/skills/__init__.py` 加一行 import（触发装饰器注册）。
+4. 补测试，跑 `uv run pytest`。
+
+经验原则：先用 Codex-style package 快速验证工作流；当它需要稳定 I/O、严格权限、复杂
+文件格式或性能优化时，再沉淀为 Python-backed Skill。
