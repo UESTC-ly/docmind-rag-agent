@@ -27,7 +27,14 @@ class TestSkillPackageLoader:
 
     def test_lists_packages(self):
         names = {package.name for package in list_skill_packages()}
-        assert {"generate_weekly_report", "generate_presentation"} <= names
+        assert {"generate_weekly_report", "generate_presentation", "codex_note"} <= names
+
+    def test_loads_codex_style_package_without_skill_json(self):
+        package = load_skill_package("codex-note")
+        assert package.name == "codex_note"
+        assert package.source == "codex"
+        assert package.parameters["required"] == ["task"]
+        assert "style.md" in package.references
 
 
 class TestPackageBackedSkill:
@@ -38,3 +45,10 @@ class TestPackageBackedSkill:
         assert package is not None
         assert skill.description == package.description
         assert skill.to_tool()["function"]["parameters"] == package.parameters
+
+    def test_codex_style_package_registered_as_generic_skill(self):
+        skill = get_skill("codex_note")
+        assert skill is not None
+        assert skill.execution_mode == "generic_package"
+        package = skill.load_package()
+        assert package.source == "codex"

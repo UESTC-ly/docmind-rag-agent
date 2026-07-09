@@ -81,6 +81,7 @@ class TestListSkills:
         assert "search_knowledge_base" in str(names)
         assert "generate_weekly_report" in str(names)
         assert "generate_presentation" in str(names)
+        assert "codex_note" in str(names)
 
         packages = {
             s["name"]: s.get("package")
@@ -89,3 +90,7 @@ class TestListSkills:
         }
         assert packages["generate_weekly_report"]["slug"] == "weekly-report"
         assert "prompt.md" in packages["generate_presentation"]["templates"]
+        assert packages["codex_note"]["source"] == "codex"
+
+        modes = {s["name"]: s.get("execution_mode") for s in skills if isinstance(s, dict)}
+        assert modes["codex_note"] == "generic_package"

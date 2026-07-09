@@ -33,14 +33,21 @@ async def list_skills(current_user: User = Depends(get_current_user)):
     out = []
     for skill in all_skills():
         skill.apply_package_metadata()
-        item = {"name": skill.name, "description": skill.description}
+        item = {
+            "name": skill.name,
+            "description": skill.description,
+            "execution_mode": skill.execution_mode,
+        }
         package = skill.load_package()
         if package is not None:
             item["package"] = {
                 "slug": package.slug,
+                "source": package.source,
                 "has_skill_md": bool(package.instructions.strip()),
                 "templates": package.template_names,
                 "references": package.reference_names,
+                "scripts": package.script_names,
+                "assets": package.asset_names,
             }
         out.append(item)
     return out

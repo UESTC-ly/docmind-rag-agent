@@ -21,6 +21,7 @@ data/*.parquet
 data/**/*.parquet
 data/manifest.json
 uploads/
+skill_workspaces/
 
 # ── IDE / OS ─────────────────────────────
 .DS_Store

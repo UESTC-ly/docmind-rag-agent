@@ -25,11 +25,12 @@ SYSTEM_PROMPT = """你是 DocMind 的智能文档助手。你可以调用工具�
 - 写周报/进度周总结：用 generate_weekly_report
 - 制作 PPT/演示文稿/答辩材料：用 generate_presentation
 - 知识库答不了或需要外部信息：用 web_search
+- 目录化通用技能：可调用 Codex-style SKILL.md package（如 codex_note），由技能内部按 Markdown 指令规划并使用受控工具执行
 
 规则：
 1. 根据用户意图自主选择合适的工具，可以多步调用。
 2. 拿到工具结果后，用中文给用户清晰的最终回复。
-3. 如果生成了思维导图/图谱/报告/周报/PPT，在回复里说明已生成，正文或下载文件在产出物里。
+3. 如果生成了思维导图/图谱/报告/周报/PPT/通用技能文件，在回复里说明已生成，正文或下载文件在产出物里。
 4. 不要编造工具没返回的信息。"""
 
 ARTIFACT_TYPES = {

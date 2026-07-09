@@ -27,6 +27,7 @@ class BaseSkill(ABC):
     description: str
     parameters: dict  # JSON Schema
     package_slug: str | None = None  # 可选：绑定 app/skills/packages/<slug>
+    execution_mode: str = "python"
     _package: Any = None
 
     def load_package(self):

@@ -44,6 +44,12 @@ class Settings(BaseSettings):
 
     # Agent
     agent_max_steps: int = 6  # Agent 主循环最大步数，防死循环
+    # Codex-style 通用 Skill runner
+    skill_runner_max_steps: int = 8  # 单个通用 skill 内部工具循环最大步数
+    skill_workspace_dir: str = "./skill_workspaces"  # 通用 skill 文件读写工作区
+    skill_shell_enabled: bool = False  # shell 工具默认关闭，避免聊天入口变成 RCE
+    skill_shell_allowed_commands: str = "echo,cat,ls,pwd,grep,sed,python,python3,node,npm,uv"
+    skill_shell_timeout_seconds: int = 10
 
     # 日志
     log_level: str = "INFO"
@@ -67,6 +73,15 @@ class Settings(BaseSettings):
     def resolved_embedding_base_url(self) -> str | None:
         """embedding 的 base_url，未单独配置则复用对话的。"""
         return self.embedding_base_url or self.openai_base_url
+
+    @property
+    def skill_shell_allowed_command_set(self) -> set[str]:
+        """把逗号分隔的 allowlist 转成集合，供受控 shell executor 使用。"""
+        return {
+            item.strip()
+            for item in self.skill_shell_allowed_commands.split(",")
+            if item.strip()
+        }
 
 
 # 全局单例，其他模块直接 from app.config import settings
