@@ -156,6 +156,10 @@ class GenericPackageSkill(BaseSkill):
 - scripts: {scripts}
 - assets: {assets}
 
+如任务需要基于用户上传文档，请先用 list_uploaded_documents 查看文档，或用
+read_uploaded_document 读取当前选中文档/指定 document_id 的文本；不要把工作区文件工具
+误认为可以读取 DocMind 已上传文档。
+
 SKILL.md:
 {self._package.instructions}
 """

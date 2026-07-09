@@ -14,7 +14,7 @@ DocMind first public release.
 - Native single-page frontend served by FastAPI.
 - RAG evaluation loop with retrieval metrics and LLM-as-judge generation metrics.
 - Cross-platform local launchers for macOS, Linux, and Windows.
-- 185 pytest tests with mocked external services and CI coverage gate.
+- 189 pytest tests with mocked external services and CI coverage gate.
 
 ### Safety notes
 

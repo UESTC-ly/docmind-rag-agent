@@ -203,6 +203,45 @@ class TestSkillToolExecutor:
         assert executor.execute("use_browser_tool", {"action": "open"})["ok"] is False
         assert executor.execute("use_app_tool", {"app": "Finder", "action": "open"})["ok"] is False
 
+    def test_uploaded_document_tools_respect_user_and_context_document(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import toolkit
+        from app.skills.toolkit import SkillToolExecutor
+
+        monkeypatch.setattr(
+            toolkit,
+            "fetch_user_documents",
+            lambda user_id: [{"id": 10, "filename": "a.md"}],
+        )
+        captured = {}
+
+        def _fake_fetch_material_text(user_id, document_id=None, max_chars=12000):
+            captured["user_id"] = user_id
+            captured["document_id"] = document_id
+            captured["max_chars"] = max_chars
+            return "用户上传文档内容", [document_id]
+
+        monkeypatch.setattr(toolkit, "fetch_material_text", _fake_fetch_material_text)
+
+        executor = SkillToolExecutor(
+            package=package,
+            context=SkillContext(user_id=7, document_id=10),
+            workspace_root=tmp_path / "workspaces",
+        )
+
+        listed = executor.execute("list_uploaded_documents", {})
+        read = executor.execute("read_uploaded_document", {})
+
+        assert listed["documents"] == [{"id": 10, "filename": "a.md"}]
+        assert read["ok"] is True
+        assert read["content"] == "用户上传文档内容"
+        assert read["document_ids"] == [10]
+        assert captured == {"user_id": 7, "document_id": 10, "max_chars": 12000}
+
 
 class TestGenericPackageSkillRunner:
     def test_generic_skill_follows_markdown_instructions_and_returns_zip_artifact(
@@ -229,6 +268,11 @@ class TestGenericPackageSkillRunner:
                             '{"name":"style.md"}',
                         ),
                         _FakeToolCall(
+                            "c-doc",
+                            "read_uploaded_document",
+                            '{}',
+                        ),
+                        _FakeToolCall(
                             "c2",
                             "write_file",
                             '{"path":"outputs/note.md","content":"# Note\\n完成"}',
@@ -248,6 +292,7 @@ class TestGenericPackageSkillRunner:
         assert result["answer"] == "已按 SKILL.md 生成 note.md。"
         assert result["generated_files"] == ["outputs/note.md"]
         assert "read_skill_reference" in captured["tools"]
+        assert "read_uploaded_document" in captured["tools"]
         assert "write_file" in captured["tools"]
 
         payload = base64.b64decode(result["download"]["content"])

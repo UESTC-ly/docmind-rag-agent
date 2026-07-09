@@ -31,20 +31,32 @@ class ReportSkill(BaseSkill):
         "type": "object",
         "properties": {
             "topic": {"type": "string", "description": "报告主题"},
+            "document_id": {
+                "type": "integer",
+                "description": "可选，限定只基于某篇文档生成报告；未传时使用当前选中文档。",
+            },
         },
         "required": ["topic"],
     }
 
     def run(self, context: SkillContext, **kwargs) -> dict:
         topic = kwargs["topic"]
+        document_id = kwargs.get("document_id") or context.document_id
 
         # 1. 检索主题相关内容
         query_vector = embed_query(topic)
         hits = search(
-            query_vector, context.user_id, top_k=settings.retrieval_top_k * 2
+            query_vector,
+            context.user_id,
+            top_k=settings.retrieval_top_k * 2,
+            document_id=document_id,
         )
         if not hits:
-            return {"error": "知识库中未找到与该主题相关的内容", "topic": topic}
+            return {
+                "error": "知识库中未找到与该主题相关的内容",
+                "topic": topic,
+                "document_id": document_id,
+            }
         context_text = "\n\n".join(h["content"] for h in hits)
 
         # 2. 生成大纲
@@ -87,6 +99,7 @@ class ReportSkill(BaseSkill):
         return {
             "type": "report",
             "topic": topic,
+            "document_id": document_id,
             "outline": sections,
             "content": report,
         }

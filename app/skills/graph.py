@@ -46,14 +46,16 @@ class GraphSkill(BaseSkill):
         "properties": {
             "document_id": {
                 "type": "integer",
-                "description": "要生成关系图的文档 ID",
+                "description": "可选，要生成关系图的文档 ID；未传时使用当前选中文档。",
             }
         },
-        "required": ["document_id"],
+        "required": [],
     }
 
     def run(self, context: SkillContext, **kwargs) -> dict:
-        document_id = kwargs["document_id"]
+        document_id = kwargs.get("document_id") or context.document_id
+        if document_id is None:
+            return {"error": "请先选择文档或传入 document_id"}
         content = fetch_document_text(context.user_id, document_id)
         if not content:
             return {"error": "文档不存在或无内容", "document_id": document_id}

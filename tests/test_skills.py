@@ -58,6 +58,27 @@ class TestGraphSkill:
         result = graph.GraphSkill().run(CTX, document_id=10)
         assert "error" in result
 
+    def test_uses_context_document_when_arg_absent(self, monkeypatch):
+        captured = {}
+
+        def _fake_fetch_document_text(uid, did):
+            captured["document_id"] = did
+            return "文档全文"
+
+        monkeypatch.setattr(
+            graph,
+            "fetch_document_text",
+            _fake_fetch_document_text,
+        )
+        monkeypatch.setattr(
+            graph,
+            "chat_completion",
+            lambda msgs, temperature=0.2: _FakeMsg('{"nodes":[],"edges":[]}'),
+        )
+        result = graph.GraphSkill().run(CTX)
+        assert result["type"] == "relation_graph"
+        assert captured["document_id"] == 10
+
     def test_invalid_json_returns_error(self, monkeypatch):
         monkeypatch.setattr(graph, "fetch_document_text", lambda uid, did: "x")
         monkeypatch.setattr(
@@ -94,6 +115,27 @@ class TestMindmapSkill:
         result = mindmap.MindmapSkill().run(CTX, document_id=10)
         assert "error" in result
 
+    def test_uses_context_document_when_arg_absent(self, monkeypatch):
+        captured = {}
+
+        def _fake_fetch_document_text(uid, did):
+            captured["document_id"] = did
+            return "文档全文"
+
+        monkeypatch.setattr(
+            mindmap,
+            "fetch_document_text",
+            _fake_fetch_document_text,
+        )
+        monkeypatch.setattr(
+            mindmap,
+            "chat_completion",
+            lambda msgs, temperature=0.2: _FakeMsg("mindmap\n  root((主题))"),
+        )
+        result = mindmap.MindmapSkill().run(CTX)
+        assert result["type"] == "mindmap"
+        assert captured["document_id"] == 10
+
 
 # ── report（多步：检索→大纲→逐节）─────────────────────────────
 class TestReportSkill:
@@ -115,6 +157,23 @@ class TestReportSkill:
         assert "# AI 架构" in result["content"]
         assert "## 小节一" in result["content"]
         assert "第一节正文" in result["content"]
+
+    def test_limits_search_to_context_document_when_available(self, monkeypatch):
+        captured = {}
+        monkeypatch.setattr(report, "embed_query", lambda t: [0.1])
+
+        def _fake_search(vec, user_id, top_k, document_id=None):
+            captured["document_id"] = document_id
+            return [{"content": "资料", "document_id": document_id, "score": 0.9}]
+
+        monkeypatch.setattr(report, "search", _fake_search)
+        seq = iter([_FakeMsg("小节一"), _FakeMsg("正文")])
+        monkeypatch.setattr(report, "chat_completion", lambda msgs, temperature=0.4: next(seq))
+
+        result = report.ReportSkill().run(CTX, topic="当前文档报告")
+
+        assert result["type"] == "report"
+        assert captured["document_id"] == 10
 
     def test_no_hits_returns_error(self, monkeypatch):
         monkeypatch.setattr(report, "embed_query", lambda t: [0.1])

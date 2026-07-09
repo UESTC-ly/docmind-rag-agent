@@ -8,7 +8,7 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。后端 **185 个测试、94% 覆盖率**，接了
+登录、流式对话、文档管理、评估看板四大界面。后端 **189 个测试、94% 覆盖率**，接了
 GitHub Actions CI。
 
 **亮点**：ReAct Agent 编排 · Codex-style 通用 Skills · 可插拔 Python Skills ·
@@ -479,7 +479,7 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**185 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**189 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
 - **服务单测**：评估 runner、dataset_gen、Celery 任务、8 个 Skills、LLM 流式聚合——
@@ -563,7 +563,7 @@ frontend/              原生单页前端（FastAPI 托管，零构建）
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 185 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 189 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```

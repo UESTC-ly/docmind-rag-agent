@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from app.config import settings
+from app.skills._helpers import fetch_material_text, fetch_user_documents
 from app.skills.base import SkillContext
 from app.skills.package_loader import SkillPackage
 
@@ -124,6 +125,39 @@ class SkillToolExecutor:
                                 "type": "string",
                                 "description": "工作区相对路径，默认根目录。",
                             }
+                        },
+                        "required": [],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "list_uploaded_documents",
+                    "description": "列出当前登录用户已上传到 DocMind 的文档，返回文档 ID 和文件名。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "read_uploaded_document",
+                    "description": "读取当前用户已上传并解析完成的文档文本；不传 document_id 时优先使用当前选中文档，否则汇总用户文档。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "document_id": {
+                                "type": "integer",
+                                "description": "可选，指定要读取的文档 ID。",
+                            },
+                            "max_chars": {
+                                "type": "integer",
+                                "description": "最多返回字符数，默认 12000。",
+                            },
                         },
                         "required": [],
                     },
@@ -313,6 +347,34 @@ class SkillToolExecutor:
         result["instruction"] = args.get("instruction", "")
         result["mode"] = "replace"
         return result
+
+    # ── Uploaded DocMind documents ────────────────────────────────
+    def _tool_list_uploaded_documents(self, args: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "documents": fetch_user_documents(self.context.user_id),
+        }
+
+    def _tool_read_uploaded_document(self, args: dict[str, Any]) -> dict[str, Any]:
+        document_id = args.get("document_id") or self.context.document_id
+        max_chars = int(args.get("max_chars") or 12000)
+        content, used_doc_ids = fetch_material_text(
+            self.context.user_id,
+            document_id=document_id,
+            max_chars=max_chars,
+        )
+        if not content:
+            return {
+                "ok": False,
+                "error": "未找到可读取的已上传文档内容；请确认文档归属当前用户且已解析完成。",
+                "document_id": document_id,
+            }
+        return {
+            "ok": True,
+            "document_id": document_id,
+            "document_ids": used_doc_ids,
+            "content": content,
+        }
 
     # ── Package resources ──────────────────────────────────────────
     def _tool_read_skill_reference(self, args: dict[str, Any]) -> dict[str, Any]:
