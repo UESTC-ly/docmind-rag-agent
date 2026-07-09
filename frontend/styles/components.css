@@ -192,9 +192,10 @@
 }
 .skill-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--space-4);
   margin-top: var(--space-4);
+  align-items: stretch;
 }
 .skill-card,
 .agent-console,
@@ -216,6 +217,7 @@
   font-size: var(--text-base);
   font-family: var(--font-mono);
   letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 .skill-card p {
   color: var(--color-text-soft);
@@ -285,7 +287,42 @@
   font-weight: 600;
   font-family: var(--font-mono);
 }
-.artifact pre {
+.artifact__body {
+  margin-top: var(--space-3);
+}
+.mermaid-preview {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-surface-alt);
+  min-height: 180px;
+  overflow: auto;
+  padding: var(--space-4);
+}
+.mermaid-preview svg {
+  display: block;
+  max-width: 100%;
+  min-width: 520px;
+  height: auto;
+  margin: 0 auto;
+}
+.mermaid-status {
+  color: var(--color-text-faint);
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+.mermaid-status--error {
+  color: var(--color-accent);
+  margin-bottom: var(--space-3);
+}
+.artifact-source {
+  margin-top: var(--space-3);
+}
+.artifact-source summary {
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+}
+.artifact pre,
+.artifact-source pre {
   margin-top: var(--space-3);
   padding: var(--space-3);
   border-radius: var(--radius);

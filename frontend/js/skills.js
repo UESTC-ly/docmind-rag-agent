@@ -5,6 +5,11 @@ import { $, el, toast } from "./ui.js";
 
 let skillsLoaded = false;
 let agentConversationId = null;
+let mermaidPromise = null;
+let mermaidRenderSeq = 0;
+
+const MERMAID_CDN =
+  "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
 
 const SKILL_HINTS = {
   search_knowledge_base: "根据已上传文档回答问题",
@@ -84,6 +89,79 @@ function renderTrace(trace) {
   ]);
 }
 
+function stripMermaidFence(code) {
+  return String(code ?? "")
+    .trim()
+    .replace(/^```(?:mermaid)?\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+}
+
+function mermaidCodeFor(artifact) {
+  if (artifact.type === "mindmap") return stripMermaidFence(artifact.content);
+  if (artifact.type === "relation_graph") return stripMermaidFence(artifact.mermaid);
+  return "";
+}
+
+function loadMermaid() {
+  if (!mermaidPromise) {
+    mermaidPromise = import(MERMAID_CDN).then((mod) => {
+      const mermaid = mod.default;
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "neutral",
+      });
+      return mermaid;
+    });
+  }
+  return mermaidPromise;
+}
+
+async function renderMermaid(container, code) {
+  const source = stripMermaidFence(code);
+  if (!source) return;
+
+  container.replaceChildren(
+    el("p", { class: "mermaid-status", text: "正在渲染 Mermaid 图…" })
+  );
+
+  try {
+    const mermaid = await loadMermaid();
+    const id = `docmind-mermaid-${Date.now()}-${mermaidRenderSeq++}`;
+    const { svg } = await mermaid.render(id, source);
+    // Mermaid 在 securityLevel=strict 下生成 SVG；这里必须插入 SVG 字符串才能显示图。
+    container.innerHTML = svg;
+  } catch (err) {
+    container.replaceChildren(
+      el("p", {
+        class: "mermaid-status mermaid-status--error",
+        text: `Mermaid 渲染失败，已显示源码：${err.message || err}`,
+      }),
+      el("pre", { text: source })
+    );
+  }
+}
+
+function renderArtifactBody(artifact) {
+  const mermaidCode = mermaidCodeFor(artifact);
+  if (mermaidCode) {
+    const preview = el("div", { class: "mermaid-preview" });
+    queueMicrotask(() => renderMermaid(preview, mermaidCode));
+    return el("div", { class: "artifact__body" }, [
+      preview,
+      el("details", { class: "artifact-source" }, [
+        el("summary", { text: "查看 Mermaid 源码" }),
+        el("pre", { text: mermaidCode }),
+      ]),
+    ]);
+  }
+
+  return el("pre", { text: JSON.stringify(artifact, null, 2) });
+}
+
 function renderArtifacts(artifacts) {
   if (!artifacts?.length) return null;
   return el("div", { class: "artifact-list" }, [
@@ -91,7 +169,7 @@ function renderArtifacts(artifacts) {
     ...artifacts.map((artifact, index) =>
       el("details", { class: "artifact", open: index === 0 ? "" : null }, [
         el("summary", { text: artifact.type || `artifact-${index + 1}` }),
-        el("pre", { text: JSON.stringify(artifact, null, 2) }),
+        renderArtifactBody(artifact),
       ])
     ),
   ]);
