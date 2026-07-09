@@ -22,13 +22,43 @@ SYSTEM_PROMPT = """你是 DocMind 的智能文档助手。你可以调用工具�
 - 生成思维导图：用 generate_mindmap
 - 生成关系图谱：用 generate_relation_graph
 - 写报告：用 generate_report
+- 写周报/进度周总结：用 generate_weekly_report
+- 制作 PPT/演示文稿/答辩材料：用 generate_presentation
 - 知识库答不了或需要外部信息：用 web_search
 
 规则：
 1. 根据用户意图自主选择合适的工具，可以多步调用。
 2. 拿到工具结果后，用中文给用户清晰的最终回复。
-3. 如果生成了思维导图/图谱/报告，在回复里说明已生成，正文数据在产出物里。
+3. 如果生成了思维导图/图谱/报告/周报/PPT，在回复里说明已生成，正文或下载文件在产出物里。
 4. 不要编造工具没返回的信息。"""
+
+ARTIFACT_TYPES = {
+    "mindmap",
+    "relation_graph",
+    "report",
+    "weekly_report",
+    "presentation",
+}
+
+
+def _tool_message_content(result: dict) -> str:
+    """压缩给 LLM 看的工具结果，避免把 base64 文件内容塞回上下文。"""
+    if result.get("artifact_kind") != "file":
+        return json.dumps(result, ensure_ascii=False)[:4000]
+
+    compact = {
+        key: value
+        for key, value in result.items()
+        if key != "download"
+    }
+    if "download" in result:
+        compact["download"] = {
+            "filename": result["download"].get("filename"),
+            "mime_type": result["download"].get("mime_type"),
+            "encoding": result["download"].get("encoding"),
+            "content_omitted": True,
+        }
+    return json.dumps(compact, ensure_ascii=False)[:4000]
 
 
 def run_agent(
@@ -107,8 +137,8 @@ def run_agent(
 
             trace.append({"step": step, "skill": skill_name, "args": args})
 
-            # 有结构化产出的技能，收集到 artifacts
-            if result.get("type") in {"mindmap", "relation_graph", "report"}:
+            # 有结构化 / 文件产出的技能，收集到 artifacts
+            if result.get("type") in ARTIFACT_TYPES or result.get("artifact_kind") == "file":
                 artifacts.append(result)
 
             # 把工具结果塞回对话，供 LLM 下一步参考
@@ -116,7 +146,7 @@ def run_agent(
                 {
                     "role": "tool",
                     "tool_call_id": tc.id,
-                    "content": json.dumps(result, ensure_ascii=False)[:4000],
+                    "content": _tool_message_content(result),
                 }
             )
 

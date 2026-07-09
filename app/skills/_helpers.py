@@ -32,3 +32,32 @@ def fetch_user_documents(user_id: int) -> list[dict]:
             )
         ).all()
         return [{"id": r[0], "filename": r[1]} for r in rows]
+
+
+def fetch_material_text(
+    user_id: int,
+    document_id: int | None = None,
+    max_chars: int = 12000,
+) -> tuple[str, list[int]]:
+    """取指定文档或用户全部文档材料，返回 (文本, 使用到的文档 id 列表)。
+
+    文件产出类技能（周报/PPT）既支持用户显式指定 document_id，也支持在未指定时汇总
+    当前用户已有文档作为材料来源。所有读取都复用 fetch_document_text 的归属校验。
+    """
+    if document_id is not None:
+        text = fetch_document_text(user_id, document_id)
+        return text[:max_chars], ([document_id] if text else [])
+
+    parts: list[str] = []
+    used_ids: list[int] = []
+    for doc in fetch_user_documents(user_id):
+        if sum(len(p) for p in parts) >= max_chars:
+            break
+        text = fetch_document_text(user_id, doc["id"])
+        if not text:
+            continue
+        used_ids.append(doc["id"])
+        remaining = max_chars - sum(len(p) for p in parts)
+        parts.append(f"【文档 {doc['id']}：{doc['filename']}】\n{text[:remaining]}")
+
+    return "\n\n".join(parts)[:max_chars], used_ids

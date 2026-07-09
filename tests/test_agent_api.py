@@ -75,6 +75,8 @@ class TestListSkills:
     async def test_skills_listed(self, client, registered_user):
         resp = await client.get("/agent/skills", headers=registered_user["headers"])
         assert resp.status_code == 200
-        # 真实注册的 5 个技能应都在
+        # 真实注册的技能应都在
         names = [s["name"] for s in resp.json()] if isinstance(resp.json(), list) else resp.json()
         assert "search_knowledge_base" in str(names)
+        assert "generate_weekly_report" in str(names)
+        assert "generate_presentation" in str(names)

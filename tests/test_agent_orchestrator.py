@@ -1,7 +1,8 @@
 """Agent 编排主循环测试（run_agent 的 ReAct 逻辑）。
 
 不连 LLM：用脚本化的假 chat_completion 逐步返回 tool_calls / 最终答案，
-验证：直接回答、单步工具调用+执行、artifacts 收集、未知技能兜底、最大步数保护、
+验证：直接回答、单步工具调用+执行、artifacts 收集、文件 artifact 精简回传、
+未知技能兜底、最大步数保护、
 以及 document_id 会注入系统提示。
 """
 
@@ -60,6 +61,24 @@ class _MindmapSkill(BaseSkill):
         return {"type": "mindmap", "nodes": ["a", "b"]}
 
 
+class _FileSkill(BaseSkill):
+    name = "fake_file_skill"
+    description = "测试用文件产出"
+    parameters = {"type": "object", "properties": {}}
+
+    def run(self, context: SkillContext, **kwargs) -> dict:
+        return {
+            "type": "presentation",
+            "artifact_kind": "file",
+            "download": {
+                "filename": "x.pptx",
+                "mime_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "encoding": "base64",
+                "content": "VERY-LARGE-BASE64",
+            },
+        }
+
+
 @pytest.fixture
 def fake_skills():
     """临时注册假技能，测试后还原注册表，避免污染其他测试。"""
@@ -67,6 +86,7 @@ def fake_skills():
     registry._REGISTRY.clear()
     registry.register_skill(_EchoSkill)
     registry.register_skill(_MindmapSkill)
+    registry.register_skill(_FileSkill)
     yield
     registry._REGISTRY.clear()
     registry._REGISTRY.update(saved)
@@ -107,6 +127,27 @@ class TestToolLoop:
         result = orchestrator.run_agent(user_id=1, question="生成导图")
         assert len(result["artifacts"]) == 1
         assert result["artifacts"][0]["type"] == "mindmap"
+
+    def test_file_artifact_collected_but_download_content_omitted_from_llm(
+        self, monkeypatch, fake_skills
+    ):
+        captured = {}
+        calls = {"n": 0}
+
+        def _llm(messages, tools=None):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return _FakeMsg(tool_calls=[_FakeToolCall("c1", "fake_file_skill", "{}")])
+            captured["tool_message"] = messages[-1]["content"]
+            return _FakeMsg(content="文件已生成")
+
+        monkeypatch.setattr(orchestrator, "chat_completion", _llm)
+        result = orchestrator.run_agent(user_id=1, question="生成文件")
+
+        assert result["artifacts"][0]["type"] == "presentation"
+        assert result["artifacts"][0]["download"]["content"] == "VERY-LARGE-BASE64"
+        assert "content_omitted" in captured["tool_message"]
+        assert "VERY-LARGE-BASE64" not in captured["tool_message"]
 
     def test_unknown_skill_does_not_crash(self, monkeypatch, fake_skills):
         # LLM 幻觉出一个不存在的技能名，编排器应兜底而非抛异常

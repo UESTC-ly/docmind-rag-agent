@@ -16,6 +16,8 @@ const SKILL_HINTS = {
   generate_mindmap: "从文档内容生成 Mermaid 思维导图",
   generate_relation_graph: "抽取概念实体与关系图谱",
   generate_report: "检索资料并生成结构化报告",
+  generate_weekly_report: "基于材料生成可下载 Markdown 周报",
+  generate_presentation: "基于材料生成可下载 PowerPoint 文件",
   web_search: "知识库不足时联网搜索补充信息",
 };
 
@@ -24,6 +26,8 @@ const SKILL_PROMPTS = {
   generate_mindmap: "请基于当前文档生成思维导图：",
   generate_relation_graph: "请基于当前文档生成关系图谱：",
   generate_report: "请围绕以下主题生成报告：",
+  generate_weekly_report: "请根据材料写一份本周周报，主题是：",
+  generate_presentation: "请根据材料制作一份 6 页 PPT，主题是：",
   web_search: "请联网搜索并总结：",
 };
 
@@ -103,6 +107,50 @@ function mermaidCodeFor(artifact) {
   return "";
 }
 
+function decodeBase64(content) {
+  const binary = atob(content);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function downloadArtifact(download) {
+  const payload =
+    download.encoding === "base64"
+      ? decodeBase64(download.content)
+      : download.content || "";
+  const blob = new Blob([payload], {
+    type: download.mime_type || "application/octet-stream",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = download.filename || "docmind-artifact";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function renderDownload(download) {
+  if (!download?.content) return null;
+  return el("div", { class: "artifact-download" }, [
+    el("div", {}, [
+      el("div", { class: "artifact-download__name", text: download.filename || "产出文件" }),
+      el("div", {
+        class: "doc__meta",
+        text: `${download.mime_type || "application/octet-stream"} · ${download.encoding || "text"}`,
+      }),
+    ]),
+    el("button", {
+      class: "btn btn--accent",
+      type: "button",
+      text: "下载产出",
+      onClick: () => downloadArtifact(download),
+    }),
+  ]);
+}
+
 function loadMermaid() {
   if (!mermaidPromise) {
     mermaidPromise = import(MERMAID_CDN).then((mod) => {
@@ -146,20 +194,47 @@ async function renderMermaid(container, code) {
 }
 
 function renderArtifactBody(artifact) {
+  const download = renderDownload(artifact.download);
   const mermaidCode = mermaidCodeFor(artifact);
   if (mermaidCode) {
     const preview = el("div", { class: "mermaid-preview" });
     queueMicrotask(() => renderMermaid(preview, mermaidCode));
     return el("div", { class: "artifact__body" }, [
+      download,
       preview,
       el("details", { class: "artifact-source" }, [
         el("summary", { text: "查看 Mermaid 源码" }),
         el("pre", { text: mermaidCode }),
       ]),
-    ]);
+    ].filter(Boolean));
   }
 
-  return el("pre", { text: JSON.stringify(artifact, null, 2) });
+  if (artifact.type === "weekly_report") {
+    return el("div", { class: "artifact__body" }, [
+      download,
+      el("pre", { text: artifact.content || "周报内容为空。" }),
+    ].filter(Boolean));
+  }
+
+  if (artifact.type === "presentation") {
+    return el("div", { class: "artifact__body" }, [
+      download,
+      el("div", { class: "slide-preview-list" }, [
+        ...(artifact.slides || []).map((slide, index) =>
+          el("article", { class: "slide-preview" }, [
+            el("div", { class: "doc__meta", text: `Slide ${index + 1}` }),
+            el("h3", { text: slide.title || "未命名页面" }),
+            el("ul", {}, (slide.bullets || []).map((b) => el("li", { text: b }))),
+          ])
+        ),
+      ]),
+    ].filter(Boolean));
+  }
+
+  return el("div", { class: "artifact__body" }, [
+    download,
+    el("pre", { text: JSON.stringify(artifact, null, 2) }),
+  ].filter(Boolean));
 }
 
 function renderArtifacts(artifacts) {

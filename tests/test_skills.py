@@ -1,14 +1,20 @@
-"""5 个 Skills 的单元测试。
+"""Skills 的单元测试。
 
 各技能的外部边界都 mock 在其模块命名空间里：
 - graph / mindmap：fetch_document_text + chat_completion
 - report：embed_query + search + chat_completion（多次）
+- weekly_report：fetch_material_text + chat_completion
+- presentation：fetch_material_text + chat_completion + 标准库 PPTX 生成
 - kb_search：embed_query + search
 - web_search：ddgs.DDGS
 - _helpers：SyncSessionLocal（用同步内存库）
 """
 
-from app.skills import graph, kb_search, mindmap, report, web_search
+import base64
+from io import BytesIO
+from zipfile import ZipFile
+
+from app.skills import graph, kb_search, mindmap, presentation, report, weekly_report, web_search
 from app.skills.base import SkillContext
 
 CTX = SkillContext(user_id=1, document_id=10)
@@ -128,6 +134,97 @@ class TestReportSkill:
         monkeypatch.setattr(report, "chat_completion", lambda msgs, temperature=0.4: next(seq))
         result = report.ReportSkill().run(CTX, topic="x")
         assert len(result["outline"]) == 5
+
+
+# ── weekly_report（Markdown 文件产出）──────────────────────────
+class TestWeeklyReportSkill:
+    def test_generates_downloadable_markdown(self, monkeypatch):
+        monkeypatch.setattr(
+            weekly_report,
+            "fetch_material_text",
+            lambda user_id, document_id=None, max_chars=12000: ("材料内容", [10]),
+        )
+        monkeypatch.setattr(
+            weekly_report,
+            "chat_completion",
+            lambda msgs, temperature=0.3: _FakeMsg("# 周报\n\n## 本周完成\n完成 A"),
+        )
+
+        result = weekly_report.WeeklyReportSkill().run(
+            CTX, topic="DocMind", week="2026-W28"
+        )
+
+        assert result["type"] == "weekly_report"
+        assert result["artifact_kind"] == "file"
+        assert result["download"]["filename"].endswith(".md")
+        assert result["download"]["encoding"] == "text"
+        assert "完成 A" in result["download"]["content"]
+
+    def test_no_material_returns_error(self, monkeypatch):
+        monkeypatch.setattr(
+            weekly_report,
+            "fetch_material_text",
+            lambda user_id, document_id=None, max_chars=12000: ("", []),
+        )
+        result = weekly_report.WeeklyReportSkill().run(CTX, topic="x")
+        assert "error" in result
+
+
+# ── presentation（PPTX 文件产出）──────────────────────────────
+class TestPresentationSkill:
+    def test_generates_downloadable_pptx(self, monkeypatch):
+        monkeypatch.setattr(
+            presentation,
+            "fetch_material_text",
+            lambda user_id, document_id=None, max_chars=14000: ("材料内容", [10]),
+        )
+        monkeypatch.setattr(
+            presentation,
+            "chat_completion",
+            lambda msgs, temperature=0.35: _FakeMsg(
+                '{"slides":[{"title":"封面","bullets":["副标题"]},'
+                '{"title":"进展","bullets":["完成 A","完成 B"]}]}'
+            ),
+        )
+
+        result = presentation.PresentationSkill().run(
+            CTX, topic="DocMind 汇报", slide_count=4
+        )
+
+        assert result["type"] == "presentation"
+        assert result["artifact_kind"] == "file"
+        assert result["download"]["filename"].endswith(".pptx")
+        assert result["download"]["encoding"] == "base64"
+
+        pptx = base64.b64decode(result["download"]["content"])
+        with ZipFile(BytesIO(pptx)) as zf:
+            names = set(zf.namelist())
+        assert "[Content_Types].xml" in names
+        assert "ppt/presentation.xml" in names
+        assert "ppt/slides/slide1.xml" in names
+
+    def test_invalid_json_falls_back_to_single_slide(self, monkeypatch):
+        monkeypatch.setattr(
+            presentation,
+            "fetch_material_text",
+            lambda user_id, document_id=None, max_chars=14000: ("材料内容", [10]),
+        )
+        monkeypatch.setattr(
+            presentation,
+            "chat_completion",
+            lambda msgs, temperature=0.35: _FakeMsg("不是 JSON"),
+        )
+        result = presentation.PresentationSkill().run(CTX, topic="兜底")
+        assert result["slides"][0]["title"] == "兜底"
+
+    def test_no_material_returns_error(self, monkeypatch):
+        monkeypatch.setattr(
+            presentation,
+            "fetch_material_text",
+            lambda user_id, document_id=None, max_chars=14000: ("", []),
+        )
+        result = presentation.PresentationSkill().run(CTX, topic="x")
+        assert "error" in result
 
 
 # ── kb_search ────────────────────────────────────────────────

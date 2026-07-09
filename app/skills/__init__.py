@@ -8,6 +8,8 @@ from app.skills import (  # noqa: F401
     graph,
     kb_search,
     mindmap,
+    presentation,
     report,
+    weekly_report,
     web_search,
 )

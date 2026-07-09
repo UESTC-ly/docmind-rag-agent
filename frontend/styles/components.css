@@ -290,6 +290,21 @@
 .artifact__body {
   margin-top: var(--space-3);
 }
+.artifact-download {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-surface-alt);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.artifact-download__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
 .mermaid-preview {
   border: var(--border);
   border-radius: var(--radius);
@@ -330,6 +345,26 @@
   color: var(--color-text-soft);
   overflow-x: auto;
   font-size: var(--text-xs);
+}
+.slide-preview-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3);
+}
+.slide-preview {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-surface-alt);
+  padding: var(--space-3);
+}
+.slide-preview h3 {
+  font-size: var(--text-base);
+  margin: var(--space-2) 0;
+}
+.slide-preview ul {
+  padding-left: var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--text-sm);
 }
 
 /* ── 文档管理 ───────────────────────────── */

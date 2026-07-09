@@ -7,7 +7,7 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。后端 **165 个测试、94% 覆盖率**，接了
+登录、流式对话、文档管理、评估看板四大界面。后端 **171 个测试、94% 覆盖率**，接了
 GitHub Actions CI。
 
 **亮点**：ReAct Agent 编排 · 可插拔 Skills · 多路召回（向量 + 关键词 RRF 融合）·
@@ -48,7 +48,7 @@ SSE 流式输出 · RAG 评估闭环 · 结构化日志（request_id 全链路�
            ┌──────────────▼─────────────────────┐ │
            │  Skills（可插拔，装饰器注册）        │ │
            │  kb_search / mindmap / graph /       │ │
-           │  report / web_search                 │ │
+           │  report / weekly / ppt / web_search  │ │
            └──────────────┬─────────────────────┘ │
                           │                         │
    ┌──────────────────────▼─────────────────────────▼─────────────┐
@@ -213,8 +213,10 @@ uv run uvicorn app.main:app --reload --port 8000
    - "把文档 1 生成思维导图" → `generate_mindmap`
    - "文档 1 里各概念的关系图" → `generate_relation_graph`
    - "就 XX 主题写份报告" → `generate_report`
+   - "根据材料写一份本周周报" → `generate_weekly_report`
+   - "根据这份材料制作汇报 PPT" → `generate_presentation`
    - "查一下最新的 XX" → `web_search`
-5. 返回体含 `answer`（最终回复）、`artifacts`（思维导图/图谱/报告结构化数据）、
+5. 返回体含 `answer`（最终回复）、`artifacts`（思维导图/图谱/报告/周报/PPT 等结构化或文件产出）、
    `trace`（每步调了哪个技能、传了什么参数，用于展示"思考过程"）
 6. `GET /agent/skills` 查看当前所有可用技能
 
@@ -260,10 +262,13 @@ function calling 定义喂给 LLM，由 LLM 自主决定调用哪个、传什么
 | `generate_mindmap` | `mindmap.py` | 抽取层级结构，输出 Mermaid mindmap | `mindmap` |
 | `generate_relation_graph` | `graph.py` | 抽取实体+关系（GraphRAG），输出 nodes/edges + Mermaid | `relation_graph` |
 | `generate_report` | `report.py` | 多步：检索→大纲→逐节生成→汇总成文 | `report` |
+| `generate_weekly_report` | `weekly_report.py` | 根据材料生成结构化中文周报，并提供 Markdown 下载 | `weekly_report` |
+| `generate_presentation` | `presentation.py` | 根据材料生成演示文稿结构，并提供 `.pptx` 下载 | `presentation` |
 | `web_search` | `web_search.py` | DuckDuckGo 联网搜索，知识库答不了时补充 | `web_search` |
 
-产出 `type` 属于 `mindmap` / `relation_graph` / `report` 的结果会被收进响应的
-`artifacts`，供前端渲染。
+产出 `type` 属于 `mindmap` / `relation_graph` / `report` / `weekly_report` /
+`presentation` 的结果会被收进响应的 `artifacts`，供前端渲染。带 `download` 字段的
+文件产出（如周报 Markdown、PPTX）会在前端显示下载按钮。
 
 ### Agent 主循环（`app/agent/orchestrator.py`）
 
@@ -358,10 +363,10 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**165 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**171 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
-- **服务单测**：评估 runner、dataset_gen、Celery 任务、5 个 Skills、LLM 流式聚合——
+- **服务单测**：评估 runner、dataset_gen、Celery 任务、7 个 Skills、LLM 流式聚合——
   mock 外部边界。
 - **路由集成测**：用内存 sqlite 替 PG、mock 掉 Celery/embedding/LLM，真实 HTTP 打
   auth/documents/chat/agent/eval 全部端点（含 SSE 流式、评估双路径）。
@@ -427,7 +432,7 @@ app/
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
-├── skills/            可插拔技能（base / registry + 5 个技能）
+├── skills/            可插拔技能（base / registry + 7 个技能）
 ├── tasks/             Celery 异步任务（document_tasks 解析流水线）
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
@@ -436,7 +441,7 @@ frontend/              原生单页前端（FastAPI 托管，零构建）
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 165 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 171 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
