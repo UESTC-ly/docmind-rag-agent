@@ -12,8 +12,8 @@
 ````
 你将接手一个已有项目 DocMind，请先建立全貌再动手。不要凭猜测回答，一切以代码为准。
 
-【项目位置】/Volumes/DevExpand/AI_proj/docmind/
-【仓库】https://github.com/UESTC-ly/docmind-rag-agent （私有，分支 main）
+【项目位置】本地 clone 后的仓库目录（例如 ./docmind-rag-agent）
+【仓库】https://github.com/UESTC-ly/docmind-rag-agent （公开，分支 main）
 
 【第一步：按顺序读这些文件建立全貌，读完再开始任何工作】
 1. doc/05-项目交接文档.md   —— 项目全貌、架构、当前状态、已知缺口、环境坑（最重要，先读它）
@@ -27,10 +27,10 @@
 
 【一句话定位】
 Agentic RAG 文档智能问答系统：上传文档→Agent 用 OpenAI Function Calling 自主编排
-5 个可插拔技能（问答/思维导图/关系图谱/报告/联网）→流式回答附来源。内置 RAG 评估
+8 个可插拔技能（问答/思维导图/关系图谱/报告/周报/PPT/联网/通用包）→流式回答附来源。内置 RAG 评估
 闭环（检索指标 hit_rate/MRR/recall/precision + LLM-as-judge faithfulness/relevancy）。
 技术栈：Python 3.12 · FastAPI async · SQLAlchemy 2.0 · PostgreSQL · Qdrant · Celery ·
-Redis · 原生单页前端。165 个测试、覆盖率 ~94%、GitHub Actions CI（90% 门槛，当前绿）。
+Redis · 原生单页前端。185 个测试、覆盖率 ~94%、GitHub Actions CI（90% 门槛，当前绿）。
 
 【必须遵守的关键约定（否则会引入 bug）】
 - 双 DB 引擎：FastAPI 用 AsyncSessionLocal(asyncpg)，Celery 用 SyncSessionLocal(psycopg2)，
@@ -44,9 +44,7 @@ Redis · 原生单页前端。165 个测试、覆盖率 ~94%、GitHub Actions CI
 - .env 含真实密钥、不入库；改 .github/workflows/ 下文件本地无法 push（gh token 缺 workflow scope）。
 
 【启动方式】
-colima start → docker-compose up -d（连字符版）→
-OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES uv run celery -A app.celery_app worker --pool=solo →
-uv run uvicorn app.main:app --reload → 浏览器 http://localhost:8000/
+macOS/Linux：./start.sh；Windows：powershell -ExecutionPolicy Bypass -File .\\start.ps1；浏览器 http://localhost:8000/
 
 【作者与协作偏好——非常重要】
 作者是 Python 初级、备战 2026 秋招，做这个项目是为了简历 + 面试讲解，要求真正掌握

@@ -2,7 +2,7 @@
 
 一个基于 **RAG + Agent 编排**的文档智能系统。用户上传文档后，Agent 通过 OpenAI
 Function Calling 自主判断该调用哪些技能（Skills）来完成任务：知识库问答、思维导图、
-关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及 v0.5.0 起支持的
+关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及 v1.0.0 正式包含的
 **Codex-style 通用 Skills 包**。系统还内置一套 **RAG 评估模块**，用检索指标
 （hit_rate / MRR / recall / precision）和 LLM-as-judge 生成指标
 （faithfulness / answer_relevancy）量化问答质量。
@@ -105,25 +105,74 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 
 ## 快速启动
 
-### 方式一：一键启动（推荐）
+### 0. 前置要求
 
-项目根目录提供了 `start.sh`，适合本地开发时一键拉起完整运行环境：
+| 平台 | 必需软件 | 说明 |
+|---|---|---|
+| macOS | Homebrew、Colima、Docker CLI/Compose、uv、Python 3.12 | 推荐用根目录 `./start.sh`，会自动转到 `scripts/start-macos-colima.sh` |
+| Linux | Docker Engine、Docker Compose plugin 或 `docker-compose`、uv、Python 3.12 | 推荐用根目录 `./start.sh`，会自动转到 `scripts/start-linux-docker.sh` |
+| Windows | Docker Desktop、PowerShell 5+、uv、Python 3.12 | 使用根目录 `start.ps1` 或 `scripts/start-windows.ps1` |
+
+安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
+Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
+
+### 1. 克隆项目
 
 ```bash
-cd /Volumes/DevExpand/AI_proj/docmind
+git clone https://github.com/UESTC-ly/docmind-rag-agent.git
+cd docmind-rag-agent
+```
+
+### 2. 配置环境变量
+
+首次运行启动脚本时，如果没有 `.env`，脚本会自动从 `.env.example` 复制一份。你也可以手动执行：
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+至少需要确认这些值：
+
+```env
+DATABASE_URL=postgresql+asyncpg://docmind:docmind123@localhost:5432/docmind_db
+SECRET_KEY=change-this-to-a-long-random-string
+OPENAI_API_KEY=replace-with-your-chat-api-key
+OPENAI_BASE_URL=https://your-relay-or-official/v1
+CHAT_MODEL=gpt-4o-mini
+```
+
+如果暂时没有真实 `OPENAI_API_KEY`，服务仍可启动，但上传后的问答、Agent、embedding 等 AI
+功能会在调用外部模型时失败；这不是启动脚本问题。
+
+### 3. 一键启动（推荐）
+
+macOS / Linux：
+
+```bash
 ./start.sh
 ```
 
-脚本会自动完成：
+Windows PowerShell：
 
-1. 清理旧的 `uvicorn` / Celery 进程；
-2. `docker-compose down --remove-orphans` 清理旧容器；
-3. 检查并启动 colima；
-4. 启动 PostgreSQL / Redis / Qdrant；
-5. 从宿主机探测 PostgreSQL 是否真正可达；
-6. 必要时清理 colima 僵尸 SSH 端口转发并重启 colima；
-7. 以 macOS 安全参数启动 Celery worker：
-   `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` + `--pool=solo`；
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+启动脚本会自动完成：
+
+1. 检查 `uv`、Docker/Compose 等前置依赖；
+2. 若缺少 `.env`，从 `.env.example` 创建；
+3. 创建 `.venv` 并 `uv pip install -r requirements.txt`；
+4. 清理旧的 `uvicorn` / Celery 进程；
+5. 启动 PostgreSQL / Redis / Qdrant；
+6. 等待 PostgreSQL 从宿主机可达；
+7. 后台启动 Celery worker（统一 `--pool=solo`，macOS 额外设置 fork 安全环境变量）；
 8. 前台启动 `uvicorn app.main:app --reload --port 8000`。
 
 启动成功后访问：
@@ -132,79 +181,83 @@ cd /Volumes/DevExpand/AI_proj/docmind
 http://localhost:8000/
 ```
 
-Celery 日志写入：
+Celery 日志：
+
+| 平台 | 日志位置 |
+|---|---|
+| macOS/Linux | `/tmp/docmind_celery.log` 或 `$TMPDIR/docmind_celery.log` |
+| Windows | `%TEMP%\docmind_celery.log` 与 `%TEMP%\docmind_celery.err.log` |
+
+停止 API：在运行 `uvicorn` 的终端按 `Ctrl+C`。如需完整重启，直接再次运行启动脚本。
+
+### 4. 手动启动（排查问题时使用）
+
+#### 4.1 启动依赖服务
+
+macOS 如使用 Colima：
 
 ```bash
-/tmp/docmind_celery.log
-tail -f /tmp/docmind_celery.log
+colima start
 ```
 
-停止 API：
-
-```text
-Ctrl+C
-```
-
-如需完整重启，直接再次运行：
+通用 Docker Compose：
 
 ```bash
-./start.sh
-```
-
-> 脚本依赖本机已有 colima、docker-compose、uv，以及可用的 `.env` 配置。
-
-### 方式二：手动启动
-
-如果需要逐步排查，也可以按下面步骤手动启动。
-
-#### 1. 启动依赖服务（PostgreSQL / Redis / Qdrant）
-
-```bash
-colima start                 # 若用 colima（macOS）
-docker-compose up -d
-docker-compose ps            # 三个容器都 Up 即可
+docker compose up -d      # Compose v2 推荐
+# 或 docker-compose up -d # 旧版 Compose
+docker compose ps
 ```
 
 `docker-compose.yml` 会拉起：PostgreSQL 16（`docmind` / `docmind123` / `docmind_db`，端口 5432）、
 Redis 7（6379）、Qdrant（6333 REST / 6334 gRPC）。
 
-#### 2. 装 Python 依赖
+#### 4.2 安装 Python 依赖
 
 ```bash
-source .venv/bin/activate
+uv venv --python 3.12 .venv
 uv pip install -r requirements.txt
 ```
 
-> 若要用 [RAG 评估模块](#rag-评估模块) 的公开数据集导入，还需额外装
-> `datasets pandas pyarrow`（当前未写进 `requirements.txt`，但评估脚本依赖它们）。
+#### 4.3 启动 Celery worker
 
-#### 3. 配置 .env
-
-在项目根建 `.env`，至少填 `DATABASE_URL`、`SECRET_KEY`、`OPENAI_API_KEY`。
-完整字段见 [配置项](#配置项)。
-
-#### 4. 启动 Celery worker（另开一个终端）
-
-文档解析靠它，**必须启动**，否则上传的文档永远停在 `pending`。macOS 下必须使用
-`--pool=solo`，否则原生扩展在 fork 后可能 SIGSEGV：
+macOS：
 
 ```bash
-source .venv/bin/activate
 OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES \
   uv run celery -A app.celery_app worker --loglevel=info --pool=solo
 ```
 
-#### 5. 启动 API 服务
+Linux / Windows：
+
+```bash
+uv run celery -A app.celery_app worker --loglevel=info --pool=solo
+```
+
+文档解析靠 Celery，**必须启动**，否则上传文档会停在 `pending`。
+
+#### 4.4 启动 API 服务
 
 ```bash
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+浏览器访问：
+
+- 前端：<http://127.0.0.1:8000/>
+- Swagger API 文档：<http://127.0.0.1:8000/docs>
+
 启动时会自动建表（`Base.metadata.create_all`，仅开发用；生产应改用 Alembic 迁移）。
 
-#### 6. 打开 API 文档
+### 5. 常见启动问题
 
-浏览器访问 http://127.0.0.1:8000/docs ，右上角 `Authorize` 填登录拿到的 token。
+| 现象 | 处理 |
+|---|---|
+| `OPENAI_API_KEY` 报错或 AI 调用失败 | 检查 `.env` 是否填入真实 key / base_url |
+| 上传文档一直 `pending` | Celery worker 没启动或启动失败，查看 Celery 日志 |
+| PostgreSQL 端口 5432 冲突 | 停掉本机已有 PG，或修改 `docker-compose.yml` 与 `.env` 端口 |
+| Linux Docker 权限不足 | 将用户加入 docker 组后重新登录，或手动用 sudo 启动依赖服务 |
+| Windows 脚本执行策略阻止 | 使用 `powershell -ExecutionPolicy Bypass -File .\start.ps1` |
+| macOS Colima 端口转发异常 | `scripts/start-macos-colima.sh` 会尝试自愈；仍失败时重启 Colima/Docker |
 
 ## 使用流程
 
@@ -254,7 +307,7 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v0.5.0 起升级为**两条执行路径并存**：
+技能是 Agent 的能力单元。v1.0.0 正式版采用**两条执行路径并存**：
 
 ```text
 Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界

@@ -4,15 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-DocMind is an agentic document intelligence system. Users upload documents; the Agent autonomously selects and chains Skills (RAG search, mindmap, relation graph, report, web search) via OpenAI Function Calling to answer questions and produce structured outputs.
+DocMind is an agentic document intelligence system. Users upload documents; the Agent autonomously selects and chains Skills (RAG search, mindmap, relation graph, report, weekly report, presentation, web search, generic Codex-style packages) via OpenAI Function Calling to answer questions and produce structured outputs.
 
 ## Development Commands
 
 ### Start infrastructure (PostgreSQL, Redis, Qdrant)
 ```bash
-colima start          # if using colima on macOS
-docker-compose up -d
-docker-compose ps     # verify all three containers are Up
+./start.sh          # macOS/Linux one-command startup
+# Windows: powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
 ### Activate virtualenv and install dependencies
@@ -23,12 +22,12 @@ uv pip install -r requirements.txt
 
 ### Run API server
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 ### Run Celery worker (required for document parsing — must run alongside the API)
 ```bash
-celery -A app.celery_app worker --loglevel=info
+uv run celery -A app.celery_app worker --loglevel=info --pool=solo
 ```
 
 API docs: http://127.0.0.1:8000/docs
@@ -37,11 +36,10 @@ API docs: http://127.0.0.1:8000/docs
 
 ```
 FastAPI (async) ──► Agent Orchestrator ──► Skills (pluggable)
-     │                     │                  ├─ kb_search    (RAG)
-  routers/           Function Calling         ├─ mindmap
-  services/           ReAct loop              ├─ graph
-  models/                                     ├─ report
-                                              └─ web_search
+     │                     │                  ├─ Python-backed skills
+  routers/           Function Calling         │  kb_search / mindmap / graph
+  services/           ReAct loop              │  report / weekly / ppt / web
+  models/                                     └─ Codex-style generic packages
      ▼
 PostgreSQL (metadata)  Qdrant (vectors)  Redis (Celery queue)
 ```
@@ -68,15 +66,14 @@ Structured outputs (`type` in `{"mindmap", "relation_graph", "report"}`) are col
 
 ### Skills system (`app/skills/`)
 
-| File | Skill name | Description |
-|---|---|---|
-| `kb_search.py` | `search_knowledge_base` | Qdrant vector search → RAG answer |
-| `mindmap.py` | `generate_mindmap` | LLM generates mindmap JSON |
-| `graph.py` | `generate_relation_graph` | LLM generates relation graph JSON |
-| `report.py` | `generate_report` | LLM writes a structured report |
-| `web_search.py` | `web_search` | DuckDuckGo search via `ddgs` |
+DocMind v1.0.0 supports two paths:
 
-**Adding a skill:** subclass `BaseSkill` in a new file under `app/skills/`, decorate with `@register_skill`, add one import line to `app/skills/__init__.py`. The agent picks it up automatically — no changes to the orchestrator.
+1. Python-backed skills: subclass `BaseSkill`, register with `@register_skill`, and import the module in `app/skills/__init__.py`.
+2. Codex-style generic packages: copy a folder with `SKILL.md` into `app/skills/packages/<slug>/`; if no Python skill already owns its name, it is auto-registered as `GenericPackageSkill`.
+
+Current skills include `search_knowledge_base`, `generate_mindmap`, `generate_relation_graph`, `generate_report`, `generate_weekly_report`, `generate_presentation`, `web_search`, and sample generic package `codex_note`.
+
+Generic skills write only inside `skill_workspaces/user_<id>/<skill_slug>/` by default. Shell is disabled unless `SKILL_SHELL_ENABLED=true` and the command is in `SKILL_SHELL_ALLOWED_COMMANDS`.
 
 ## Configuration (`.env`)
 
