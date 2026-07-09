@@ -66,6 +66,17 @@ export const api = {
   listConversations: () => request("/chat/conversations"),
   getHistory: (id) => request(`/chat/conversations/${id}`),
 
+  listSkills: () => request("/agent/skills"),
+  agentChat: ({ message, conversationId, documentId }) =>
+    request("/agent/chat", {
+      method: "POST",
+      body: {
+        message,
+        conversation_id: conversationId ?? null,
+        document_id: documentId ?? null,
+      },
+    }),
+
   listDatasets: () => request("/eval/datasets"),
   createRun: (datasetId) =>
     request("/eval/runs", { method: "POST", body: { dataset_id: datasetId } }),

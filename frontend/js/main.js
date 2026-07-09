@@ -5,9 +5,11 @@ import { $, $$, el, toast } from "./ui.js";
 import { initChat, loadConversation, newConversation } from "./chat.js";
 import { initDocs, refreshDocs } from "./docs.js";
 import { refreshEval } from "./eval.js";
+import { initSkills, refreshSkills } from "./skills.js";
 
 const VIEW_META = {
   chat: { title: "对话", sub: "流式 RAG 问答 · 多路召回" },
+  skills: { title: "技能", sub: "Agent Function Calling · 可插拔工具" },
   docs: { title: "文档", sub: "上传解析 · 异步向量化" },
   eval: { title: "评估", sub: "检索指标 + LLM-as-judge" },
 };
@@ -22,6 +24,7 @@ function switchView(name) {
   );
   $("#view-title").textContent = VIEW_META[name].title;
   $("#view-sub").textContent = VIEW_META[name].sub;
+  if (name === "skills") refreshSkills();
   if (name === "docs") refreshDocs();
   if (name === "eval") refreshEval();
 }
@@ -57,11 +60,15 @@ async function refreshConversations(activeId = null) {
 function showAuth() {
   $("#auth-screen").hidden = false;
   $("#app").hidden = true;
+  document.body.classList.remove("is-app");
+  window.scrollTo({ top: 0, left: 0 });
 }
 
 async function enterApp() {
   $("#auth-screen").hidden = true;
   $("#app").hidden = false;
+  document.body.classList.add("is-app");
+  window.scrollTo({ top: 0, left: 0 });
   try {
     const me = await api.me();
     $("#user-email").textContent = me.email;
@@ -109,6 +116,7 @@ function init() {
   initAuthScreen();
   initChat();
   initDocs();
+  initSkills();
 
   $$(".nav__item[data-view]").forEach((b) =>
     b.addEventListener("click", () => switchView(b.dataset.view))

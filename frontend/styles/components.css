@@ -167,6 +167,134 @@
   border-color: var(--color-focus);
 }
 
+/* ── Skills / Agent 调用入口 ─────────────── */
+.skills-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+.section-head,
+.agent-console__head,
+.agent-console__actions,
+.skill-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+.section-kicker {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-2);
+}
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.skill-card,
+.agent-console,
+.agent-answer,
+.trace,
+.artifact {
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  padding: var(--space-4);
+}
+.skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 190px;
+}
+.skill-card h3 {
+  font-size: var(--text-base);
+  font-family: var(--font-mono);
+  letter-spacing: -0.04em;
+}
+.skill-card p {
+  color: var(--color-text-soft);
+  font-size: var(--text-sm);
+  flex: 1;
+}
+.agent-console {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.field--inline {
+  min-width: 180px;
+  margin-bottom: 0;
+}
+.agent-console__input {
+  width: 100%;
+  min-height: 112px;
+}
+.agent-console__hint {
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+}
+.agent-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.agent-answer .msg__body {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+.trace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.trace__item {
+  display: grid;
+  grid-template-columns: 3rem minmax(140px, 220px) 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+  font-size: var(--text-sm);
+  border-top: var(--border);
+  padding-top: var(--space-2);
+}
+.trace__item span,
+.trace__item code {
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.trace__item code {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artifact-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.artifact summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.artifact pre {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--color-surface-alt);
+  color: var(--color-text-soft);
+  overflow-x: auto;
+  font-size: var(--text-xs);
+}
+
 /* ── 文档管理 ───────────────────────────── */
 .uploader {
   border: 1px dashed var(--color-line);

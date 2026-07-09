@@ -7,6 +7,11 @@
   overflow: hidden;
 }
 
+body.is-app {
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* ── 侧栏 ───────────────────────────────── */
 .sidebar {
   display: flex;
@@ -180,5 +185,14 @@
   .topbar {
     padding-left: var(--space-4);
     padding-right: var(--space-4);
+  }
+  .section-head,
+  .agent-console__head,
+  .agent-console__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .trace__item {
+    grid-template-columns: 1fr;
   }
 }
