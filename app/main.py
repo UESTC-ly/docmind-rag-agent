@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     logger.info("DocMind shutting down")
 
 
-app = FastAPI(title="DocMind", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="DocMind", version="0.4.0", lifespan=lifespan)
 
 app.add_middleware(RequestLoggingMiddleware)
 

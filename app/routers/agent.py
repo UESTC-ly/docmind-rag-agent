@@ -30,7 +30,17 @@ async def agent_chat(
 @router.get("/skills", summary="列出所有可用技能")
 async def list_skills(current_user: User = Depends(get_current_user)):
     """展示 Agent 当前拥有的技能，体现可插拔能力。"""
-    return [
-        {"name": s.name, "description": s.description}
-        for s in all_skills()
-    ]
+    out = []
+    for skill in all_skills():
+        skill.apply_package_metadata()
+        item = {"name": skill.name, "description": skill.description}
+        package = skill.load_package()
+        if package is not None:
+            item["package"] = {
+                "slug": package.slug,
+                "has_skill_md": bool(package.instructions.strip()),
+                "templates": package.template_names,
+                "references": package.reference_names,
+            }
+        out.append(item)
+    return out

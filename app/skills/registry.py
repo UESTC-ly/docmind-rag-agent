@@ -12,6 +12,7 @@ _REGISTRY: dict[str, BaseSkill] = {}
 def register_skill(cls: type[BaseSkill]) -> type[BaseSkill]:
     """类装饰器：实例化并登记一个 Skill。"""
     instance = cls()
+    instance.apply_package_metadata()
     if instance.name in _REGISTRY:
         raise ValueError(f"Skill 名称重复: {instance.name}")
     _REGISTRY[instance.name] = instance

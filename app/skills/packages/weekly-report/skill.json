@@ -1,0 +1,22 @@
+{
+  "name": "generate_weekly_report",
+  "description": "根据已上传材料生成一份结构化中文周报，并提供 Markdown 文件下载。当用户要求写周报、工作汇报、进度周总结时使用。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "type": "string",
+        "description": "周报主题或工作方向，可选；未提供时使用“项目周报”。"
+      },
+      "week": {
+        "type": "string",
+        "description": "周报周期，可选，如 2026-07-01 至 2026-07-07。"
+      },
+      "document_id": {
+        "type": "integer",
+        "description": "可选，限定使用某个文档材料；不传则汇总用户全部文档。"
+      }
+    },
+    "required": []
+  }
+}

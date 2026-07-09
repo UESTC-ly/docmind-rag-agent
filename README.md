@@ -7,7 +7,7 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。后端 **171 个测试、94% 覆盖率**，接了
+登录、流式对话、文档管理、评估看板四大界面。后端 **175 个测试、94% 覆盖率**，接了
 GitHub Actions CI。
 
 **亮点**：ReAct Agent 编排 · 可插拔 Skills · 多路召回（向量 + 关键词 RRF 融合）·
@@ -251,10 +251,20 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。每个技能继承 `BaseSkill`，声明 `name` / `description` /
-`parameters`（JSON Schema），实现 `run()`；`@register_skill` 装饰器把它登记进全局注册表
-（`app/skills/registry.py`）。Agent 主循环通过 `all_tools()` 把所有技能转成 OpenAI
-function calling 定义喂给 LLM，由 LLM 自主决定调用哪个、传什么参数。
+技能是 Agent 的能力单元。v0.4.0 起采用**两层架构**：
+
+```text
+Skill Package 层：SKILL.md / skill.json / templates / references
+Python 执行层：BaseSkill 子类 + run()
+```
+
+也就是说，复杂技能可以像主流 Agent Skills 一样用文件夹组织说明、模板和参考资料；
+但最终仍然通过 Python `BaseSkill` 执行，保持现有 Function Calling、测试和权限边界不变。
+
+执行层仍然继承 `BaseSkill` 并实现 `run()`；`@register_skill` 装饰器把它登记进全局注册表
+（`app/skills/registry.py`）。若类上声明了 `package_slug`，注册时会从
+`app/skills/packages/<slug>/skill.json` 读取 `name` / `description` / `parameters`
+作为 OpenAI Function Calling metadata。
 
 | 技能名 | 文件 | 作用 | 产出 `type` |
 |---|---|---|---|
@@ -269,6 +279,37 @@ function calling 定义喂给 LLM，由 LLM 自主决定调用哪个、传什么
 产出 `type` 属于 `mindmap` / `relation_graph` / `report` / `weekly_report` /
 `presentation` 的结果会被收进响应的 `artifacts`，供前端渲染。带 `download` 字段的
 文件产出（如周报 Markdown、PPTX）会在前端显示下载按钮。
+
+### Skill Package 目录结构
+
+以周报技能为例：
+
+```text
+app/skills/packages/weekly-report/
+├── SKILL.md                         给 Agent/开发者看的技能说明
+├── skill.json                       Function Calling metadata（name/description/parameters）
+├── templates/
+│   └── prompt.md                    LLM 提示词模板
+└── references/
+    └── writing-guide.md             写作规范、参考说明
+```
+
+Python 执行层通过：
+
+```python
+class WeeklyReportSkill(BaseSkill):
+    package_slug = "weekly-report"
+```
+
+绑定 package，并在 `run()` 中读取：
+
+```python
+self.package_template("prompt.md", fallback)
+self.package_reference("writing-guide.md")
+```
+
+这样可以把 prompt、模板、参考资料和真正的执行逻辑拆开：目录层负责“怎么描述能力”，
+Python 层负责“怎么安全执行能力”。
 
 ### Agent 主循环（`app/agent/orchestrator.py`）
 
@@ -363,7 +404,7 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**171 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**175 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
 - **服务单测**：评估 runner、dataset_gen、Celery 任务、7 个 Skills、LLM 流式聚合——
@@ -432,7 +473,8 @@ app/
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
-├── skills/            可插拔技能（base / registry + 7 个技能）
+├── skills/            可插拔技能（base / registry + 7 个技能 + packages 两层架构）
+│   └── packages/      目录化 Skill Package：SKILL.md / skill.json / templates / references
 ├── tasks/             Celery 异步任务（document_tasks 解析流水线）
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
@@ -441,14 +483,28 @@ frontend/              原生单页前端（FastAPI 托管，零构建）
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 171 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 175 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
 
 ## 新增一个 Skill（体现可插拔）
 
-1. 在 `app/skills/` 新建文件，写一个继承 `BaseSkill` 的类，用 `@register_skill` 装饰，
-   声明 `name` / `description` / `parameters`（JSON Schema）并实现 `run()`
-2. 在 `app/skills/__init__.py` 加一行 import（触发装饰器注册）
-3. 完成——Agent 自动发现并可调用，核心编排代码零改动
+简单技能可以继续只写 Python 类；复杂技能建议使用两层结构：
+
+1. 在 `app/skills/packages/<slug>/` 下创建：
+   - `SKILL.md`
+   - `skill.json`
+   - `templates/`
+   - `references/`
+2. 在 `app/skills/` 新建执行层文件，写一个继承 `BaseSkill` 的类：
+   ```python
+   @register_skill
+   class MySkill(BaseSkill):
+       package_slug = "<slug>"
+
+       def run(self, context, **kwargs):
+           ...
+   ```
+3. 在 `app/skills/__init__.py` 加一行 import（触发装饰器注册）
+4. 完成——Agent 自动发现并可调用，核心编排代码零改动

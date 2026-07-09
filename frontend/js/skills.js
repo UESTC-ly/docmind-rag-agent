@@ -33,15 +33,18 @@ const SKILL_PROMPTS = {
 
 function skillCard(skill) {
   const prompt = SKILL_PROMPTS[skill.name] || `请使用 ${skill.name} 完成：`;
+  const packageText = skill.package
+    ? `Package ${skill.package.slug} · ${skill.package.templates.length} 模板 · ${skill.package.references.length} 参考`
+    : SKILL_HINTS[skill.name] || "由 Agent 通过 Function Calling 调用";
   return el("article", { class: "skill-card" }, [
     el("div", { class: "skill-card__top" }, [
       el("h3", { text: skill.name }),
-      el("span", { class: "status", text: "可用" }),
+      el("span", { class: "status", text: skill.package ? "Package" : "可用" }),
     ]),
     el("p", { text: skill.description }),
     el("div", {
       class: "doc__meta",
-      text: SKILL_HINTS[skill.name] || "由 Agent 通过 Function Calling 调用",
+      text: packageText,
     }),
     el("button", {
       class: "btn btn--ghost",

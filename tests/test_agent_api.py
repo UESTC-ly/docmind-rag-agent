@@ -76,7 +76,16 @@ class TestListSkills:
         resp = await client.get("/agent/skills", headers=registered_user["headers"])
         assert resp.status_code == 200
         # 真实注册的技能应都在
-        names = [s["name"] for s in resp.json()] if isinstance(resp.json(), list) else resp.json()
+        skills = resp.json()
+        names = [s["name"] for s in skills] if isinstance(skills, list) else skills
         assert "search_knowledge_base" in str(names)
         assert "generate_weekly_report" in str(names)
         assert "generate_presentation" in str(names)
+
+        packages = {
+            s["name"]: s.get("package")
+            for s in skills
+            if isinstance(s, dict) and s.get("package")
+        }
+        assert packages["generate_weekly_report"]["slug"] == "weekly-report"
+        assert "prompt.md" in packages["generate_presentation"]["templates"]

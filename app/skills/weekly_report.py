@@ -8,7 +8,7 @@ from app.skills._helpers import fetch_material_text
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
 
-_PROMPT = """你是专业项目周报撰写助手。请根据下面材料写一份中文周报。
+_FALLBACK_PROMPT = """你是专业项目周报撰写助手。请根据下面材料写一份中文周报。
 
 要求：
 - 输出 Markdown，不要使用 ``` 包裹。
@@ -31,6 +31,7 @@ def _safe_filename(name: str, suffix: str) -> str:
 
 @register_skill
 class WeeklyReportSkill(BaseSkill):
+    package_slug = "weekly-report"
     name = "generate_weekly_report"
     description = "根据已上传材料生成一份结构化中文周报，并提供 Markdown 文件下载。当用户要求写周报、工作汇报、进度周总结时使用。"
     parameters = {
@@ -63,13 +64,18 @@ class WeeklyReportSkill(BaseSkill):
         if not material:
             return {"error": "未找到可用于生成周报的材料", "document_id": document_id}
 
+        prompt = self.package_template("prompt.md", _FALLBACK_PROMPT).format(
+            topic=topic, week=week, content=material
+        )
+        guide = self.package_reference("writing-guide.md")
+        if guide:
+            prompt = f"{guide}\n\n---\n\n{prompt}"
+
         msg = chat_completion(
             [
                 {
                     "role": "user",
-                    "content": _PROMPT.format(
-                        topic=topic, week=week, content=material
-                    ),
+                    "content": prompt,
                 }
             ],
             temperature=0.3,

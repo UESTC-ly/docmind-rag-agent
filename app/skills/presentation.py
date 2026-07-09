@@ -10,7 +10,7 @@ from app.skills.base import BaseSkill, SkillContext
 from app.skills.pptx_builder import Slide, build_pptx
 from app.skills.registry import register_skill
 
-_PROMPT = """你是 PPT 内容策划助手。请根据材料生成演示文稿结构。
+_FALLBACK_PROMPT = """你是 PPT 内容策划助手。请根据材料生成演示文稿结构。
 
 严格输出 JSON，不要解释，不要 ``` 包裹。格式：
 {{
@@ -67,6 +67,7 @@ def _parse_slides(raw: str, topic: str, slide_count: int) -> list[Slide]:
 
 @register_skill
 class PresentationSkill(BaseSkill):
+    package_slug = "presentation"
     name = "generate_presentation"
     description = "根据已上传材料制作一份可下载的 PowerPoint 演示文稿（.pptx）。当用户要求制作 PPT、汇报演示、答辩材料、展示稿时使用。"
     parameters = {
@@ -98,15 +99,20 @@ class PresentationSkill(BaseSkill):
         if not material:
             return {"error": "未找到可用于制作 PPT 的材料", "document_id": document_id}
 
+        prompt = self.package_template("prompt.md", _FALLBACK_PROMPT).format(
+            topic=topic,
+            slide_count=slide_count,
+            content=material,
+        )
+        guide = self.package_reference("slide-guide.md")
+        if guide:
+            prompt = f"{guide}\n\n---\n\n{prompt}"
+
         msg = chat_completion(
             [
                 {
                     "role": "user",
-                    "content": _PROMPT.format(
-                        topic=topic,
-                        slide_count=slide_count,
-                        content=material,
-                    ),
+                    "content": prompt,
                 }
             ],
             temperature=0.35,

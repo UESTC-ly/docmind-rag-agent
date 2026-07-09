@@ -11,6 +11,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -25,6 +26,45 @@ class BaseSkill(ABC):
     name: str
     description: str
     parameters: dict  # JSON Schema
+    package_slug: str | None = None  # 可选：绑定 app/skills/packages/<slug>
+    _package: Any = None
+
+    def load_package(self):
+        """懒加载 Skill Package。
+
+        Python 类仍然是执行层；package 目录提供说明、metadata、模板与 references。
+        这里延迟导入，避免 base.py 和 package_loader.py 形成循环导入。
+        """
+        if not self.package_slug:
+            return None
+        if self._package is None:
+            from app.skills.package_loader import load_skill_package
+
+            self._package = load_skill_package(self.package_slug)
+        return self._package
+
+    def apply_package_metadata(self) -> None:
+        """用 package metadata 覆盖 function-calling 暴露信息。"""
+        package = self.load_package()
+        if package is None:
+            return
+        self.name = package.name
+        self.description = package.description
+        self.parameters = package.parameters
+
+    def package_template(self, name: str, fallback: str) -> str:
+        """读取 package 模板；未绑定 package 或模板不存在时使用 fallback。"""
+        package = self.load_package()
+        if package is None:
+            return fallback
+        return package.templates.get(name, fallback)
+
+    def package_reference(self, name: str, fallback: str = "") -> str:
+        """读取 package reference；未绑定 package 或 reference 不存在时返回 fallback。"""
+        package = self.load_package()
+        if package is None:
+            return fallback
+        return package.references.get(name, fallback)
 
     @abstractmethod
     def run(self, context: SkillContext, **kwargs) -> dict:
@@ -33,6 +73,7 @@ class BaseSkill(ABC):
 
     def to_tool(self) -> dict:
         """转成 OpenAI function calling 的 tool 定义。"""
+        self.apply_package_metadata()
         return {
             "type": "function",
             "function": {

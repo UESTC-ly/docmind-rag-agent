@@ -1,0 +1,24 @@
+{
+  "name": "generate_presentation",
+  "description": "根据已上传材料制作一份可下载的 PowerPoint 演示文稿（.pptx）。当用户要求制作 PPT、汇报演示、答辩材料、展示稿时使用。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "type": "string",
+        "description": "PPT 主题"
+      },
+      "slide_count": {
+        "type": "integer",
+        "description": "期望页数，默认 6，范围 3-10",
+        "minimum": 3,
+        "maximum": 10
+      },
+      "document_id": {
+        "type": "integer",
+        "description": "可选，限定使用某个文档材料；不传则汇总用户全部文档。"
+      }
+    },
+    "required": ["topic"]
+  }
+}
