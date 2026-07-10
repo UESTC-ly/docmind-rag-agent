@@ -1,5 +1,7 @@
 use std::{
     collections::HashMap,
+    env,
+    ffi::OsString,
     fs,
     io::{Read, Write},
     net::{SocketAddr, TcpStream},
@@ -215,6 +217,10 @@ fn ensure_env_file(backend_root: &Path, runtime_dir: &Path) -> Result<PathBuf, S
 fn runtime_environment(env_file: &Path, data_dir: &Path) -> HashMap<String, String> {
     let mut environment = HashMap::new();
     environment.insert(
+        "PATH".to_owned(),
+        desktop_command_path().to_string_lossy().into_owned(),
+    );
+    environment.insert(
         "DOCMIND_ENV_FILE".to_owned(),
         env_file.to_string_lossy().into_owned(),
     );
@@ -379,7 +385,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut command = Command::new(program);
+    let mut command = desktop_command(program);
     command.args(arguments.into_iter().map(|item| item.as_ref().to_owned()));
     if let Some(path) = current_dir {
         command.current_dir(path);
@@ -401,7 +407,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut command = Command::new(program);
+    let mut command = desktop_command(program);
     command.args(arguments.into_iter().map(|item| item.as_ref().to_owned()));
     if let Some(path) = current_dir {
         command.current_dir(path);
@@ -415,6 +421,41 @@ where
         .success()
         .then_some(())
         .ok_or_else(|| format!("命令执行失败：{program}"))
+}
+
+fn desktop_command(program: &str) -> Command {
+    let mut command = Command::new(program);
+    command.env("PATH", desktop_command_path());
+    command
+}
+
+fn desktop_command_path() -> OsString {
+    let mut paths: Vec<PathBuf> = env::var_os("PATH")
+        .map(|value| env::split_paths(&value).collect())
+        .unwrap_or_default();
+
+    for path in [
+        PathBuf::from("/opt/homebrew/bin"),
+        PathBuf::from("/usr/local/bin"),
+        PathBuf::from("/usr/bin"),
+        PathBuf::from("/bin"),
+        PathBuf::from("/usr/sbin"),
+        PathBuf::from("/sbin"),
+    ] {
+        if !paths.contains(&path) {
+            paths.push(path);
+        }
+    }
+
+    if let Some(home) = env::var_os("HOME").map(PathBuf::from) {
+        for path in [home.join(".local/bin"), home.join(".cargo/bin")] {
+            if !paths.contains(&path) {
+                paths.push(path);
+            }
+        }
+    }
+
+    env::join_paths(paths).unwrap_or_else(|_| OsString::from("/usr/local/bin:/usr/bin:/bin"))
 }
 
 pub fn run() {
@@ -480,5 +521,14 @@ mod tests {
 
         assert_eq!(status.state, "starting");
         assert!(!status.message.is_empty());
+    }
+
+    #[test]
+    fn desktop_path_includes_homebrew_and_system_commands() {
+        let paths: Vec<PathBuf> = env::split_paths(&desktop_command_path()).collect();
+
+        assert!(paths.contains(&PathBuf::from("/opt/homebrew/bin")));
+        assert!(paths.contains(&PathBuf::from("/usr/local/bin")));
+        assert!(paths.contains(&PathBuf::from("/usr/bin")));
     }
 }

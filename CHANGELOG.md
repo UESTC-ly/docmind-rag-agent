@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.1 - 2026-07-10
+
+- Configured Tauri ad-hoc signing for macOS bundles so Apple Silicon machines do not classify downloaded GitHub Release builds as damaged.
+- Added the Homebrew and system executable paths to Finder-launched desktop processes so Docker, Colima, and uv are discovered outside a terminal session.
+- A Developer ID certificate and Apple notarization remain necessary to remove macOS's unidentified-developer warning completely.
+
 ## v2.0.0 - 2026-07-10
 
 ### Desktop application
