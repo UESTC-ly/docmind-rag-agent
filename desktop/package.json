@@ -1,0 +1,22 @@
+{
+  "name": "@docmind/desktop",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:frontend": "node scripts/build-frontend.mjs",
+    "serve:frontend": "node scripts/serve-frontend.mjs",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.7.0",
+    "@tauri-apps/plugin-dialog": "2.3.0",
+    "@tauri-apps/plugin-fs": "2.4.0",
+    "@tauri-apps/plugin-notification": "2.2.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.7.0",
+    "esbuild": "^0.25.0"
+  }
+}

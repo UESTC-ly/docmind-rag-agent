@@ -2,6 +2,12 @@
 
 import { api } from "./api.js";
 import { $, el, toast } from "./ui.js";
+import {
+  confirmDesktopAction,
+  isDesktopApp,
+  notifyDesktop,
+  selectNativeDocument,
+} from "./desktop.js";
 
 const STATUS_LABEL = {
   pending: "待解析",
@@ -11,6 +17,7 @@ const STATUS_LABEL = {
 };
 
 let pollTimer = null;
+const knownStatuses = new Map();
 
 function docRow(doc) {
   const status = el("span", {
@@ -48,6 +55,13 @@ export async function refreshDocs() {
     }
     // 有正在解析的就继续轮询
     const pending = docs.some((d) => d.status === "pending" || d.status === "processing");
+    docs.forEach((doc) => {
+      const previous = knownStatuses.get(doc.id);
+      if (previous && previous !== "completed" && doc.status === "completed") {
+        notifyDesktop("文档解析完成", `${doc.filename} 已可用于问答和技能。`);
+      }
+      knownStatuses.set(doc.id, doc.status);
+    });
     schedulePoll(pending);
   } catch (e) {
     toast(e.message);
@@ -71,7 +85,8 @@ async function upload(file) {
 }
 
 async function removeDoc(id, name) {
-  if (!confirm(`删除文档「${name}」？其向量与分块会一并移除。`)) return;
+  const confirmed = await confirmDesktopAction(`删除文档「${name}」？其向量与分块会一并移除。`);
+  if (!confirmed) return;
   try {
     await api.deleteDocument(id);
     toast("已删除");
@@ -84,8 +99,13 @@ async function removeDoc(id, name) {
 export function initDocs() {
   const uploader = $("#uploader");
   const fileInput = $("#file-input");
+  const nativePicker = $("#native-file-picker");
 
   fileInput.addEventListener("change", () => upload(fileInput.files[0]));
+  if (isDesktopApp()) {
+    nativePicker.hidden = false;
+    nativePicker.addEventListener("click", async () => upload(await selectNativeDocument()));
+  }
 
   // 拖拽上传
   ["dragover", "dragenter"].forEach((ev) =>

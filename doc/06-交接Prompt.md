@@ -30,7 +30,7 @@ Agentic RAG 文档智能问答系统：上传文档→Agent 用 OpenAI Function 
 8 个可插拔技能（问答/思维导图/关系图谱/报告/周报/PPT/联网/通用包）→流式回答附来源。内置 RAG 评估
 闭环（检索指标 hit_rate/MRR/recall/precision + LLM-as-judge faithfulness/relevancy）。
 技术栈：Python 3.12 · FastAPI async · SQLAlchemy 2.0 · PostgreSQL · Qdrant · Celery ·
-Redis · 原生单页前端。189 个测试、覆盖率 ~94%、GitHub Actions CI（90% 门槛，当前绿）。
+Redis · 原生单页前端 + Tauri 桌面壳。191 个测试、覆盖率 ~94%、GitHub Actions CI（90% 门槛，当前绿）。
 
 【必须遵守的关键约定（否则会引入 bug）】
 - 双 DB 引擎：FastAPI 用 AsyncSessionLocal(asyncpg)，Celery 用 SyncSessionLocal(psycopg2)，

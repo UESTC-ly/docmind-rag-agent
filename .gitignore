@@ -27,3 +27,9 @@ skill_workspaces/
 .DS_Store
 .idea/
 .vscode/
+
+# ── Tauri desktop build output ────────────
+desktop/node_modules/
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

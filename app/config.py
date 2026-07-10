@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings
 
 
@@ -56,7 +58,7 @@ class Settings(BaseSettings):
     log_json: bool = True  # True=结构化 JSON 日志（生产/可观测）；False=彩色文本（本地开发）
 
     class Config:
-        env_file = ".env"
+        env_file = os.getenv("DOCMIND_ENV_FILE", ".env")
         case_sensitive = False
 
     @property

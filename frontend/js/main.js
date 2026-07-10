@@ -6,6 +6,7 @@ import { initChat, loadConversation, newConversation } from "./chat.js";
 import { initDocs, refreshDocs } from "./docs.js";
 import { refreshEval } from "./eval.js";
 import { initSkills, refreshSkills } from "./skills.js";
+import { isDesktopApp, retryDesktopBackend, waitForDesktopBackend } from "./desktop.js";
 
 const VIEW_META = {
   chat: { title: "对话", sub: "流式 RAG 问答 · 多路召回" },
@@ -112,7 +113,34 @@ function initAuthScreen() {
 }
 
 // ── 装配 ─────────────────────────────────
-function init() {
+async function waitForDesktopServices() {
+  if (!isDesktopApp()) return true;
+
+  const status = $("#desktop-status");
+  const retry = $("#desktop-retry");
+  status.hidden = false;
+  retry.hidden = true;
+  try {
+    await waitForDesktopBackend((backend) => {
+      status.textContent = backend.message;
+    });
+    status.hidden = true;
+    return true;
+  } catch (error) {
+    status.textContent = error.message;
+    retry.hidden = false;
+    retry.addEventListener("click", async () => {
+      retry.disabled = true;
+      retry.textContent = "重试中…";
+      await retryDesktopBackend();
+      location.reload();
+    }, { once: true });
+    return false;
+  }
+}
+
+async function init() {
+  if (!(await waitForDesktopServices())) return;
   initAuthScreen();
   initChat();
   initDocs();
@@ -141,4 +169,4 @@ function init() {
   else showAuth();
 }
 
-init();
+void init();

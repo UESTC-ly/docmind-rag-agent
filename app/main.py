@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 import app.skills  # noqa: F401  触发所有技能注册
@@ -25,7 +26,20 @@ async def lifespan(app: FastAPI):
     logger.info("DocMind shutting down")
 
 
-app = FastAPI(title="DocMind", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="DocMind", version="2.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:1420",
+        "http://localhost:1420",
+        "tauri://localhost",
+        "https://tauri.localhost",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(RequestLoggingMiddleware)
 

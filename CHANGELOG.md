@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.0.0 - 2026-07-10
+
+### Desktop application
+
+- Added a Tauri 2 desktop shell that reuses the existing FastAPI API and single-page frontend.
+- Added desktop-owned lifecycle management for Docker Compose, an isolated Python environment, Celery, and FastAPI.
+- Added native file pickers for uploads, native save dialogs for generated artifacts, native delete confirmation, and desktop notifications for completed parsing.
+- Kept browser mode and root cross-platform startup scripts intact.
+- Kept user configuration, uploads, Skill workspaces, and logs outside the application bundle.
+
+### Compatibility
+
+- Pinned the Rust Tauri dependency graph to versions compatible with Rust 1.87.
+- Preserved immutable `v1.0.0` and `v1.1.0` Git tags as rollback points.
+
 ## v1.0.0 - 2026-07-09
 
 DocMind first public release.

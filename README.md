@@ -8,8 +8,9 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。后端 **189 个测试、94% 覆盖率**，接了
-GitHub Actions CI。
+登录、流式对话、文档管理、评估看板四大界面。v2.0 额外提供 **Tauri 桌面 App**：保留
+同一套前端与 FastAPI API，但以原生窗口、系统文件选择/保存和系统通知交互。后端
+**191 个测试、94% 覆盖率**，接了 GitHub Actions CI。
 
 **亮点**：ReAct Agent 编排 · Codex-style 通用 Skills · 可插拔 Python Skills ·
 多路召回（向量 + 关键词 RRF 融合）· SSE 流式输出 · RAG 评估闭环 ·
@@ -21,6 +22,7 @@ GitHub Actions CI。
 - [技术栈](#技术栈)
 - [核心设计](#核心设计)
 - [快速启动](#快速启动)
+- [桌面 App（v2.0）](#桌面-appv20)
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
 - [Skills 技能系统](#skills-技能系统)
@@ -115,6 +117,55 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 
 安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
 Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
+
+## 桌面 App（v2.0）
+
+桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI；Rust 宿主负责
+启动和停止 Docker Compose、Celery 与 FastAPI。首次运行需要本机已有 Docker/Compose、uv 和
+Python 3.12；它们仍是 PostgreSQL、Redis、Qdrant 与 Python AI 后端的运行时依赖。
+
+### 日常使用
+
+从 GitHub Release 下载与当前操作系统匹配的桌面安装包后直接启动 `DocMind`。桌面 App 会：
+
+1. 在 macOS 尝试启动 Colima（仅当 Docker 尚未运行且已安装 Colima）；
+2. 启动 PostgreSQL / Redis / Qdrant；
+3. 首次创建独立 Python 环境并安装 `requirements.txt`；
+4. 用 `--pool=solo` 启动 Celery，再启动仅监听 `127.0.0.1:8000` 的 FastAPI；
+5. 等待 `/health` 端口就绪后显示登录页。
+
+配置与可写数据不放在安装包内：桌面端首次启动会从 `.env.example` 创建自己的 `.env`。填入真实
+`OPENAI_API_KEY` 后重启 App 即可使用 AI 功能。
+
+| 平台 | 配置目录 |
+|---|---|
+| macOS | `~/Library/Application Support/com.docmind.desktop/` |
+| Windows | `%APPDATA%\\com.docmind.desktop\\` |
+| Linux | `~/.config/com.docmind.desktop/` |
+
+目录中包含 `.env`、`data/uploads/`、`data/skill_workspaces/` 和 `logs/api.log` / `logs/celery.log`。
+删除安装包不会删除这些用户数据；数据库、Redis 与 Qdrant 则继续由 Docker volume 持久化。
+
+### 开发与打包
+
+```bash
+cd desktop
+npm install
+npm run dev       # 启动 Tauri 窗口与受管后端
+npm run build     # 在当前操作系统生成安装包
+```
+
+Tauri 只能在目标操作系统上原生签名/打包：macOS 生成 `.app/.dmg`，Windows 生成 `.msi/.exe`，
+Linux 生成 `.AppImage/.deb`。发布工程可在对应操作系统或 CI runner 执行 `npm run build`。
+
+桌面端保留网页入口：执行根目录 `./start.sh` 或 `start.ps1` 后仍可通过
+`http://127.0.0.1:8000/` 使用。两种入口共享同一个后端，不应同时占用同一台机器的 `8000` 端口。
+
+### 原生交互
+
+- 文档页提供系统文件选择器，仍兼容网页拖拽/选择上传。
+- 删除文档改用系统确认框；解析完成会发送系统通知。
+- 周报、PPT 与通用 Skill 文件产出会打开系统“另存为”对话框，而不是浏览器下载栏。
 
 ### 1. 克隆项目
 
@@ -479,7 +530,7 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**189 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**191 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
 - **服务单测**：评估 runner、dataset_gen、Celery 任务、8 个 Skills、LLM 流式聚合——
@@ -559,11 +610,12 @@ app/
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
 frontend/              原生单页前端（FastAPI 托管，零构建）
+desktop/               Tauri 2 桌面壳、原生能力与打包配置
 ├── index.html
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 189 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 191 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```

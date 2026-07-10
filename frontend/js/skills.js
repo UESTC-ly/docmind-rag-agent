@@ -2,6 +2,7 @@
 
 import { api } from "./api.js";
 import { $, el, toast } from "./ui.js";
+import { saveNativeArtifact } from "./desktop.js";
 
 let skillsLoaded = false;
 let agentConversationId = null;
@@ -118,7 +119,11 @@ function decodeBase64(content) {
   return bytes;
 }
 
-function downloadArtifact(download) {
+async function downloadArtifact(download) {
+  if (await saveNativeArtifact(download)) {
+    toast("已保存到系统选择的位置");
+    return;
+  }
   const payload =
     download.encoding === "base64"
       ? decodeBase64(download.content)

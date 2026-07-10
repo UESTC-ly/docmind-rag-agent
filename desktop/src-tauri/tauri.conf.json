@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DocMind",
+  "version": "2.0.0",
+  "identifier": "com.docmind.desktop",
+  "build": {
+    "beforeDevCommand": "npm run build:frontend && npm run serve:frontend",
+    "beforeBuildCommand": "npm run build:frontend",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "DocMind",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 1024,
+        "minHeight": 680,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://cdn.jsdelivr.net; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "../../app": "backend/app",
+      "../../requirements.txt": "backend/requirements.txt",
+      "../../docker-compose.yml": "backend/docker-compose.yml",
+      "../../.env.example": "backend/.env.example"
+    }
+  }
+}
