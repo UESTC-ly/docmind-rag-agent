@@ -22,7 +22,11 @@ from pathlib import Path
 from typing import Any
 
 from app.config import settings
-from app.skills._helpers import fetch_material_text, fetch_user_documents
+from app.skills._helpers import (
+    fetch_material_text,
+    fetch_retrieved_material,
+    fetch_user_documents,
+)
 from app.skills.base import SkillContext
 from app.skills.package_loader import SkillPackage
 
@@ -139,6 +143,31 @@ class SkillToolExecutor:
                         "type": "object",
                         "properties": {},
                         "required": [],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "search_uploaded_documents",
+                    "description": "通过 DocMind 的向量+关键词 RRF 检索已上传文档。凡是根据文档回答或生成材料，应先调用此工具取得相关片段。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "围绕用户任务构造的检索问题或主题。",
+                            },
+                            "document_id": {
+                                "type": "integer",
+                                "description": "可选，限定当前用户的一篇文档。",
+                            },
+                            "max_chars": {
+                                "type": "integer",
+                                "description": "最多返回字符数，默认 12000。",
+                            },
+                        },
+                        "required": ["query"],
                     },
                 },
             },
@@ -373,6 +402,34 @@ class SkillToolExecutor:
             "ok": True,
             "document_id": document_id,
             "document_ids": used_doc_ids,
+            "content": content,
+        }
+
+    def _tool_search_uploaded_documents(self, args: dict[str, Any]) -> dict[str, Any]:
+        query = str(args.get("query") or "").strip()
+        if not query:
+            return {"ok": False, "error": "检索 query 不能为空"}
+        document_id = args.get("document_id") or self.context.document_id
+        max_chars = int(args.get("max_chars") or 12000)
+        content, used_doc_ids, sources = fetch_retrieved_material(
+            self.context.user_id,
+            query=query,
+            document_id=document_id,
+            max_chars=max_chars,
+        )
+        if not content:
+            return {
+                "ok": False,
+                "error": "RAG 未检索到相关文档片段。",
+                "document_id": document_id,
+                "retrieval_mode": "hybrid",
+            }
+        return {
+            "ok": True,
+            "document_id": document_id,
+            "document_ids": used_doc_ids,
+            "retrieval_mode": "hybrid",
+            "sources": sources,
             "content": content,
         }
 

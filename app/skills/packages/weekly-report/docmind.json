@@ -1,0 +1,4 @@
+{
+  "status": "ready",
+  "reason": "由 Python 执行层完成混合 RAG、Markdown 生成和下载。"
+}

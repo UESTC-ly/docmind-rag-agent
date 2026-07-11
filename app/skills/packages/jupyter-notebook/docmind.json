@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖脚本执行、二进制 assets 复制和 Notebook 运行环境；当前通用 runner 尚未完整适配。"
+}

@@ -14,16 +14,22 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def mock_agent(monkeypatch):
     """打桩 run_agent 与 load_history（后者用 SyncSessionLocal 连真 PG，测试须隔离）。"""
-    monkeypatch.setattr(
-        agent_service, "run_agent",
-        lambda user_id, message, history, document_id: {
+    captured = {}
+
+    def _fake_run_agent(
+        user_id, message, history, document_id, requested_skill=None
+    ):
+        captured["requested_skill"] = requested_skill
+        return {
             "answer": "Agent 的回答",
             "artifacts": [{"type": "mindmap", "nodes": ["a"]}],
             "trace": [{"step": 0, "skill": "search_knowledge_base", "args": {}}],
-        },
-    )
+        }
+
+    monkeypatch.setattr(agent_service, "run_agent", _fake_run_agent)
     # 复用会话时会调 load_history（同步、连真库），mock 掉保证测试无外部依赖
     monkeypatch.setattr(agent_service, "load_history", lambda conversation_id: [])
+    return captured
 
 
 class TestAgentChat:
@@ -38,6 +44,21 @@ class TestAgentChat:
         assert body["artifacts"][0]["type"] == "mindmap"
         assert body["trace"][0]["skill"] == "search_knowledge_base"
         assert body["conversation_id"] > 0
+
+    async def test_selected_skill_is_forwarded_to_orchestrator(
+        self, client, registered_user, mock_agent
+    ):
+        resp = await client.post(
+            "/agent/chat",
+            headers=registered_user["headers"],
+            json={
+                "message": "生成周报",
+                "document_id": 1,
+                "skill_name": "generate_weekly_report",
+            },
+        )
+        assert resp.status_code == 200
+        assert mock_agent["requested_skill"] == "generate_weekly_report"
 
     async def test_chat_reuses_conversation(self, client, registered_user, mock_agent):
         first = await client.post(
@@ -94,3 +115,6 @@ class TestListSkills:
 
         modes = {s["name"]: s.get("execution_mode") for s in skills if isinstance(s, dict)}
         assert modes["codex_note"] == "generic_package"
+        availability = {s["name"]: s.get("available") for s in skills if isinstance(s, dict)}
+        assert availability["codex_note"] is True
+        assert availability["gh-fix-ci"] is False

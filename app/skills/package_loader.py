@@ -38,6 +38,8 @@ class SkillPackage:
     metadata: dict[str, Any]
     script_names: list[str]
     asset_names: list[str]
+    runtime_status: str
+    runtime_reason: str
 
     @property
     def template_names(self) -> list[str]:
@@ -163,6 +165,7 @@ def load_skill_package(slug: str) -> SkillPackage:
     package_dir = PACKAGE_ROOT / slug
     metadata_path = package_dir / "skill.json"
     instructions_path = package_dir / "SKILL.md"
+    runtime_path = package_dir / "docmind.json"
 
     if not package_dir.is_dir():
         raise FileNotFoundError(f"Skill package not found: {slug}")
@@ -175,6 +178,22 @@ def load_skill_package(slug: str) -> SkillPackage:
     else:
         metadata, source = _metadata_from_frontmatter(slug, instructions)
     _validate_metadata(slug, metadata)
+    runtime = (
+        json.loads(runtime_path.read_text(encoding="utf-8"))
+        if runtime_path.is_file()
+        else {}
+    )
+    runtime_status = str(runtime.get("status") or "unreviewed").strip().lower()
+    if runtime_status not in {"ready", "blocked", "unreviewed"}:
+        raise ValueError(f"Skill package {slug} has invalid runtime status")
+    runtime_reason = str(
+        runtime.get("reason")
+        or (
+            "尚未经过 DocMind 工具/权限兼容性审计，暂不允许 Agent 自动调用。"
+            if runtime_status == "unreviewed"
+            else ""
+        )
+    ).strip()
 
     return SkillPackage(
         slug=slug,
@@ -189,6 +208,8 @@ def load_skill_package(slug: str) -> SkillPackage:
         metadata=metadata,
         script_names=_list_files(package_dir / "scripts"),
         asset_names=_list_files(package_dir / "assets"),
+        runtime_status=runtime_status,
+        runtime_reason=runtime_reason,
     )
 
 

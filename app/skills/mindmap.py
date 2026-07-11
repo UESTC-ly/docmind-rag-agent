@@ -27,10 +27,24 @@ mindmap
 {content}"""
 
 
+def _strip_mermaid_fence(raw: str) -> str:
+    """移除模型常见的 ```mermaid / ``` 代码围栏，不误留语言标签。"""
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines.pop()
+        text = "\n".join(lines).strip()
+    return text
+
+
 @register_skill
 class MindmapSkill(BaseSkill):
     name = "generate_mindmap"
     description = "把指定文档的内容生成为思维导图（Mermaid 格式）。当用户想要梳理文档结构、生成脑图/思维导图时使用。"
+    grounding_mode = "document_prefix"
+    produces_download = True
     parameters = {
         "type": "object",
         "properties": {
@@ -56,10 +70,22 @@ class MindmapSkill(BaseSkill):
             [{"role": "user", "content": _PROMPT.format(content=content)}],
             temperature=0.2,
         )
-        mermaid = (msg.content or "").strip().removeprefix("```").removesuffix("```")
+        mermaid = _strip_mermaid_fence(msg.content or "")
         return {
             "type": "mindmap",
+            "artifact_kind": "file",
             "format": "mermaid",
             "document_id": document_id,
             "content": mermaid,
+            "grounding": {
+                "mode": "document_prefix",
+                "document_ids": [document_id],
+                "max_chars": 8000,
+            },
+            "download": {
+                "filename": f"document_{document_id}_mindmap.mmd",
+                "mime_type": "text/plain;charset=utf-8",
+                "encoding": "text",
+                "content": mermaid,
+            },
         }

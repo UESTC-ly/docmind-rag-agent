@@ -36,7 +36,7 @@ def _scripted_llm(responses):
     """返回一个假的 chat_completion：按调用次序依次吐出 responses 里的消息。"""
     seq = iter(responses)
 
-    def _fn(messages, tools=None):
+    def _fn(messages, tools=None, tool_choice="auto"):
         return next(seq)
 
     return _fn
@@ -79,6 +79,17 @@ class _FileSkill(BaseSkill):
         }
 
 
+class _UnavailableSkill(BaseSkill):
+    name = "unavailable_test_skill"
+    description = "测试用隔离技能"
+    parameters = {"type": "object", "properties": {}}
+    available = False
+    unavailable_reason = "缺少测试 adapter"
+
+    def run(self, context: SkillContext, **kwargs) -> dict:
+        raise AssertionError("隔离技能不应执行")
+
+
 @pytest.fixture
 def fake_skills():
     """临时注册假技能，测试后还原注册表，避免污染其他测试。"""
@@ -87,6 +98,7 @@ def fake_skills():
     registry.register_skill(_EchoSkill)
     registry.register_skill(_MindmapSkill)
     registry.register_skill(_FileSkill)
+    registry.register_skill(_UnavailableSkill)
     yield
     registry._REGISTRY.clear()
     registry._REGISTRY.update(saved)
@@ -102,6 +114,87 @@ class TestDirectAnswer:
         assert result["answer"] == "直接回答，无需工具"
         assert result["trace"] == []
         assert result["artifacts"] == []
+
+    def test_selected_skill_is_forced_on_first_model_turn(self, monkeypatch, fake_skills):
+        captured = []
+
+        def _llm(messages, tools=None, tool_choice="auto"):
+            captured.append(tool_choice)
+            if len(captured) == 1:
+                return _FakeMsg(
+                    tool_calls=[_FakeToolCall("c1", "echo_test_skill", '{"text":"hi"}')]
+                )
+            return _FakeMsg(content="已执行指定技能")
+
+        monkeypatch.setattr(orchestrator, "chat_completion", _llm)
+        result = orchestrator.run_agent(
+            user_id=1,
+            question="生成材料",
+            requested_skill="echo_test_skill",
+        )
+
+        assert captured[0] == {
+            "type": "function",
+            "function": {"name": "echo_test_skill"},
+        }
+        assert captured[1] == "auto"
+        assert result["trace"][0]["skill"] == "echo_test_skill"
+
+    def test_document_scoped_agent_must_use_a_tool_before_answering(
+        self, monkeypatch, fake_skills
+    ):
+        captured = []
+
+        def _llm(messages, tools=None, tool_choice="auto"):
+            captured.append(tool_choice)
+            if len(captured) == 1:
+                return _FakeMsg(
+                    tool_calls=[_FakeToolCall("c1", "echo_test_skill", '{"text":"doc"}')]
+                )
+            return _FakeMsg(content="基于工具结果回答")
+
+        monkeypatch.setattr(orchestrator, "chat_completion", _llm)
+        orchestrator.run_agent(user_id=1, question="根据文档回答", document_id=42)
+
+        assert captured[0] == {
+            "type": "function",
+            "function": {"name": "search_knowledge_base"},
+        }
+
+    def test_direct_answer_is_rejected_when_selected_skill_was_forced(
+        self, monkeypatch, fake_skills
+    ):
+        monkeypatch.setattr(
+            orchestrator,
+            "chat_completion",
+            lambda messages, tools=None, tool_choice="auto": _FakeMsg(
+                content="我直接在聊天里生成了材料"
+            ),
+        )
+        result = orchestrator.run_agent(
+            user_id=1,
+            question="生成材料",
+            requested_skill="echo_test_skill",
+        )
+        assert "没有接受模型的直接回答" in result["answer"]
+        assert "我直接在聊天里生成了材料" not in result["answer"]
+
+    def test_unavailable_selected_skill_is_rejected_before_llm(
+        self, monkeypatch, fake_skills
+    ):
+        monkeypatch.setattr(
+            orchestrator,
+            "chat_completion",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                AssertionError("隔离技能不应进入 LLM")
+            ),
+        )
+        result = orchestrator.run_agent(
+            user_id=1,
+            question="执行",
+            requested_skill="unavailable_test_skill",
+        )
+        assert "缺少测试 adapter" in result["answer"]
 
 
 class TestToolLoop:
@@ -134,7 +227,7 @@ class TestToolLoop:
         captured = {}
         calls = {"n": 0}
 
-        def _llm(messages, tools=None):
+        def _llm(messages, tools=None, tool_choice="auto"):
             calls["n"] += 1
             if calls["n"] == 1:
                 return _FakeMsg(tool_calls=[_FakeToolCall("c1", "fake_file_skill", "{}")])
@@ -160,6 +253,20 @@ class TestToolLoop:
         assert result["answer"] == "已处理"
         assert result["trace"][0]["skill"] == "nonexistent_skill"
 
+    def test_model_cannot_bypass_quarantine_by_hallucinating_unavailable_skill(
+        self, monkeypatch, fake_skills
+    ):
+        script = [
+            _FakeMsg(
+                tool_calls=[_FakeToolCall("c1", "unavailable_test_skill", "{}")]
+            ),
+            _FakeMsg(content="已拒绝不可用技能"),
+        ]
+        monkeypatch.setattr(orchestrator, "chat_completion", _scripted_llm(script))
+        result = orchestrator.run_agent(user_id=1, question="调用隔离技能")
+        assert result["trace"][0]["ok"] is False
+        assert result["answer"] == "已拒绝不可用技能"
+
 
 class TestGuards:
     def test_max_steps_guard(self, monkeypatch, fake_skills):
@@ -169,7 +276,9 @@ class TestGuards:
         )
         monkeypatch.setattr(orchestrator.settings, "agent_max_steps", 3)
         monkeypatch.setattr(
-            orchestrator, "chat_completion", lambda messages, tools=None: always_tool
+            orchestrator,
+            "chat_completion",
+            lambda messages, tools=None, tool_choice="auto": always_tool,
         )
         result = orchestrator.run_agent(user_id=1, question="死循环")
         assert "未能在限定步数内完成" in result["answer"]
@@ -180,7 +289,7 @@ class TestDocumentScope:
     def test_document_id_injected_into_system_prompt(self, monkeypatch, fake_skills):
         captured = {}
 
-        def _capture_llm(messages, tools=None):
+        def _capture_llm(messages, tools=None, tool_choice="auto"):
             captured["system"] = messages[0]["content"]
             return _FakeMsg(content="ok")
 

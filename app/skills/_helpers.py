@@ -6,7 +6,8 @@ Skill 在同步上下文执行（Agent 用 to_thread 调用），所以用同步
 from sqlalchemy import select
 
 from app.database import SyncSessionLocal
-from app.models.document import Document, DocumentChunk
+from app.models.document import Document, DocumentChunk, DocumentStatus
+from app.services.skill_retrieval import retrieve_for_skill
 
 
 def fetch_document_text(user_id: int, document_id: int) -> str:
@@ -28,7 +29,8 @@ def fetch_user_documents(user_id: int) -> list[dict]:
     with SyncSessionLocal() as db:
         rows = db.execute(
             select(Document.id, Document.filename).where(
-                Document.user_id == user_id
+                Document.user_id == user_id,
+                Document.status == DocumentStatus.COMPLETED,
             )
         ).all()
         return [{"id": r[0], "filename": r[1]} for r in rows]
@@ -61,3 +63,46 @@ def fetch_material_text(
         parts.append(f"【文档 {doc['id']}：{doc['filename']}】\n{text[:remaining]}")
 
     return "\n\n".join(parts)[:max_chars], used_ids
+
+
+def fetch_retrieved_material(
+    user_id: int,
+    query: str,
+    document_id: int | None = None,
+    max_chars: int = 12000,
+) -> tuple[str, list[int], list[dict]]:
+    """通过 DocMind 的混合 RAG 链路取写作材料。
+
+    返回 ``(带来源标记的上下文, 文档 ID, 精简来源)``。与 ``fetch_material_text``
+    的全文读取不同，此函数适合报告、周报、PPT 和通用 Skill 的目标式生成。
+    """
+    hits = retrieve_for_skill(
+        user_id=user_id,
+        query=query,
+        document_id=document_id,
+        top_k=max(8, min(20, max_chars // 800)),
+    )
+    parts: list[str] = []
+    source_items: list[dict] = []
+    used_ids: list[int] = []
+    used_chars = 0
+    for hit in hits:
+        content = str(hit.get("content") or "")
+        if not content or used_chars >= max_chars:
+            continue
+        doc_id = int(hit["document_id"])
+        chunk_index = int(hit.get("chunk_index", 0))
+        remaining = max_chars - used_chars
+        excerpt = content[:remaining]
+        parts.append(f"【文档 {doc_id} · 片段 {chunk_index}】\n{excerpt}")
+        used_chars += len(excerpt)
+        if doc_id not in used_ids:
+            used_ids.append(doc_id)
+        source_items.append(
+            {
+                "document_id": doc_id,
+                "chunk_index": chunk_index,
+                "score": hit.get("score"),
+            }
+        )
+    return "\n\n".join(parts), used_ids, source_items

@@ -43,6 +43,21 @@ class TestGraphSkill:
         assert "张三" in result["mermaid"]
         assert "graph TD" in result["mermaid"]
 
+    def test_mermaid_uses_safe_internal_node_ids(self):
+        code = graph._to_mermaid(
+            [{"id": '实体 A "核心"', "type": "概念"}],
+            [
+                {
+                    "source": '实体 A "核心"',
+                    "target": "实体/B",
+                    "relation": "包含|依赖",
+                }
+            ],
+        )
+        assert 'n0["实体 A &quot;核心&quot;"]' in code
+        assert 'n1["实体/B"]' in code
+        assert 'n0 -->|"包含&#124;依赖"| n1' in code
+
     def test_strips_json_fence(self, monkeypatch):
         monkeypatch.setattr(graph, "fetch_document_text", lambda uid, did: "x")
         monkeypatch.setattr(
@@ -100,6 +115,8 @@ class TestMindmapSkill:
         assert result["type"] == "mindmap"
         assert result["format"] == "mermaid"
         assert "root((主题))" in result["content"]
+        assert result["artifact_kind"] == "file"
+        assert result["download"]["filename"].endswith(".mmd")
 
     def test_strips_fence(self, monkeypatch):
         monkeypatch.setattr(mindmap, "fetch_document_text", lambda uid, did: "x")
@@ -109,6 +126,19 @@ class TestMindmapSkill:
         )
         result = mindmap.MindmapSkill().run(CTX, document_id=10)
         assert not result["content"].startswith("```")
+
+    def test_strips_mermaid_language_fence(self, monkeypatch):
+        monkeypatch.setattr(mindmap, "fetch_document_text", lambda uid, did: "x")
+        monkeypatch.setattr(
+            mindmap,
+            "chat_completion",
+            lambda msgs, temperature=0.2: _FakeMsg(
+                "```mermaid\nmindmap\n  root((x))\n```"
+            ),
+        )
+        result = mindmap.MindmapSkill().run(CTX, document_id=10)
+        assert result["content"].startswith("mindmap")
+        assert not result["content"].startswith("mermaid\n")
 
     def test_empty_document_returns_error(self, monkeypatch):
         monkeypatch.setattr(mindmap, "fetch_document_text", lambda uid, did: "")
@@ -140,8 +170,7 @@ class TestMindmapSkill:
 # ── report（多步：检索→大纲→逐节）─────────────────────────────
 class TestReportSkill:
     def test_generates_structured_report(self, monkeypatch):
-        monkeypatch.setattr(report, "embed_query", lambda t: [0.1])
-        monkeypatch.setattr(report, "search", lambda *a, **k: [
+        monkeypatch.setattr(report, "retrieve_for_skill", lambda *a, **k: [
             {"content": "资料一", "document_id": 1, "chunk_index": 0, "score": 0.9},
         ])
         # 第一次调用返回大纲，后续返回各节正文
@@ -157,16 +186,24 @@ class TestReportSkill:
         assert "# AI 架构" in result["content"]
         assert "## 小节一" in result["content"]
         assert "第一节正文" in result["content"]
+        assert result["artifact_kind"] == "file"
+        assert result["download"]["filename"].endswith(".md")
+        assert result["grounding"]["mode"] == "hybrid_rag"
 
     def test_limits_search_to_context_document_when_available(self, monkeypatch):
         captured = {}
-        monkeypatch.setattr(report, "embed_query", lambda t: [0.1])
-
-        def _fake_search(vec, user_id, top_k, document_id=None):
+        def _fake_search(user_id, query, top_k, document_id=None):
             captured["document_id"] = document_id
-            return [{"content": "资料", "document_id": document_id, "score": 0.9}]
+            return [
+                {
+                    "content": "资料",
+                    "document_id": document_id,
+                    "chunk_index": 0,
+                    "score": 0.9,
+                }
+            ]
 
-        monkeypatch.setattr(report, "search", _fake_search)
+        monkeypatch.setattr(report, "retrieve_for_skill", _fake_search)
         seq = iter([_FakeMsg("小节一"), _FakeMsg("正文")])
         monkeypatch.setattr(report, "chat_completion", lambda msgs, temperature=0.4: next(seq))
 
@@ -176,14 +213,12 @@ class TestReportSkill:
         assert captured["document_id"] == 10
 
     def test_no_hits_returns_error(self, monkeypatch):
-        monkeypatch.setattr(report, "embed_query", lambda t: [0.1])
-        monkeypatch.setattr(report, "search", lambda *a, **k: [])
+        monkeypatch.setattr(report, "retrieve_for_skill", lambda *a, **k: [])
         result = report.ReportSkill().run(CTX, topic="不存在的主题")
         assert "error" in result
 
     def test_outline_capped_at_5_sections(self, monkeypatch):
-        monkeypatch.setattr(report, "embed_query", lambda t: [0.1])
-        monkeypatch.setattr(report, "search", lambda *a, **k: [
+        monkeypatch.setattr(report, "retrieve_for_skill", lambda *a, **k: [
             {"content": "资料", "document_id": 1, "chunk_index": 0, "score": 0.9}
         ])
         # 大纲给 7 节，但应只取前 5
@@ -200,8 +235,12 @@ class TestWeeklyReportSkill:
     def test_generates_downloadable_markdown(self, monkeypatch):
         monkeypatch.setattr(
             weekly_report,
-            "fetch_material_text",
-            lambda user_id, document_id=None, max_chars=12000: ("材料内容", [10]),
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=12000: (
+                "材料内容",
+                [10],
+                [{"document_id": 10, "chunk_index": 1}],
+            ),
         )
         monkeypatch.setattr(
             weekly_report,
@@ -218,12 +257,13 @@ class TestWeeklyReportSkill:
         assert result["download"]["filename"].endswith(".md")
         assert result["download"]["encoding"] == "text"
         assert "完成 A" in result["download"]["content"]
+        assert result["grounding"]["mode"] == "hybrid_rag"
 
     def test_no_material_returns_error(self, monkeypatch):
         monkeypatch.setattr(
             weekly_report,
-            "fetch_material_text",
-            lambda user_id, document_id=None, max_chars=12000: ("", []),
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=12000: ("", [], []),
         )
         result = weekly_report.WeeklyReportSkill().run(CTX, topic="x")
         assert "error" in result
@@ -234,8 +274,12 @@ class TestPresentationSkill:
     def test_generates_downloadable_pptx(self, monkeypatch):
         monkeypatch.setattr(
             presentation,
-            "fetch_material_text",
-            lambda user_id, document_id=None, max_chars=14000: ("材料内容", [10]),
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=14000: (
+                "材料内容",
+                [10],
+                [{"document_id": 10, "chunk_index": 1}],
+            ),
         )
         monkeypatch.setattr(
             presentation,
@@ -254,6 +298,7 @@ class TestPresentationSkill:
         assert result["artifact_kind"] == "file"
         assert result["download"]["filename"].endswith(".pptx")
         assert result["download"]["encoding"] == "base64"
+        assert result["grounding"]["mode"] == "hybrid_rag"
 
         pptx = base64.b64decode(result["download"]["content"])
         with ZipFile(BytesIO(pptx)) as zf:
@@ -265,8 +310,12 @@ class TestPresentationSkill:
     def test_invalid_json_falls_back_to_single_slide(self, monkeypatch):
         monkeypatch.setattr(
             presentation,
-            "fetch_material_text",
-            lambda user_id, document_id=None, max_chars=14000: ("材料内容", [10]),
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=14000: (
+                "材料内容",
+                [10],
+                [{"document_id": 10, "chunk_index": 1}],
+            ),
         )
         monkeypatch.setattr(
             presentation,
@@ -279,8 +328,8 @@ class TestPresentationSkill:
     def test_no_material_returns_error(self, monkeypatch):
         monkeypatch.setattr(
             presentation,
-            "fetch_material_text",
-            lambda user_id, document_id=None, max_chars=14000: ("", []),
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=14000: ("", [], []),
         )
         result = presentation.PresentationSkill().run(CTX, topic="x")
         assert "error" in result
@@ -289,24 +338,23 @@ class TestPresentationSkill:
 # ── kb_search ────────────────────────────────────────────────
 class TestKbSearchSkill:
     def test_returns_mapped_results(self, monkeypatch):
-        monkeypatch.setattr(kb_search, "embed_query", lambda q: [0.1])
-        monkeypatch.setattr(kb_search, "search", lambda *a, **k: [
+        monkeypatch.setattr(kb_search, "retrieve_for_skill", lambda *a, **k: [
             {"content": "命中片段", "document_id": 2, "chunk_index": 3, "score": 0.876},
         ])
         result = kb_search.KnowledgeBaseSearchSkill().run(CTX, query="问题")
         assert result["type"] == "kb_search"
         assert result["results"][0]["document_id"] == 2
         assert result["results"][0]["score"] == 0.876
+        assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["grounding"]["sources"][0]["chunk_index"] == 3
 
     def test_uses_context_document_when_arg_absent(self, monkeypatch):
         captured = {}
-        monkeypatch.setattr(kb_search, "embed_query", lambda q: [0.1])
-
-        def _fake_search(vec, user_id, top_k, document_id):
+        def _fake_search(user_id, query, top_k, document_id):
             captured["document_id"] = document_id
             return []
 
-        monkeypatch.setattr(kb_search, "search", _fake_search)
+        monkeypatch.setattr(kb_search, "retrieve_for_skill", _fake_search)
         kb_search.KnowledgeBaseSearchSkill().run(CTX, query="q")
         # 未传 document_id 参数 → 回退到 context.document_id(=10)
         assert captured["document_id"] == 10

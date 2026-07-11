@@ -67,3 +67,19 @@ class TestFetchUserDocuments:
             s.add(User(id=5, email="empty@t.com", hashed_password="x"))
             s.commit()
         assert _helpers.fetch_user_documents(5) == []
+
+    def test_excludes_documents_that_are_not_ready(self, bind_db):
+        with bind_db() as s:
+            user = User(id=6, email="pending@t.com", hashed_password="x")
+            s.add(user)
+            s.add(
+                Document(
+                    user_id=6,
+                    filename="pending.txt",
+                    file_path="p",
+                    status=DocumentStatus.PENDING,
+                    chunk_count=0,
+                )
+            )
+            s.commit()
+        assert _helpers.fetch_user_documents(6) == []

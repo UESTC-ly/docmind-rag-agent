@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖 PDF 二进制读写、渲染工具和 Python 库；当前通用 runner 只支持文本工作区文件。"
+}

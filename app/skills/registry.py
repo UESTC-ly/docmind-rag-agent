@@ -39,7 +39,7 @@ def all_skills() -> list[BaseSkill]:
 
 def all_tools() -> list[dict]:
     """所有技能的 function calling 定义，喂给 LLM。"""
-    return [skill.to_tool() for skill in _REGISTRY.values()]
+    return [skill.to_tool() for skill in _REGISTRY.values() if skill.available]
 
 
 def register_generic_package_skills() -> None:

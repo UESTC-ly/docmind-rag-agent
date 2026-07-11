@@ -67,13 +67,14 @@ export const api = {
   getHistory: (id) => request(`/chat/conversations/${id}`),
 
   listSkills: () => request("/agent/skills"),
-  agentChat: ({ message, conversationId, documentId }) =>
+  agentChat: ({ message, conversationId, documentId, skillName }) =>
     request("/agent/chat", {
       method: "POST",
       body: {
         message,
         conversation_id: conversationId ?? null,
         document_id: documentId ?? null,
+        skill_name: skillName ?? null,
       },
     }),
 

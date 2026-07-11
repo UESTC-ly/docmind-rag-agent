@@ -4,8 +4,7 @@
 """
 
 from app.config import settings
-from app.services.embedding_service import embed_query
-from app.services.vector_store import search
+from app.services.skill_retrieval import retrieve_for_skill
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
 
@@ -14,6 +13,7 @@ from app.skills.registry import register_skill
 class KnowledgeBaseSearchSkill(BaseSkill):
     name = "search_knowledge_base"
     description = "在用户已上传的文档知识库中做语义检索，返回相关片段。回答文档相关问题时优先用它。"
+    grounding_mode = "hybrid_rag"
     parameters = {
         "type": "object",
         "properties": {
@@ -30,21 +30,30 @@ class KnowledgeBaseSearchSkill(BaseSkill):
         query = kwargs["query"]
         document_id = kwargs.get("document_id") or context.document_id
 
-        query_vector = embed_query(query)
-        hits = search(
-            query_vector,
+        hits = retrieve_for_skill(
             context.user_id,
+            query,
             top_k=settings.retrieval_top_k,
             document_id=document_id,
         )
+        sources = [
+            {
+                "document_id": h["document_id"],
+                "chunk_index": h.get("chunk_index"),
+                "score": round(h.get("score", 0.0), 4),
+            }
+            for h in hits
+        ]
         return {
             "type": "kb_search",
+            "grounding": {"mode": "hybrid_rag", "sources": sources},
             "query": query,
             "results": [
                 {
                     "content": h["content"],
                     "document_id": h["document_id"],
-                    "score": round(h["score"], 4),
+                    "chunk_index": h.get("chunk_index"),
+                    "score": round(h.get("score", 0.0), 4),
                 }
                 for h in hits
             ],

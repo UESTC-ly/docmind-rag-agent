@@ -9,6 +9,7 @@ from app.services.retrieval import (
     keyword_search,
     reciprocal_rank_fusion,
 )
+from app.services import skill_retrieval
 
 
 class TestRRF:
@@ -57,6 +58,78 @@ class TestFuse:
         fused = fuse_dense_and_keyword(dense, keyword, top_k=5)
         assert len(fused) == 1
         assert "score" in fused[0]
+
+    def test_keyword_only_hit_still_has_response_score(self):
+        keyword = [
+            {
+                "document_id": 1,
+                "chunk_index": 3,
+                "content": "精确型号",
+                "keyword_score": 2,
+                "score": 0.0,
+            }
+        ]
+        assert fuse_dense_and_keyword([], keyword, top_k=5)[0]["score"] == 0.0
+
+
+class TestSkillRetrieval:
+    def test_hybrid_mode_reuses_dense_keyword_and_rrf(self, monkeypatch):
+        dense = [
+            {"document_id": 1, "chunk_index": 0, "content": "语义", "score": 0.9}
+        ]
+        keyword = [
+            {
+                "document_id": 1,
+                "chunk_index": 1,
+                "content": "关键词",
+                "keyword_score": 2,
+                "score": 0.0,
+            }
+        ]
+        captured = {}
+        monkeypatch.setattr(skill_retrieval.settings, "retrieval_mode", "hybrid")
+        monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
+        monkeypatch.setattr(
+            skill_retrieval,
+            "search",
+            lambda vector, user_id, top_k, document_id: dense,
+        )
+
+        def _keyword(query, user_id, document_id, limit):
+            captured.update(
+                query=query,
+                user_id=user_id,
+                document_id=document_id,
+                limit=limit,
+            )
+            return keyword
+
+        monkeypatch.setattr(skill_retrieval, "keyword_search_sync", _keyword)
+
+        hits = skill_retrieval.retrieve_for_skill(
+            user_id=7, query="型号", document_id=9, top_k=5
+        )
+
+        assert {(h["document_id"], h["chunk_index"]) for h in hits} == {
+            (1, 0),
+            (1, 1),
+        }
+        assert captured["document_id"] == 9
+
+    def test_dense_mode_skips_keyword_path(self, monkeypatch):
+        monkeypatch.setattr(skill_retrieval.settings, "retrieval_mode", "dense")
+        monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
+        monkeypatch.setattr(
+            skill_retrieval,
+            "search",
+            lambda vector, user_id, top_k, document_id: [{"content": "dense"}],
+        )
+        monkeypatch.setattr(
+            skill_retrieval,
+            "keyword_search_sync",
+            lambda *args: (_ for _ in ()).throw(AssertionError("不应调用关键词检索")),
+        )
+        assert skill_retrieval.retrieve_for_skill(1, "q") == [{"content": "dense"}]
 
 
 async def _seed(db, contents):

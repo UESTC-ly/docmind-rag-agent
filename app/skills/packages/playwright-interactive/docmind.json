@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖持久 js_repl/Playwright 会话；当前 DocMind 没有对应浏览器 adapter。"
+}

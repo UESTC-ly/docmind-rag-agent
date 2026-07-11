@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖操作系统截图权限和本地应用工具；当前 DocMind 未配置 app adapter。"
+}

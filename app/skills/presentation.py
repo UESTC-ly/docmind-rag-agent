@@ -5,7 +5,7 @@ import json
 import re
 
 from app.services.llm_service import chat_completion
-from app.skills._helpers import fetch_material_text
+from app.skills._helpers import fetch_retrieved_material
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.pptx_builder import Slide, build_pptx
 from app.skills.registry import register_skill
@@ -70,6 +70,8 @@ class PresentationSkill(BaseSkill):
     package_slug = "presentation"
     name = "generate_presentation"
     description = "根据已上传材料制作一份可下载的 PowerPoint 演示文稿（.pptx）。当用户要求制作 PPT、汇报演示、答辩材料、展示稿时使用。"
+    grounding_mode = "hybrid_rag"
+    produces_download = True
     parameters = {
         "type": "object",
         "properties": {
@@ -93,8 +95,11 @@ class PresentationSkill(BaseSkill):
         document_id = kwargs.get("document_id") or context.document_id
         slide_count = max(3, min(10, int(kwargs.get("slide_count") or 6)))
 
-        material, used_doc_ids = fetch_material_text(
-            context.user_id, document_id=document_id, max_chars=14000
+        material, used_doc_ids, sources = fetch_retrieved_material(
+            context.user_id,
+            query=f"{topic} 汇报 背景 进展 成果 风险 总结",
+            document_id=document_id,
+            max_chars=14000,
         )
         if not material:
             return {"error": "未找到可用于制作 PPT 的材料", "document_id": document_id}
@@ -126,6 +131,7 @@ class PresentationSkill(BaseSkill):
             "artifact_kind": "file",
             "topic": topic,
             "document_ids": used_doc_ids,
+            "grounding": {"mode": "hybrid_rag", "sources": sources},
             "slides": [
                 {"title": slide.title, "bullets": slide.bullets}
                 for slide in slides

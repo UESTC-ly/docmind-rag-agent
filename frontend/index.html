@@ -110,7 +110,7 @@
                 placeholder="例如：把文档 1 生成思维导图；或：查一下最新的 RAG rerank 方法并总结。"
               ></textarea>
               <div class="agent-console__actions">
-                <span class="agent-console__hint">这里走 /agent/chat，由 LLM 自主选择 search / mindmap / graph / report / web_search 等工具。</span>
+                <span class="agent-console__hint" id="selected-skill-name">未锁定技能：Agent 自动选择</span>
                 <button class="btn btn--accent" type="submit" id="skill-agent-submit">调用 Agent</button>
               </div>
             </form>

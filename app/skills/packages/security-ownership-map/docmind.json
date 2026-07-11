@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖 git 历史、Python 脚本和仓库文件；当前通用 runner 未挂载代码仓库。"
+}

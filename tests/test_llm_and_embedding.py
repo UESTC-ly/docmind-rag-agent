@@ -92,6 +92,23 @@ class TestChatCompletionUsesStream:
         llm_service.chat_completion([{"role": "user", "content": "x"}], tools=tools)
         assert captured["tool_choice"] == "auto"
 
+    def test_explicit_tool_choice_is_forwarded(self, monkeypatch):
+        captured = {}
+
+        def _fake_create(**kwargs):
+            captured.update(kwargs)
+            return [_Chunk(content="ok")]
+
+        monkeypatch.setattr(llm_service._client.chat.completions, "create", _fake_create)
+        tools = [{"type": "function", "function": {"name": "f", "parameters": {}}}]
+        choice = {"type": "function", "function": {"name": "f"}}
+        llm_service.chat_completion(
+            [{"role": "user", "content": "x"}],
+            tools=tools,
+            tool_choice=choice,
+        )
+        assert captured["tool_choice"] == choice
+
 
 # ── embedding 分批 ──────────────────────────────────────────
 class _EmbItem:

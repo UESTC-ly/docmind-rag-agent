@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.0 - 2026-07-11
+
+- Prevent document-scoped Agent requests and explicitly selected skill cards from bypassing tool execution.
+- Reuse hybrid vector + keyword RRF retrieval in knowledge search, reports, weekly reports, presentations, and document-grounded generic skills.
+- Guarantee downloadable artifacts for reports, mindmaps, relation graphs, and generic-skill text fallbacks.
+- Quarantine unreviewed or unsupported third-party skill packages with `docmind.json` runtime compatibility metadata.
+
 ## v2.0.1 - 2026-07-10
 
 - Configured Tauri ad-hoc signing for macOS bundles so Apple Silicon machines do not classify downloaded GitHub Release builds as damaged.

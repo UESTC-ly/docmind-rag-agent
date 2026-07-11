@@ -8,6 +8,7 @@ let skillsLoaded = false;
 let agentConversationId = null;
 let mermaidPromise = null;
 let mermaidRenderSeq = 0;
+let selectedSkillName = null;
 
 const MERMAID_CDN =
   "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -37,27 +38,46 @@ function skillCard(skill) {
   const packageText = skill.package
     ? `Package ${skill.package.slug} · ${skill.package.source || "skill_json"} · ${skill.package.templates.length} 模板 · ${skill.package.references.length} 参考`
     : SKILL_HINTS[skill.name] || "由 Agent 通过 Function Calling 调用";
-  const mode = skill.execution_mode === "generic_package" ? "通用包" : (skill.package ? "Package" : "可用");
+  const mode = !skill.available
+    ? "暂不可用"
+    : skill.execution_mode === "generic_package"
+      ? "通用包"
+      : (skill.package ? "Package" : "可用");
+  const grounding = skill.grounding_mode === "hybrid_rag"
+    ? "RAG 检索"
+    : skill.grounding_mode === "document_prefix"
+      ? "顺序正文（前 8000 字）"
+      : skill.grounding_mode === "rag_when_document_selected"
+        ? "选中文档时走 RAG"
+        : skill.grounding_mode === "web"
+          ? "联网"
+          : "无需文档";
   return el("article", { class: "skill-card" }, [
     el("div", { class: "skill-card__top" }, [
       el("h3", { text: skill.name }),
       el("span", { class: "status", text: mode }),
     ]),
     el("p", { text: skill.description }),
+    !skill.available
+      ? el("p", { class: "empty", text: skill.unavailable_reason || "尚未完成运行时适配。" })
+      : null,
     el("div", {
       class: "doc__meta",
-      text: packageText,
+      text: `${packageText} · ${grounding}${skill.produces_download ? " · 可下载" : ""}`,
     }),
     el("button", {
       class: "btn btn--ghost",
       type: "button",
-      text: "填入调用模板",
+      text: skill.available ? "选择并填入模板" : "等待适配",
+      disabled: skill.available ? null : "",
       onClick: () => {
         $("#skill-agent-input").value = prompt;
+        selectedSkillName = skill.name;
+        $("#selected-skill-name").textContent = `已锁定技能：${skill.name}`;
         $("#skill-agent-input").focus();
       },
     }),
-  ]);
+  ].filter(Boolean));
 }
 
 function renderSkills(skills) {
@@ -293,9 +313,12 @@ async function submitAgentTask() {
       message,
       conversationId: agentConversationId,
       documentId,
+      skillName: selectedSkillName,
     });
     agentConversationId = result.conversation_id;
     renderAgentResult(result);
+    selectedSkillName = null;
+    $("#selected-skill-name").textContent = "未锁定技能：Agent 自动选择";
     window.dispatchEvent(new CustomEvent("chat:conversation", { detail: result }));
   } catch (e) {
     $("#skill-agent-result").replaceChildren(el("p", { class: "empty", text: e.message }));
@@ -314,5 +337,11 @@ export function initSkills() {
   $("#skill-agent-form").addEventListener("submit", (e) => {
     e.preventDefault();
     submitAgentTask();
+  });
+  $("#skill-agent-input").addEventListener("input", () => {
+    if (selectedSkillName) {
+      selectedSkillName = null;
+      $("#selected-skill-name").textContent = "未锁定技能：Agent 自动选择";
+    }
   });
 }

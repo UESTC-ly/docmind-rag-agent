@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖 Playwright CLI、浏览器进程和 shell；当前 DocMind Web 安全沙箱未开放。"
+}

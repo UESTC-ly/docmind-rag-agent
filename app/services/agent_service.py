@@ -43,6 +43,7 @@ async def chat_with_agent(
     message: str,
     conversation_id: int | None = None,
     document_id: int | None = None,
+    requested_skill: str | None = None,
 ) -> AgentResponse:
     conv = await _get_or_create_conversation(
         db, user_id, conversation_id, message
@@ -62,6 +63,7 @@ async def chat_with_agent(
         message,
         history,
         document_id,
+        requested_skill,
     )
 
     # 落库

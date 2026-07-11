@@ -32,7 +32,7 @@ class _FakeMsg:
         self.tool_calls = tool_calls
 
 
-def _write_codex_package(root, slug="codex-note"):
+def _write_codex_package(root, slug="codex-note", runtime_ready=True):
     package_dir = root / slug
     (package_dir / "references").mkdir(parents=True)
     (package_dir / "templates").mkdir()
@@ -55,6 +55,10 @@ description: Read materials and write a concise note when the user asks for note
     (package_dir / "templates" / "note.md").write_text("# {title}\n", encoding="utf-8")
     (package_dir / "scripts" / "helper.py").write_text("print('helper')\n", encoding="utf-8")
     (package_dir / "assets" / "logo.txt").write_text("logo", encoding="utf-8")
+    if runtime_ready:
+        (package_dir / "docmind.json").write_text(
+            '{"status":"ready","reason":"test package"}', encoding="utf-8"
+        )
     return package_dir
 
 
@@ -81,6 +85,7 @@ class TestCodexStylePackageLoader:
         assert "note.md" in package.templates
         assert package.script_names == ["helper.py"]
         assert package.asset_names == ["logo.txt"]
+        assert package.runtime_status == "ready"
 
     def test_rejects_skill_without_description(self, isolated_package_root):
         package_dir = isolated_package_root / "bad-skill"
@@ -120,6 +125,25 @@ class TestGenericPackageRegistration:
             # 幂等：启动或测试重复调用不应重复注册/抛错。
             registry.register_generic_package_skills()
             assert [s.name for s in registry.all_skills()] == ["codex_note"]
+        finally:
+            registry._REGISTRY.clear()
+            registry._REGISTRY.update(saved)
+
+    def test_unreviewed_package_is_registered_but_quarantined_from_agent_tools(
+        self, isolated_package_root
+    ):
+        _write_codex_package(
+            isolated_package_root, slug="unreviewed", runtime_ready=False
+        )
+        saved = dict(registry._REGISTRY)
+        registry._REGISTRY.clear()
+        try:
+            registry.register_generic_package_skills()
+            skill = registry.get_skill("codex_note")
+            assert skill is not None
+            assert skill.available is False
+            assert "尚未经过" in skill.unavailable_reason
+            assert registry.all_tools() == []
         finally:
             registry._REGISTRY.clear()
             registry._REGISTRY.update(saved)
@@ -242,6 +266,47 @@ class TestSkillToolExecutor:
         assert read["document_ids"] == [10]
         assert captured == {"user_id": 7, "document_id": 10, "max_chars": 12000}
 
+    def test_uploaded_document_search_uses_rag_retrieval(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import toolkit
+        from app.skills.toolkit import SkillToolExecutor
+
+        captured = {}
+
+        def _fake_retrieve(user_id, query, document_id=None, max_chars=12000):
+            captured.update(
+                user_id=user_id,
+                query=query,
+                document_id=document_id,
+                max_chars=max_chars,
+            )
+            return "RAG 命中片段", [10], [{"document_id": 10, "chunk_index": 2}]
+
+        monkeypatch.setattr(toolkit, "fetch_retrieved_material", _fake_retrieve)
+        executor = SkillToolExecutor(
+            package=package,
+            context=SkillContext(user_id=7, document_id=10),
+            workspace_root=tmp_path / "workspaces",
+        )
+
+        result = executor.execute(
+            "search_uploaded_documents", {"query": "项目进展", "max_chars": 6000}
+        )
+
+        assert result["ok"] is True
+        assert result["content"] == "RAG 命中片段"
+        assert result["retrieval_mode"] == "hybrid"
+        assert captured == {
+            "user_id": 7,
+            "query": "项目进展",
+            "document_id": 10,
+            "max_chars": 6000,
+        }
+
 
 class TestGenericPackageSkillRunner:
     def test_generic_skill_follows_markdown_instructions_and_returns_zip_artifact(
@@ -251,7 +316,7 @@ class TestGenericPackageSkillRunner:
         package = package_loader.load_skill_package("codex-note")
 
         from app.skills.generic import GenericPackageSkill
-        from app.skills import generic
+        from app.skills import generic, toolkit
 
         calls = {"n": 0}
         captured = {}
@@ -298,3 +363,106 @@ class TestGenericPackageSkillRunner:
         payload = base64.b64decode(result["download"]["content"])
         with ZipFile(BytesIO(payload)) as zf:
             assert zf.read("outputs/note.md").decode("utf-8") == "# Note\n完成"
+
+    def test_direct_text_result_still_becomes_downloadable_artifact(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import generic, toolkit
+        from app.skills.generic import GenericPackageSkill
+
+        monkeypatch.setattr(
+            generic,
+            "chat_completion",
+            lambda messages, tools=None, temperature=0.2: _FakeMsg(content="# 完整材料\n正文"),
+        )
+        monkeypatch.setattr(
+            toolkit,
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=12000: (
+                "材料片段",
+                [10],
+                [{"document_id": 10, "chunk_index": 0, "score": 0.9}],
+            ),
+        )
+        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+
+        result = GenericPackageSkill(package).run(
+            SkillContext(user_id=3), task="根据材料生成文档"
+        )
+
+        assert result["artifact_kind"] == "file"
+        assert result["generated_files"] == ["outputs/codex-note-result.md"]
+        payload = base64.b64decode(result["download"]["content"])
+        with ZipFile(BytesIO(payload)) as zf:
+            assert "完整材料" in zf.read("outputs/codex-note-result.md").decode("utf-8")
+
+    def test_selected_document_is_rag_grounded_before_inner_llm(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import generic, toolkit
+        from app.skills.generic import GenericPackageSkill
+
+        captured = {}
+        monkeypatch.setattr(
+            toolkit,
+            "fetch_retrieved_material",
+            lambda user_id, query, document_id=None, max_chars=12000: (
+                "【文档 10 · 片段 2】\n真实材料",
+                [10],
+                [{"document_id": 10, "chunk_index": 2, "score": 0.9}],
+            ),
+        )
+
+        def _llm(messages, tools=None, temperature=0.2):
+            captured["messages"] = messages
+            return _FakeMsg(content="基于真实材料的结果")
+
+        monkeypatch.setattr(generic, "chat_completion", _llm)
+        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+
+        result = GenericPackageSkill(package).run(
+            SkillContext(user_id=3, document_id=10), task="根据文档生成材料"
+        )
+
+        assert result["actions"][0]["tool"] == "search_uploaded_documents"
+        assert result["actions"][0]["ok"] is True
+        assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["grounding"]["document_ids"] == [10]
+        assert "真实材料" in captured["messages"][1]["content"]
+
+    def test_document_task_stops_instead_of_hallucinating_when_rag_fails(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import generic, toolkit
+        from app.skills.generic import GenericPackageSkill
+
+        monkeypatch.setattr(
+            toolkit,
+            "fetch_retrieved_material",
+            lambda *args, **kwargs: ("", [], []),
+        )
+        monkeypatch.setattr(
+            generic,
+            "chat_completion",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                AssertionError("RAG 失败后不应继续让 LLM 无依据生成")
+            ),
+        )
+        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+
+        result = GenericPackageSkill(package).run(
+            SkillContext(user_id=3, document_id=10), task="根据文档生成材料"
+        )
+
+        assert "无法基于上传文档" in result["answer"]
+        assert result["actions"][0]["ok"] is False
+        assert result["artifact_kind"] == "file"

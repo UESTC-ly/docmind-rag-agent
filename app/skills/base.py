@@ -28,6 +28,10 @@ class BaseSkill(ABC):
     parameters: dict  # JSON Schema
     package_slug: str | None = None  # 可选：绑定 app/skills/packages/<slug>
     execution_mode: str = "python"
+    grounding_mode: str = "none"
+    produces_download: bool = False
+    available: bool = True
+    unavailable_reason: str = ""
     _package: Any = None
 
     def load_package(self):

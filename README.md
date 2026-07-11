@@ -10,7 +10,7 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
 登录、流式对话、文档管理、评估看板四大界面。v2.0 额外提供 **Tauri 桌面 App**：保留
 同一套前端与 FastAPI API，但以原生窗口、系统文件选择/保存和系统通知交互。后端
-**191 个测试、94% 覆盖率**，接了 GitHub Actions CI。
+**210 个测试、92% 覆盖率**，接了 GitHub Actions CI。
 
 **亮点**：ReAct Agent 编排 · Codex-style 通用 Skills · 可插拔 Python Skills ·
 多路召回（向量 + 关键词 RRF 融合）· SSE 流式输出 · RAG 评估闭环 ·
@@ -323,9 +323,12 @@ uv run uvicorn app.main:app --reload --port 8000
    - "根据材料写一份本周周报" → `generate_weekly_report`
    - "根据这份材料制作汇报 PPT" → `generate_presentation`
    - "查一下最新的 XX" → `web_search`
-5. 返回体含 `answer`（最终回复）、`artifacts`（思维导图/图谱/报告/周报/PPT 等结构化或文件产出）、
-   `trace`（每步调了哪个技能、传了什么参数，用于展示"思考过程"）
-6. `GET /agent/skills` 查看当前所有可用技能
+5. 技能卡的“选择并填入模板”会把 `skill_name` 一并提交，首轮强制调用该技能，避免
+   LLM 只在聊天窗口模拟产出；若选了 `document_id` 且未锁定技能，首轮强制调用
+   `search_knowledge_base`，先取得 RAG 片段再继续编排。
+6. 返回体含 `answer`（最终回复）、`artifacts`（思维导图/图谱/报告/周报/PPT 等结构化或文件产出）、
+   `trace`（技能、参数、成功状态和 grounding 模式）
+7. `GET /agent/skills` 查看技能、运行时兼容状态、grounding 模式与下载能力
 
 `POST /chat/` 是**不带 Agent 编排的纯 RAG 问答**：直接检索 → 拼 Prompt → 生成，返回
 `answer` + `sources`（引用片段）。适合只需要问答、不需要工具调度的场景。
@@ -345,8 +348,8 @@ uv run uvicorn app.main:app --reload --port 8000
 | 问答 | `POST /chat/stream` | RAG 流式问答（SSE，逐 token） |
 | 问答 | `GET /chat/conversations` | 我的对话列表 |
 | 问答 | `GET /chat/conversations/{id}` | 某对话的消息历史 |
-| Agent | `POST /agent/chat` | 与 Agent 对话（Function Calling 编排） |
-| Agent | `GET /agent/skills` | 列出所有可用技能 |
+| Agent | `POST /agent/chat` | 与 Agent 对话；可传 `skill_name` 锁定首轮技能 |
+| Agent | `GET /agent/skills` | 列出技能及 available / grounding / download 元数据 |
 | 评估 | `POST /eval/datasets` | 从文档 LLM 反向出题生成数据集 |
 | 评估 | `GET /eval/datasets` | 我的评估数据集列表 |
 | 评估 | `POST /eval/runs` | 触发一次评估运行（同步执行） |
@@ -367,12 +370,15 @@ Codex-style Generic Skill：只需 SKILL.md，可选 templates / references / sc
 
 也就是说，DocMind 现在既保留原来的 Python 技能，也能扫描
 `app/skills/packages/<slug>/SKILL.md` 这种主流 Agent Skills 文件夹。若 package 没有
-对应 Python 类，系统会自动注册为 `GenericPackageSkill`，由内部 ReAct runner 按
-Markdown 指令规划并调用受控工具执行。
+对应 Python 类，系统会注册为 `GenericPackageSkill`，由内部 ReAct runner 按
+Markdown 指令规划并调用受控工具执行。**注册不等于可执行**：通用包还需要
+`docmind.json` 通过运行时兼容性审计；未审计或依赖未接入工具的包仍显示在技能列表，
+但不会暴露给 Function Calling，也不能被技能卡锁定调用。
 
 通用 runner 当前内置的动作能力：
 
 - `read_skill_reference` / `read_skill_template`：渐进读取 package 资料；
+- `search_uploaded_documents`：复用向量 + 关键词 RRF 的 DocMind RAG 检索；
 - `list_files` / `read_file` / `write_file`：读写用户隔离工作区；
 - `modify_code`：在隔离工作区写入/替换代码文件；
 - `run_shell`：默认关闭，开启后仍需命令 allowlist，且不使用 `shell=True`；
@@ -382,20 +388,40 @@ Markdown 指令规划并调用受控工具执行。
 `skill_workspaces/user_<id>/<skill_slug>/`，不会直接改 DocMind 仓库源码；shell 默认关闭，
 避免把 `/agent/chat` 变成远程代码执行入口。
 
-| 技能名 | 执行模式 | 作用 | 产出 `type` |
+| 技能名 | Grounding | 作用 | 下载 |
 |---|---|---|---|
-| `search_knowledge_base` | Python | Qdrant 语义检索，回答文档问题优先用 | `kb_search` |
-| `generate_mindmap` | Python | 抽取层级结构，输出 Mermaid mindmap | `mindmap` |
-| `generate_relation_graph` | Python | 抽取实体+关系（GraphRAG），输出 nodes/edges + Mermaid | `relation_graph` |
-| `generate_report` | Python | 多步：检索→大纲→逐节生成→汇总成文 | `report` |
-| `generate_weekly_report` | Python + Package | 根据材料生成结构化中文周报，并提供 Markdown 下载 | `weekly_report` |
-| `generate_presentation` | Python + Package | 根据材料生成演示文稿结构，并提供 `.pptx` 下载 | `presentation` |
-| `web_search` | Python | DuckDuckGo 联网搜索，知识库答不了时补充 | `web_search` |
-| `codex_note` | Generic Package | 示例 Codex-style 通用技能：按 SKILL.md 写 Markdown 笔记并打包下载 | `generic_skill` |
+| `search_knowledge_base` | Hybrid RAG | 向量 + 关键词 RRF 检索，回答文档问题优先用 | — |
+| `generate_mindmap` | 顺序正文前 8000 字 | 抽取层级结构，输出 Mermaid mindmap | `.mmd` |
+| `generate_relation_graph` | 顺序正文前 8000 字 | 抽取实体+关系，输出 nodes/edges + Mermaid | `.json` |
+| `generate_report` | Hybrid RAG | 检索→大纲→逐节生成→汇总成文 | `.md` |
+| `generate_weekly_report` | Hybrid RAG | 根据检索材料生成结构化中文周报 | `.md` |
+| `generate_presentation` | Hybrid RAG | 根据检索材料生成演示文稿 | `.pptx` |
+| `web_search` | 联网 | DuckDuckGo 搜索外部信息 | — |
+| `codex_note` | 选中文档时 Hybrid RAG | 按 SKILL.md 写 Markdown 笔记 | `.zip` |
 
 产出 `type` 属于 `mindmap` / `relation_graph` / `report` / `weekly_report` /
 `presentation`，或带 `artifact_kind=file` 的通用技能结果，会被收进响应的
-`artifacts`，供前端渲染或下载。
+`artifacts`。通用技能即使只返回聊天正文、没有主动调用 `write_file`，runner 也会把
+最终正文落成 Markdown 并打 ZIP，保证文件型任务始终有下载入口。
+
+### 通用包兼容性隔离
+
+每个通用包可增加 `docmind.json`：
+
+```json
+{
+  "status": "ready",
+  "reason": "已适配 DocMind RAG 与受控文件工具。"
+}
+```
+
+- `ready`：进入 Agent 的 Function Calling 工具列表；
+- `blocked`：已审计但依赖尚未接入（如真实 MCP、GitHub CLI、Playwright、系统截图）；
+- 缺少文件：视为 `unreviewed`，默认隔离，防止复制一个 Codex 包后“看起来可用、实际只会聊天回答”。
+
+仓库内从上游安装的 10 个 GitHub/Notebook/OpenAI Docs/PDF/Playwright/Screenshot/Security
+包都已逐个审计。当前它们因需要仓库挂载、shell、MCP、浏览器或系统权限而标记为
+`blocked`；`codex_note`、周报和 PPT 包为 `ready`。这比静默降级成普通聊天更安全、也更可诊断。
 
 ### 两种 Skill Package 目录结构
 
@@ -405,6 +431,7 @@ Python-backed package（例如周报）：
 app/skills/packages/weekly-report/
 ├── SKILL.md                         给 Agent/开发者看的技能说明
 ├── skill.json                       Function Calling metadata（name/description/parameters）
+├── docmind.json                     DocMind 运行时兼容状态（ready/blocked）
 ├── templates/
 │   └── prompt.md                    LLM 提示词模板
 └── references/
@@ -416,6 +443,7 @@ Codex-style generic package（例如 `codex-note`）：
 ```text
 app/skills/packages/codex-note/
 ├── SKILL.md                         必需，frontmatter 提供 name/description
+├── docmind.json                     兼容审计通过后设为 ready
 ├── templates/                       可选
 │   └── note.md
 ├── references/                      可选
@@ -441,7 +469,9 @@ Follow these steps and write final files into outputs/.
 
 ReAct 式循环，最多 `agent_max_steps`（默认 6）步防死循环：
 
-1. 把 系统提示 + 历史 + 用户消息 + 所有工具定义 交给 LLM
+1. 把系统提示 + 历史 + 用户消息 + 所有已通过兼容审计的工具定义交给 LLM；技能卡
+   传 `skill_name` 时强制首轮调用指定技能；选定文档且未锁定技能时，首轮强制走
+   `search_knowledge_base`
 2. LLM 要么直接回答（结束），要么返回 `tool_calls`
 3. 逐个执行技能，结果作为 `role: tool` 消息塞回上下文
 4. 回到第 1 步，直到 LLM 给出最终答案或达到最大步数
@@ -530,7 +560,7 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**191 个测试、覆盖率 94%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+`tests/`，**210 个测试、覆盖率 92%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
 - **服务单测**：评估 runner、dataset_gen、Celery 任务、8 个 Skills、LLM 流式聚合——
@@ -601,11 +631,12 @@ app/
 ├── services/          业务逻辑
 │   ├── auth / document / rag / agent / embedding / llm / vector_store
 │   ├── retrieval.py   多路召回（RRF 融合 + 关键词检索）
+│   ├── skill_retrieval.py  同步 Skills 复用 Hybrid RAG 的入口
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
 ├── skills/            可插拔技能（Python Skills + Codex-style generic runner）
-│   └── packages/      目录化 Skill Package：SKILL.md / templates / references / scripts / assets
+│   └── packages/      SKILL.md / docmind.json / templates / references / scripts / assets
 ├── tasks/             Celery 异步任务（document_tasks 解析流水线）
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
@@ -615,7 +646,7 @@ desktop/               Tauri 2 桌面壳、原生能力与打包配置
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
 └── js/                api / ui / chat / docs / eval / main（ES modules）
 
-tests/                 191 个测试，pytest + 内存 sqlite + mock 外部边界
+tests/                 210 个测试，pytest + 内存 sqlite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
 .github/workflows/     CI（pytest + 90% 覆盖率门槛）
 ```
@@ -645,7 +676,9 @@ data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + m
    - `references/`：写作规范、API 说明、业务资料；
    - `scripts/`：需要 shell 开启且命令 allowlist 命中后才能运行；
    - `assets/`：模板文件、图片等资源。
-3. 重启服务，`GET /agent/skills` 会看到该技能，执行模式为 `generic_package`。
+3. 增加 `docmind.json`。新复制的包默认是 `unreviewed`；确认它只依赖 DocMind 已实现的
+   受控工具并完成测试后，才设置 `{"status":"ready"}`。
+4. 重启服务，`GET /agent/skills` 会看到该技能、兼容状态和执行模式。
 
 ### 方式 B：写 Python-backed Skill
 

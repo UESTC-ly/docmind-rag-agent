@@ -34,6 +34,8 @@ class GenericPackageSkill(BaseSkill):
     """
 
     execution_mode = "generic_package"
+    grounding_mode = "rag_when_document_selected"
+    produces_download = True
 
     def __init__(self, package: SkillPackage) -> None:
         self._package = package
@@ -41,6 +43,8 @@ class GenericPackageSkill(BaseSkill):
         self.name = package.name
         self.description = package.description
         self.parameters = package.parameters
+        self.available = package.runtime_status == "ready"
+        self.unavailable_reason = package.runtime_reason
 
     def load_package(self) -> SkillPackage:
         return self._package
@@ -65,6 +69,53 @@ class GenericPackageSkill(BaseSkill):
             shell_timeout_seconds=settings.skill_shell_timeout_seconds,
         )
         tools = executor.tool_definitions()
+        actions: list[dict] = []
+        grounding = None
+        task_mentions_documents = any(
+            marker in task.lower()
+            for marker in ("文档", "材料", "上传", "document", "material", "attachment")
+        )
+        if document_id is not None or task_mentions_documents:
+            grounding = executor.execute(
+                "search_uploaded_documents",
+                {
+                    "query": task,
+                    "document_id": document_id,
+                    "max_chars": 12000,
+                },
+            )
+            actions.append(
+                {
+                    "step": -1,
+                    "tool": "search_uploaded_documents",
+                    "args": {"query": task, "document_id": document_id},
+                    "ok": bool(grounding.get("ok")),
+                }
+            )
+
+        if grounding is not None and not grounding.get("ok"):
+            final_answer = (
+                "无法基于上传文档执行该技能："
+                f"{grounding.get('error', 'RAG 检索失败')}"
+            )
+            write_result = executor.execute(
+                "write_file",
+                {
+                    "path": f"outputs/{self._package.slug}-result.md",
+                    "content": final_answer,
+                },
+            )
+            actions.append(
+                {
+                    "step": 0,
+                    "tool": "write_file",
+                    "args": {"path": f"outputs/{self._package.slug}-result.md"},
+                    "ok": bool(write_result.get("ok")),
+                    "fallback": True,
+                }
+            )
+            return self._build_result(final_answer, actions, executor, grounding)
+
         messages = [
             {"role": "system", "content": self._system_prompt(executor)},
             {
@@ -74,13 +125,13 @@ class GenericPackageSkill(BaseSkill):
                         "task": task,
                         "inputs": inputs,
                         "document_id": document_id,
+                        "rag_grounding": grounding,
                     },
                     ensure_ascii=False,
                 ),
             },
         ]
 
-        actions: list[dict] = []
         final_answer = ""
         for step in range(settings.skill_runner_max_steps):
             llm_msg = chat_completion(messages, tools=tools, temperature=0.2)
@@ -132,7 +183,29 @@ class GenericPackageSkill(BaseSkill):
         else:
             final_answer = "通用技能执行步骤过多，已达到上限，请尝试缩小任务范围。"
 
-        return self._build_result(final_answer, actions, executor)
+        if not executor.generated_files:
+            fallback_content = (
+                final_answer.strip()
+                or "该技能本次没有生成正文或文件，请检查调用轨迹与运行时能力。"
+            )
+            write_result = executor.execute(
+                "write_file",
+                {
+                    "path": f"outputs/{self._package.slug}-result.md",
+                    "content": fallback_content,
+                },
+            )
+            actions.append(
+                {
+                    "step": settings.skill_runner_max_steps,
+                    "tool": "write_file",
+                    "args": {"path": f"outputs/{self._package.slug}-result.md"},
+                    "ok": bool(write_result.get("ok")),
+                    "fallback": True,
+                }
+            )
+
+        return self._build_result(final_answer, actions, executor, grounding)
 
     def _system_prompt(self, executor: SkillToolExecutor) -> str:
         references = ", ".join(self._package.reference_names) or "无"
@@ -156,9 +229,9 @@ class GenericPackageSkill(BaseSkill):
 - scripts: {scripts}
 - assets: {assets}
 
-如任务需要基于用户上传文档，请先用 list_uploaded_documents 查看文档，或用
-read_uploaded_document 读取当前选中文档/指定 document_id 的文本；不要把工作区文件工具
-误认为可以读取 DocMind 已上传文档。
+如任务需要基于用户上传文档，必须先用 search_uploaded_documents 走 DocMind 的
+向量+关键词 RRF 检索；只有思维导图、全文结构分析等确实需要完整顺序时，才继续用
+read_uploaded_document 补充全文。不要把工作区文件工具误认为可以读取已上传文档。
 
 SKILL.md:
 {self._package.instructions}
@@ -169,6 +242,7 @@ SKILL.md:
         answer: str,
         actions: list[dict],
         executor: SkillToolExecutor,
+        grounding: dict | None,
     ) -> dict:
         generated_files = list(executor.generated_files)
         result = {
@@ -178,6 +252,11 @@ SKILL.md:
             "answer": answer,
             "actions": actions,
             "generated_files": generated_files,
+            "grounding": {
+                "mode": "hybrid_rag" if grounding is not None else "tool_driven",
+                "document_ids": (grounding or {}).get("document_ids", []),
+                "sources": (grounding or {}).get("sources", []),
+            },
         }
         if generated_files:
             result["artifact_kind"] = "file"

@@ -4,7 +4,7 @@ import re
 from datetime import date
 
 from app.services.llm_service import chat_completion
-from app.skills._helpers import fetch_material_text
+from app.skills._helpers import fetch_retrieved_material
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
 
@@ -34,6 +34,8 @@ class WeeklyReportSkill(BaseSkill):
     package_slug = "weekly-report"
     name = "generate_weekly_report"
     description = "根据已上传材料生成一份结构化中文周报，并提供 Markdown 文件下载。当用户要求写周报、工作汇报、进度周总结时使用。"
+    grounding_mode = "hybrid_rag"
+    produces_download = True
     parameters = {
         "type": "object",
         "properties": {
@@ -58,8 +60,11 @@ class WeeklyReportSkill(BaseSkill):
         topic = (kwargs.get("topic") or "项目周报").strip()
         week = (kwargs.get("week") or date.today().isoformat()).strip()
 
-        material, used_doc_ids = fetch_material_text(
-            context.user_id, document_id=document_id, max_chars=12000
+        material, used_doc_ids, sources = fetch_retrieved_material(
+            context.user_id,
+            query=f"{topic} {week} 本周完成 进展 风险 下周计划",
+            document_id=document_id,
+            max_chars=12000,
         )
         if not material:
             return {"error": "未找到可用于生成周报的材料", "document_id": document_id}
@@ -93,6 +98,7 @@ class WeeklyReportSkill(BaseSkill):
             "topic": topic,
             "week": week,
             "document_ids": used_doc_ids,
+            "grounding": {"mode": "hybrid_rag", "sources": sources},
             "content": markdown,
             "download": {
                 "filename": filename,

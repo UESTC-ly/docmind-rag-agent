@@ -1,0 +1,4 @@
+{
+  "status": "blocked",
+  "reason": "依赖 GitHub CLI、仓库工作区和外部授权；当前 Web 安全沙箱未提供这些能力。"
+}

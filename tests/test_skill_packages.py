@@ -29,6 +29,12 @@ class TestSkillPackageLoader:
         names = {package.name for package in list_skill_packages()}
         assert {"generate_weekly_report", "generate_presentation", "codex_note"} <= names
 
+    def test_every_bundled_package_has_explicit_runtime_audit(self):
+        packages = list_skill_packages()
+        assert packages
+        assert all(package.runtime_status in {"ready", "blocked"} for package in packages)
+        assert not [p.slug for p in packages if p.runtime_status == "unreviewed"]
+
     def test_loads_codex_style_package_without_skill_json(self):
         package = load_skill_package("codex-note")
         assert package.name == "codex_note"

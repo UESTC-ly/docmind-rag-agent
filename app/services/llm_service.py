@@ -70,6 +70,7 @@ def chat_completion(
     messages: list[dict],
     tools: list[dict] | None = None,
     temperature: float = 0.3,
+    tool_choice: str | dict = "auto",
 ):
     """通用对话补全。
 
@@ -85,7 +86,7 @@ def chat_completion(
     }
     if tools:
         kwargs["tools"] = tools
-        kwargs["tool_choice"] = "auto"
+        kwargs["tool_choice"] = tool_choice
 
     stream = _client.chat.completions.create(**kwargs)
     return _aggregate_stream(stream)

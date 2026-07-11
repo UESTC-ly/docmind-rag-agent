@@ -1,12 +1,11 @@
-"""报告生成技能：根据知识库内容，就某主题生成结构化报告。
+"""报告生成技能：根据知识库内容，就某主题生成可下载结构化报告。
 
 技术点：多步规划。检索相关内容 → 组织大纲 → 分段生成 → 汇总成文。
 """
 
 from app.config import settings
-from app.services.embedding_service import embed_query
 from app.services.llm_service import chat_completion
-from app.services.vector_store import search
+from app.services.skill_retrieval import retrieve_for_skill
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
 
@@ -27,6 +26,8 @@ _SECTION_PROMPT = """你在写一份关于「{topic}」的报告。现在写「{
 class ReportSkill(BaseSkill):
     name = "generate_report"
     description = "就某个主题，基于已上传的知识库内容生成一份结构化报告。当用户要求'写报告''总结成文档''整理成材料'时使用。"
+    grounding_mode = "hybrid_rag"
+    produces_download = True
     parameters = {
         "type": "object",
         "properties": {
@@ -44,10 +45,9 @@ class ReportSkill(BaseSkill):
         document_id = kwargs.get("document_id") or context.document_id
 
         # 1. 检索主题相关内容
-        query_vector = embed_query(topic)
-        hits = search(
-            query_vector,
+        hits = retrieve_for_skill(
             context.user_id,
+            topic,
             top_k=settings.retrieval_top_k * 2,
             document_id=document_id,
         )
@@ -96,10 +96,26 @@ class ReportSkill(BaseSkill):
             parts.append(f"## {section}\n\n{(sec_msg.content or '').strip()}")
 
         report = f"# {topic}\n\n" + "\n\n".join(parts)
+        source_items = [
+            {
+                "document_id": h["document_id"],
+                "chunk_index": h.get("chunk_index"),
+                "score": h.get("score"),
+            }
+            for h in hits
+        ]
         return {
             "type": "report",
+            "artifact_kind": "file",
             "topic": topic,
             "document_id": document_id,
             "outline": sections,
             "content": report,
+            "grounding": {"mode": "hybrid_rag", "sources": source_items},
+            "download": {
+                "filename": "report.md",
+                "mime_type": "text/markdown;charset=utf-8",
+                "encoding": "text",
+                "content": report,
+            },
         }

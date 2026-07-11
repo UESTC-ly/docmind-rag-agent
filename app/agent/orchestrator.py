@@ -67,10 +67,27 @@ def run_agent(
     question: str,
     history: list[dict] | None = None,
     document_id: int | None = None,
+    requested_skill: str | None = None,
 ) -> dict:
     """执行 Agent 主循环，返回 {answer, artifacts, trace}。"""
     context = SkillContext(user_id=user_id, document_id=document_id)
     tools = all_tools()
+    selected = get_skill(requested_skill) if requested_skill is not None else None
+    if requested_skill is not None and selected is None:
+        return {
+            "answer": f"指定技能不存在或未加载：{requested_skill}",
+            "artifacts": [],
+            "trace": [],
+        }
+    if selected is not None and not selected.available:
+        return {
+            "answer": (
+                f"技能 {requested_skill} 当前未通过 DocMind 运行时兼容性审计："
+                f"{selected.unavailable_reason}"
+            ),
+            "artifacts": [],
+            "trace": [],
+        }
 
     # 已选定文档时，明确告知 LLM 无需再向用户索要文档 ID，
     # 否则模型会保守地反问"请提供文档"，而不是直接调 search_knowledge_base。
@@ -79,6 +96,11 @@ def run_agent(
         system_prompt += (
             f"\n\n当前用户已选定文档（document_id={document_id}），"
             "检索类工具会自动作用于该文档，不要向用户索要文档 ID，直接调用工具。"
+        )
+    if requested_skill is not None:
+        system_prompt += (
+            f"\n\n用户已在技能面板明确选择 {requested_skill}。"
+            "第一步必须调用该技能，不允许只在聊天正文中模拟技能产出。"
         )
 
     messages: list[dict] = [{"role": "system", "content": system_prompt}]
@@ -90,10 +112,35 @@ def run_agent(
     trace: list[dict] = []  # 执行轨迹，便于调试和前端展示"思考过程"
 
     for step in range(settings.agent_max_steps):
-        llm_msg = chat_completion(messages, tools=tools)
+        tool_choice: str | dict = "auto"
+        forced_skill_name: str | None = None
+        if step == 0 and requested_skill is not None:
+            forced_skill_name = requested_skill
+            tool_choice = {
+                "type": "function",
+                "function": {"name": requested_skill},
+            }
+        elif step == 0 and document_id is not None:
+            # 未锁定具体技能时，选定文档的 Agent 请求先强制走知识库 RAG；拿到真实
+            # 片段后，模型仍可继续调用脑图、图谱、报告等后续技能。
+            forced_skill_name = "search_knowledge_base"
+            tool_choice = {
+                "type": "function",
+                "function": {"name": "search_knowledge_base"},
+            }
+        llm_msg = chat_completion(messages, tools=tools, tool_choice=tool_choice)
 
         # LLM 没有调用工具 → 得到最终答案，结束
         if not llm_msg.tool_calls:
+            if forced_skill_name is not None:
+                return {
+                    "answer": (
+                        f"模型未按要求调用技能 {forced_skill_name}，"
+                        "为避免绕过 RAG/文件产出，本次没有接受模型的直接回答。"
+                    ),
+                    "artifacts": artifacts,
+                    "trace": trace,
+                }
             return {
                 "answer": llm_msg.content or "",
                 "artifacts": artifacts,
@@ -130,13 +177,31 @@ def run_agent(
             skill = get_skill(skill_name)
             if skill is None:
                 result = {"error": f"未知技能: {skill_name}"}
+            elif not skill.available:
+                result = {
+                    "error": (
+                        f"技能 {skill_name} 当前不可调用："
+                        f"{skill.unavailable_reason}"
+                    )
+                }
             else:
                 try:
                     result = skill.run(context, **args)
                 except Exception as exc:  # noqa: BLE001
                     result = {"error": f"技能执行失败: {exc}"}
 
-            trace.append({"step": step, "skill": skill_name, "args": args})
+            trace_item = {
+                "step": step,
+                "skill": skill_name,
+                "args": args,
+                "ok": "error" not in result,
+            }
+            if skill is not None:
+                trace_item["grounding_mode"] = skill.grounding_mode
+            grounding = result.get("grounding")
+            if grounding:
+                trace_item["grounding"] = grounding
+            trace.append(trace_item)
 
             # 有结构化 / 文件产出的技能，收集到 artifacts
             if result.get("type") in ARTIFACT_TYPES or result.get("artifact_kind") == "file":

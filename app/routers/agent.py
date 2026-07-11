@@ -24,6 +24,7 @@ async def agent_chat(
         message=data.message,
         conversation_id=data.conversation_id,
         document_id=data.document_id,
+        requested_skill=data.skill_name,
     )
 
 
@@ -37,6 +38,10 @@ async def list_skills(current_user: User = Depends(get_current_user)):
             "name": skill.name,
             "description": skill.description,
             "execution_mode": skill.execution_mode,
+            "grounding_mode": skill.grounding_mode,
+            "produces_download": skill.produces_download,
+            "available": skill.available,
+            "unavailable_reason": skill.unavailable_reason,
         }
         package = skill.load_package()
         if package is not None:
@@ -48,6 +53,8 @@ async def list_skills(current_user: User = Depends(get_current_user)):
                 "references": package.reference_names,
                 "scripts": package.script_names,
                 "assets": package.asset_names,
+                "runtime_status": package.runtime_status,
+                "runtime_reason": package.runtime_reason,
             }
         out.append(item)
     return out

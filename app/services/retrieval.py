@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.database import SyncSessionLocal
 from app.models.document import Document, DocumentChunk
 
 ChunkKey = tuple[int, int]  # (document_id, chunk_index)
@@ -74,7 +75,13 @@ async def keyword_search(
         stmt = stmt.where(DocumentChunk.document_id == document_id)
 
     rows = (await db.execute(stmt)).scalars().all()
+    return _score_keyword_rows(rows, terms, limit)
 
+
+def _score_keyword_rows(
+    rows: list[DocumentChunk], terms: list[str], limit: int
+) -> list[dict]:
+    """对已限定用户范围的分块做关键词打分，供 async/sync 两条 DB 路径复用。"""
     scored: list[dict] = []
     for chunk in rows:
         content_lower = chunk.content.lower()
@@ -86,11 +93,40 @@ async def keyword_search(
                     "content": chunk.content,
                     "document_id": chunk.document_id,
                     "keyword_score": hit,
+                    # Source/Skill 响应统一要求 score 字段；关键词独占命中没有可比较的
+                    # 向量相似度，用 0.0 明确表示“由关键词路召回”。
+                    "score": 0.0,
                 }
             )
 
     scored.sort(key=lambda x: x["keyword_score"], reverse=True)
     return scored[:limit]
+
+
+def keyword_search_sync(
+    query: str,
+    user_id: int,
+    document_id: int | None,
+    limit: int,
+) -> list[dict]:
+    """同步关键词召回，专供 Agent Skill 在线程池里的同步执行路径。
+
+    这里必须使用 SyncSessionLocal；FastAPI 的 AsyncSession 不能跨线程交给同步 Skill。
+    """
+    terms = _tokenize(query)
+    if not terms:
+        return []
+
+    with SyncSessionLocal() as db:
+        stmt = (
+            select(DocumentChunk)
+            .join(Document, DocumentChunk.document_id == Document.id)
+            .where(Document.user_id == user_id)
+        )
+        if document_id is not None:
+            stmt = stmt.where(DocumentChunk.document_id == document_id)
+        rows = db.execute(stmt).scalars().all()
+    return _score_keyword_rows(rows, terms, limit)
 
 
 def _key(hit: dict) -> ChunkKey:

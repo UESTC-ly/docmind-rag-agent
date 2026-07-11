@@ -11,6 +11,7 @@ from app.skills.registry import register_skill
 class WebSearchSkill(BaseSkill):
     name = "web_search"
     description = "联网搜索实时/外部信息。当用户问题超出已上传文档的范围，或需要最新信息时使用。"
+    grounding_mode = "web"
     parameters = {
         "type": "object",
         "properties": {
