@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+.doc
+.learn/
 
 # ── Python ───────────────────────────────
 __pycache__/
@@ -33,3 +35,7 @@ desktop/node_modules/
 desktop/dist/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/
+
+# ── 私有面试资料（仅本地，不入库）────────
+doc/02-面向面试的项目介绍.md
+doc/03-面试100问及回答.md
