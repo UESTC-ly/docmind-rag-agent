@@ -1,4 +1,5 @@
 {
   "status": "blocked",
-  "reason": "依赖 PDF 二进制读写、渲染工具和 Python 库；当前通用 runner 只支持文本工作区文件。"
+  "reason": "复制包没有可执行 PDF scripts，且当前冻结运行时未实现其 create/extract/render action surface。",
+  "requires": ["package_scripts", "package_assets"]
 }

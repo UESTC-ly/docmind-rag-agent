@@ -1,0 +1,67 @@
+name: Desktop native packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/desktop-release.yml"
+      - "alembic.ini"
+      - "alembic/**"
+      - "app/**"
+      - "desktop/**"
+      - "frontend/**"
+
+concurrency:
+  group: desktop-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  package:
+    name: macOS native installer
+    runs-on: macos-14
+    timeout-minutes: 75
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python used only for freezing
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: desktop/sidecar/requirements-build.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install desktop JavaScript dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and smoke-test frozen sidecar and native installer
+        working-directory: desktop
+        run: npm run build
+
+      - name: Verify macOS bundle signature and disk image
+        run: |
+          codesign --verify --deep --strict --verbose=2 \
+            desktop/src-tauri/target/release/bundle/macos/DocMind.app
+          node desktop/scripts/smoke-sidecar.mjs \
+            desktop/src-tauri/target/release/bundle/macos/DocMind.app/Contents/MacOS/docmind-sidecar
+          hdiutil verify \
+            desktop/src-tauri/target/release/bundle/dmg/DocMind_2.2.0_aarch64.dmg
+
+      - name: Upload native packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: docmind-macos-native
+          path: desktop/src-tauri/target/release/bundle/**
+          if-no-files-found: error
+          retention-days: 14

@@ -53,11 +53,15 @@ description: Read materials and write a concise note when the user asks for note
     )
     (package_dir / "references" / "style.md").write_text("保持简洁。", encoding="utf-8")
     (package_dir / "templates" / "note.md").write_text("# {title}\n", encoding="utf-8")
-    (package_dir / "scripts" / "helper.py").write_text("print('helper')\n", encoding="utf-8")
+    (package_dir / "scripts" / "helper.py").write_text(
+        "print('helper')\n", encoding="utf-8"
+    )
     (package_dir / "assets" / "logo.txt").write_text("logo", encoding="utf-8")
     if runtime_ready:
         (package_dir / "docmind.json").write_text(
-            '{"status":"ready","reason":"test package"}', encoding="utf-8"
+            '{"status":"ready","reason":"test package",'
+            '"requires":["documents","workspace"]}',
+            encoding="utf-8",
         )
     return package_dir
 
@@ -97,7 +101,9 @@ class TestCodexStylePackageLoader:
         with pytest.raises(ValueError, match="description"):
             package_loader.load_skill_package("bad-skill")
 
-    def test_list_skips_invalid_package_without_breaking_startup(self, isolated_package_root):
+    def test_list_skips_invalid_package_without_breaking_startup(
+        self, isolated_package_root
+    ):
         _write_codex_package(isolated_package_root)
         bad_dir = isolated_package_root / "bad-skill"
         bad_dir.mkdir()
@@ -111,7 +117,9 @@ class TestCodexStylePackageLoader:
 
 
 class TestGenericPackageRegistration:
-    def test_registers_unbacked_codex_package_as_generic_skill(self, isolated_package_root):
+    def test_registers_unbacked_codex_package_as_generic_skill(
+        self, isolated_package_root
+    ):
         _write_codex_package(isolated_package_root)
         saved = dict(registry._REGISTRY)
         registry._REGISTRY.clear()
@@ -150,7 +158,9 @@ class TestGenericPackageRegistration:
 
 
 class TestSkillToolExecutor:
-    def test_file_tools_are_scoped_to_user_workspace(self, isolated_package_root, tmp_path):
+    def test_file_tools_are_scoped_to_user_workspace(
+        self, isolated_package_root, tmp_path
+    ):
         _write_codex_package(isolated_package_root)
         package = package_loader.load_skill_package("codex-note")
 
@@ -177,7 +187,7 @@ class TestSkillToolExecutor:
         assert denied["ok"] is False
         assert "工作区" in denied["error"]
 
-    def test_shell_tool_is_disabled_by_default_and_allowlisted_when_enabled(
+    def test_general_shell_is_not_a_production_skill_capability(
         self, isolated_package_root, tmp_path
     ):
         _write_codex_package(isolated_package_root)
@@ -192,7 +202,7 @@ class TestSkillToolExecutor:
         )
         disabled = executor.execute("run_shell", {"command": "echo hello"})
         assert disabled["ok"] is False
-        assert disabled["disabled"] is True
+        assert disabled["denied"] is True
 
         enabled = SkillToolExecutor(
             package=package,
@@ -202,12 +212,11 @@ class TestSkillToolExecutor:
             shell_allowed_commands={"echo"},
         )
         result = enabled.execute("run_shell", {"command": "echo hello"})
-        assert result["ok"] is True
-        assert result["stdout"].strip() == "hello"
-
-        denied = enabled.execute("run_shell", {"command": "rm -rf ."})
-        assert denied["ok"] is False
-        assert "不在允许列表" in denied["error"]
+        assert result["ok"] is False
+        assert result["denied"] is True
+        assert "run_shell" not in {
+            item["function"]["name"] for item in enabled.tool_definitions()
+        }
 
     def test_mcp_browser_and_app_tools_have_safe_unconfigured_fallback(
         self, isolated_package_root, tmp_path
@@ -225,7 +234,10 @@ class TestSkillToolExecutor:
 
         assert executor.execute("call_mcp", {"server": "x", "tool": "y"})["ok"] is False
         assert executor.execute("use_browser_tool", {"action": "open"})["ok"] is False
-        assert executor.execute("use_app_tool", {"app": "Finder", "action": "open"})["ok"] is False
+        assert (
+            executor.execute("use_app_tool", {"app": "Finder", "action": "open"})["ok"]
+            is False
+        )
 
     def test_uploaded_document_tools_respect_user_and_context_document(
         self, isolated_package_root, tmp_path, monkeypatch
@@ -309,14 +321,92 @@ class TestSkillToolExecutor:
 
 
 class TestGenericPackageSkillRunner:
+    def test_text_only_package_does_not_gain_document_or_workspace_side_effects(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        package_dir = _write_codex_package(isolated_package_root)
+        (package_dir / "docmind.json").write_text(
+            '{"status":"ready","reason":"text-only","requires":[]}',
+            encoding="utf-8",
+        )
+        package_loader.load_skill_package.cache_clear()
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import generic, toolkit
+        from app.skills.generic import GenericPackageSkill
+
+        monkeypatch.setattr(
+            toolkit,
+            "fetch_retrieved_material",
+            lambda *args, **kwargs: pytest.fail("undeclared documents capability used"),
+        )
+        monkeypatch.setattr(
+            generic,
+            "chat_completion",
+            lambda messages, tools=None, temperature=0.2: _FakeMsg(
+                content="text-only answer"
+            ),
+        )
+        monkeypatch.setattr(
+            generic.settings,
+            "skill_workspace_dir",
+            str(tmp_path / "workspaces"),
+        )
+
+        result = GenericPackageSkill(package).run(
+            SkillContext(user_id=3, document_id=10),
+            task="根据文档回答",
+        )
+
+        assert result["answer"] == "text-only answer"
+        assert result["actions"] == []
+        assert result["generated_files"] == []
+        assert "download" not in result
+
+    def test_generic_skill_closes_adapter_sessions_when_llm_fails(
+        self, isolated_package_root, tmp_path, monkeypatch
+    ):
+        _write_codex_package(isolated_package_root)
+        package = package_loader.load_skill_package("codex-note")
+
+        from app.skills import generic, toolkit
+        from app.skills.generic import GenericPackageSkill
+
+        closed = []
+
+        class _Adapter:
+            def close_session(self, session_id):
+                closed.append(session_id)
+
+        monkeypatch.setattr(toolkit, "_MCP_ADAPTERS", {("docs", "*"): _Adapter()})
+        monkeypatch.setattr(toolkit, "_BROWSER_ADAPTERS", {})
+        monkeypatch.setattr(
+            generic,
+            "chat_completion",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("LLM down")),
+        )
+        monkeypatch.setattr(
+            generic.settings,
+            "skill_workspace_dir",
+            str(tmp_path / "workspaces"),
+        )
+
+        with pytest.raises(RuntimeError, match="LLM down"):
+            GenericPackageSkill(package).run(
+                SkillContext(user_id=3),
+                task="write a note",
+            )
+
+        assert len(closed) == 1
+
     def test_generic_skill_follows_markdown_instructions_and_returns_zip_artifact(
         self, isolated_package_root, tmp_path, monkeypatch
     ):
         _write_codex_package(isolated_package_root)
         package = package_loader.load_skill_package("codex-note")
 
+        from app.skills import generic
         from app.skills.generic import GenericPackageSkill
-        from app.skills import generic, toolkit
 
         calls = {"n": 0}
         captured = {}
@@ -335,7 +425,7 @@ class TestGenericPackageSkillRunner:
                         _FakeToolCall(
                             "c-doc",
                             "read_uploaded_document",
-                            '{}',
+                            "{}",
                         ),
                         _FakeToolCall(
                             "c2",
@@ -347,7 +437,9 @@ class TestGenericPackageSkillRunner:
             return _FakeMsg(content="已按 SKILL.md 生成 note.md。")
 
         monkeypatch.setattr(generic, "chat_completion", _llm)
-        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+        monkeypatch.setattr(
+            generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces")
+        )
 
         skill = GenericPackageSkill(package)
         result = skill.run(SkillContext(user_id=3), task="写一份项目笔记")
@@ -376,7 +468,9 @@ class TestGenericPackageSkillRunner:
         monkeypatch.setattr(
             generic,
             "chat_completion",
-            lambda messages, tools=None, temperature=0.2: _FakeMsg(content="# 完整材料\n正文"),
+            lambda messages, tools=None, temperature=0.2: _FakeMsg(
+                content="# 完整材料\n正文"
+            ),
         )
         monkeypatch.setattr(
             toolkit,
@@ -387,7 +481,9 @@ class TestGenericPackageSkillRunner:
                 [{"document_id": 10, "chunk_index": 0, "score": 0.9}],
             ),
         )
-        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+        monkeypatch.setattr(
+            generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces")
+        )
 
         result = GenericPackageSkill(package).run(
             SkillContext(user_id=3), task="根据材料生成文档"
@@ -424,7 +520,9 @@ class TestGenericPackageSkillRunner:
             return _FakeMsg(content="基于真实材料的结果")
 
         monkeypatch.setattr(generic, "chat_completion", _llm)
-        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+        monkeypatch.setattr(
+            generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces")
+        )
 
         result = GenericPackageSkill(package).run(
             SkillContext(user_id=3, document_id=10), task="根据文档生成材料"
@@ -457,7 +555,9 @@ class TestGenericPackageSkillRunner:
                 AssertionError("RAG 失败后不应继续让 LLM 无依据生成")
             ),
         )
-        monkeypatch.setattr(generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces"))
+        monkeypatch.setattr(
+            generic.settings, "skill_workspace_dir", str(tmp_path / "workspaces")
+        )
 
         result = GenericPackageSkill(package).run(
             SkillContext(user_id=3, document_id=10), task="根据文档生成材料"

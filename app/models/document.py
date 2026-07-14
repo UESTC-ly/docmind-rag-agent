@@ -5,10 +5,12 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     func,
+    literal_column,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -60,6 +62,20 @@ class DocumentChunk(Base):
     content: Mapped[str] = mapped_column(Text)  # 块的原始文本
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+
+    # Mirror the PostgreSQL-only migration index in ORM metadata so
+    # ``alembic check`` does not mistake the production index for drift.  The
+    # DDL predicate keeps SQLite desktop/test schemas free of PG-only SQL.
+    __table_args__ = (
+        Index(
+            "ix_document_chunks_content_fts",
+            func.to_tsvector(
+                literal_column("'simple'::regconfig"),
+                content,
+            ),
+            postgresql_using="gin",
+        ).ddl_if(dialect="postgresql"),
     )
 
     document: Mapped["Document"] = relationship(back_populates="chunks")

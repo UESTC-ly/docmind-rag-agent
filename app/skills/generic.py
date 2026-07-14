@@ -22,6 +22,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from app.config import settings
 from app.services.llm_service import chat_completion
 from app.skills.base import BaseSkill, SkillContext
+from app.skills.capabilities import check_capabilities
 from app.skills.package_loader import SkillPackage
 from app.skills.toolkit import SkillToolExecutor
 
@@ -43,8 +44,17 @@ class GenericPackageSkill(BaseSkill):
         self.name = package.name
         self.description = package.description
         self.parameters = package.parameters
-        self.available = package.runtime_status == "ready"
-        self.unavailable_reason = package.runtime_reason
+        self.refresh_availability()
+
+    def refresh_availability(self) -> None:
+        report = check_capabilities(self._package.required_capabilities)
+        self.available = self._package.runtime_status == "ready" and report.available
+        if self._package.runtime_status != "ready":
+            self.unavailable_reason = self._package.runtime_reason
+        elif not report.available:
+            self.unavailable_reason = f"运行时 capability 未满足：{report.reason}"
+        else:
+            self.unavailable_reason = ""
 
     def load_package(self) -> SkillPackage:
         return self._package
@@ -68,6 +78,18 @@ class GenericPackageSkill(BaseSkill):
             shell_allowed_commands=settings.skill_shell_allowed_command_set,
             shell_timeout_seconds=settings.skill_shell_timeout_seconds,
         )
+        try:
+            return self._execute_with_tools(executor, task, inputs, document_id)
+        finally:
+            executor.close()
+
+    def _execute_with_tools(
+        self,
+        executor: SkillToolExecutor,
+        task: str,
+        inputs: dict,
+        document_id: int | None,
+    ) -> dict:
         tools = executor.tool_definitions()
         actions: list[dict] = []
         grounding = None
@@ -75,7 +97,9 @@ class GenericPackageSkill(BaseSkill):
             marker in task.lower()
             for marker in ("文档", "材料", "上传", "document", "material", "attachment")
         )
-        if document_id is not None or task_mentions_documents:
+        if "documents" in executor.capabilities and (
+            document_id is not None or task_mentions_documents
+        ):
             grounding = executor.execute(
                 "search_uploaded_documents",
                 {
@@ -95,25 +119,25 @@ class GenericPackageSkill(BaseSkill):
 
         if grounding is not None and not grounding.get("ok"):
             final_answer = (
-                "无法基于上传文档执行该技能："
-                f"{grounding.get('error', 'RAG 检索失败')}"
+                f"无法基于上传文档执行该技能：{grounding.get('error', 'RAG 检索失败')}"
             )
-            write_result = executor.execute(
-                "write_file",
-                {
-                    "path": f"outputs/{self._package.slug}-result.md",
-                    "content": final_answer,
-                },
-            )
-            actions.append(
-                {
-                    "step": 0,
-                    "tool": "write_file",
-                    "args": {"path": f"outputs/{self._package.slug}-result.md"},
-                    "ok": bool(write_result.get("ok")),
-                    "fallback": True,
-                }
-            )
+            if "workspace" in executor.capabilities:
+                write_result = executor.execute(
+                    "write_file",
+                    {
+                        "path": f"outputs/{self._package.slug}-result.md",
+                        "content": final_answer,
+                    },
+                )
+                actions.append(
+                    {
+                        "step": 0,
+                        "tool": "write_file",
+                        "args": {"path": f"outputs/{self._package.slug}-result.md"},
+                        "ok": bool(write_result.get("ok")),
+                        "fallback": True,
+                    }
+                )
             return self._build_result(final_answer, actions, executor, grounding)
 
         messages = [
@@ -183,7 +207,7 @@ class GenericPackageSkill(BaseSkill):
         else:
             final_answer = "通用技能执行步骤过多，已达到上限，请尝试缩小任务范围。"
 
-        if not executor.generated_files:
+        if "workspace" in executor.capabilities and not executor.generated_files:
             fallback_content = (
                 final_answer.strip()
                 or "该技能本次没有生成正文或文件，请检查调用轨迹与运行时能力。"
@@ -208,10 +232,22 @@ class GenericPackageSkill(BaseSkill):
         return self._build_result(final_answer, actions, executor, grounding)
 
     def _system_prompt(self, executor: SkillToolExecutor) -> str:
+        allowed_tools = {
+            item["function"]["name"] for item in executor.tool_definitions()
+        }
         references = ", ".join(self._package.reference_names) or "无"
         templates = ", ".join(self._package.template_names) or "无"
-        scripts = ", ".join(self._package.script_names) or "无"
-        assets = ", ".join(self._package.asset_names) or "无"
+        scripts = (
+            ", ".join(self._package.script_names)
+            if "run_skill_script" in allowed_tools
+            else "未授权"
+        )
+        assets = (
+            ", ".join(self._package.asset_names)
+            if {"read_skill_asset", "copy_skill_asset"} & allowed_tools
+            else "未授权"
+        )
+        tools = ", ".join(sorted(allowed_tools)) or "无"
         return f"""你是 DocMind 的 Codex-style 通用 Skill Runner。
 
 你正在执行 Skill Package:
@@ -228,6 +264,7 @@ class GenericPackageSkill(BaseSkill):
 - templates: {templates}
 - scripts: {scripts}
 - assets: {assets}
+- tools: {tools}
 
 如任务需要基于用户上传文档，必须先用 search_uploaded_documents 走 DocMind 的
 向量+关键词 RRF 检索；只有思维导图、全文结构分析等确实需要完整顺序时，才继续用
@@ -284,10 +321,14 @@ def _compact_tool_result(result: dict) -> str:
 
 
 def _zip_generated_files(executor: SkillToolExecutor) -> str:
+    paths = executor.validated_generated_paths()
+    total_bytes = sum(path.stat().st_size for path in paths)
+    if total_bytes > settings.skill_artifact_max_bytes:
+        raise ValueError(
+            f"artifact 总大小超过 {settings.skill_artifact_max_bytes} bytes 上限"
+        )
     buf = BytesIO()
     with ZipFile(buf, "w", ZIP_DEFLATED) as zf:
-        for rel in executor.generated_files:
-            path = executor.workspace / rel
-            if path.is_file():
-                zf.write(path, rel)
+        for path in paths:
+            zf.write(path, path.relative_to(executor.workspace).as_posix())
     return base64.b64encode(buf.getvalue()).decode("ascii")

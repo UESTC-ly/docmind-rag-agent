@@ -26,6 +26,31 @@ class TestPointId:
     def test_id_formula(self):
         assert vector_store._point_id(3, 7) == 3 * vector_store._ID_STRIDE + 7
 
+    def test_local_path_selects_embedded_qdrant(self, tmp_path, monkeypatch):
+        captured = {}
+        sentinel = object()
+        monkeypatch.setattr(
+            vector_store,
+            "QdrantClient",
+            lambda **kwargs: captured.update(kwargs) or sentinel,
+        )
+        path = tmp_path / "qdrant"
+        client = vector_store._create_client(str(path), "http://must-not-be-used")
+        assert client is sentinel
+        assert captured == {"path": str(path.resolve())}
+        assert path.is_dir()
+
+    def test_close_releases_client_resources(self, monkeypatch):
+        closed = []
+
+        class _ClosableClient:
+            def close(self):
+                closed.append(True)
+
+        monkeypatch.setattr(vector_store, "_client", _ClosableClient())
+        vector_store.close()
+        assert closed == [True]
+
 
 class TestUpsert:
     def test_builds_points_with_payload(self, monkeypatch):

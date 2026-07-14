@@ -4,8 +4,6 @@
 异常兜底为 0.0，以及 prompt 拼装。
 """
 
-import pytest
-
 from app.services.evaluation import generation_judge
 
 

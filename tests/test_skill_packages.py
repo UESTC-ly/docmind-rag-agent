@@ -16,7 +16,9 @@ class TestSkillPackageLoader:
         assert "周报" in package.description
         assert "prompt.md" in package.templates
         assert "writing-guide.md" in package.references
-        assert "SKILL" in package.instructions or "Weekly Report" in package.instructions
+        assert (
+            "SKILL" in package.instructions or "Weekly Report" in package.instructions
+        )
 
     def test_loads_presentation_package(self):
         package = load_skill_package("presentation")
@@ -27,13 +29,77 @@ class TestSkillPackageLoader:
 
     def test_lists_packages(self):
         names = {package.name for package in list_skill_packages()}
-        assert {"generate_weekly_report", "generate_presentation", "codex_note"} <= names
+        assert {
+            "generate_weekly_report",
+            "generate_presentation",
+            "codex_note",
+        } <= names
 
     def test_every_bundled_package_has_explicit_runtime_audit(self):
         packages = list_skill_packages()
         assert packages
-        assert all(package.runtime_status in {"ready", "blocked"} for package in packages)
+        assert all(
+            package.runtime_status in {"ready", "blocked"} for package in packages
+        )
         assert not [p.slug for p in packages if p.runtime_status == "unreviewed"]
+        assert not [p.slug for p in packages if not p.required_capabilities]
+
+    def test_bundled_runtime_statuses_match_the_supported_action_surface(self):
+        packages = list_skill_packages()
+        ready = {
+            package.slug for package in packages if package.runtime_status == "ready"
+        }
+        blocked = {
+            package.slug for package in packages if package.runtime_status == "blocked"
+        }
+
+        assert ready == {
+            "codex-note",
+            "jupyter-notebook",
+            "openai-docs",
+            "playwright",
+            "presentation",
+            "screenshot",
+            "security-best-practices",
+            "security-threat-model",
+            "weekly-report",
+        }
+        assert blocked == {
+            "gh-fix-ci",
+            "pdf",
+            "playwright-interactive",
+            "security-ownership-map",
+        }
+
+    def test_ready_script_packages_have_scripts_and_workspace_authority(self):
+        packages = list_skill_packages()
+        scripted = [
+            package
+            for package in packages
+            if package.runtime_status == "ready"
+            and "package_scripts" in package.required_capabilities
+        ]
+
+        assert {package.slug for package in scripted} == {
+            "jupyter-notebook",
+            "screenshot",
+        }
+        assert all(package.script_names for package in scripted)
+        assert all("workspace" in package.required_capabilities for package in scripted)
+
+    def test_known_incompatible_copied_packages_remain_quarantined(self):
+        assert load_skill_package("pdf").script_names == []
+        assert "js_repl" in load_skill_package("playwright-interactive").instructions
+        for slug in (
+            "gh-fix-ci",
+            "pdf",
+            "playwright-interactive",
+            "security-ownership-map",
+        ):
+            skill = get_skill(load_skill_package(slug).name)
+            assert skill is not None
+            skill.refresh_availability()
+            assert skill.available is False
 
     def test_loads_codex_style_package_without_skill_json(self):
         package = load_skill_package("codex-note")

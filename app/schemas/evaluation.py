@@ -76,4 +76,7 @@ class ResultDetailResponse(BaseModel):
     faithfulness_score: float | None = None
     answer_relevancy_score: float | None = None
     retrieved_chunk_ids: str | None = None
+    retrieval_mode: str | None = None
+    reranker_mode: str | None = None
+    retrieval_trace: str | None = None
     generated_answer: str | None = None

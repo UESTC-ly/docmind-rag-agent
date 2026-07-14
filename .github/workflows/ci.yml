@@ -7,8 +7,9 @@ on:
     branches: [master, main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  python:
+    name: macOS Python lint, typecheck, and tests
+    runs-on: macos-14
 
     env:
       DATABASE_URL: postgresql+asyncpg://ci:ci@localhost:5432/ci_test
@@ -31,6 +32,21 @@ jobs:
         run: |
           uv venv --python 3.12
           uv pip install -r requirements.txt
+          uv pip install ruff==0.15.21 mypy==1.20.2
+
+      - name: Lint Python for runtime-breaking errors
+        run: uv run ruff check app tests --select E9,F63,F7,F82
+
+      - name: Typecheck model and API contracts
+        run: |
+          uv run mypy \
+            app/models \
+            app/schemas \
+            --follow-imports=skip \
+            --ignore-missing-imports \
+            --allow-untyped-defs \
+            --no-warn-return-any \
+            --no-warn-unused-ignores
 
       - name: Run tests with coverage gate
         run: |
@@ -47,3 +63,44 @@ jobs:
           name: coverage-report
           path: coverage.xml
           if-no-files-found: ignore
+
+  javascript:
+    name: macOS JavaScript syntax
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check browser and build scripts
+        run: |
+          find frontend/js frontend/e2e desktop/scripts \
+            -type f \( -name '*.js' -o -name '*.mjs' \) \
+            -exec node --check {} \;
+          node --check frontend/playwright.config.js
+          node --check frontend/playwright.fullstack.config.js
+
+  rust:
+    name: macOS Rust fmt, clippy, and tests
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --manifest-path desktop/src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path desktop/src-tauri/Cargo.toml --locked

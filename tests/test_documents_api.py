@@ -6,9 +6,20 @@ mock 掉外部边界：
 - 上传目录指向临时目录（避免污染真实 uploads/）
 """
 
-import pytest
+import asyncio
+from io import BytesIO
 
-from app.services import document_service
+import pytest
+from fastapi import UploadFile
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.database import Base
+from app.models.document import Document, DocumentStatus
+from app.models.user import User
+from app.services import document_service, task_dispatcher
+from app.tasks import document_tasks
 
 pytestmark = pytest.mark.asyncio
 
@@ -18,7 +29,8 @@ def mock_boundaries(monkeypatch, tmp_path):
     """打桩所有外部副作用，返回被调用记录用于断言。"""
     calls = {"delay": [], "delete_vec": []}
     monkeypatch.setattr(
-        document_service.process_document, "delay",
+        document_service,
+        "dispatch_document",
         lambda doc_id: calls["delay"].append(doc_id),
     )
     monkeypatch.setattr(
@@ -57,6 +69,78 @@ class TestUpload:
             files={"file": ("note.txt", b"hi", "text/plain")},
         )
         assert resp.status_code == 401
+
+    async def test_desktop_local_task_reads_committed_document(
+        self, monkeypatch, tmp_path
+    ):
+        """The local worker's independent sync connection must see the row."""
+        database = tmp_path / "desktop-local.db"
+        async_engine = create_async_engine(
+            f"sqlite+aiosqlite:///{database}",
+            connect_args={"check_same_thread": False},
+        )
+        sync_engine = create_engine(
+            f"sqlite:///{database}",
+            connect_args={"check_same_thread": False},
+        )
+        async_sessions = async_sessionmaker(
+            async_engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+        sync_sessions = sessionmaker(sync_engine, expire_on_commit=False)
+
+        async with async_engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+
+        task_dispatcher.shutdown_local_executor()
+        monkeypatch.setattr(document_service.settings, "upload_dir", str(tmp_path / "uploads"))
+        monkeypatch.setattr(task_dispatcher.settings, "task_execution_mode", "local")
+        monkeypatch.setattr(document_tasks, "SyncSessionLocal", sync_sessions)
+        monkeypatch.setattr(document_tasks, "extract_text", lambda _path: "local task text")
+        monkeypatch.setattr(
+            document_tasks,
+            "split_text",
+            lambda text, **_kwargs: [text],
+        )
+        monkeypatch.setattr(
+            document_tasks,
+            "embed_texts",
+            lambda chunks: [[0.1] for _chunk in chunks],
+        )
+        monkeypatch.setattr(document_tasks, "upsert_chunks", lambda **_kwargs: None)
+
+        try:
+            async with async_sessions() as db:
+                user = User(email="desktop@example.com", hashed_password="x")
+                db.add(user)
+                await db.commit()
+                await db.refresh(user)
+                uploaded = UploadFile(
+                    file=BytesIO(b"local task text"),
+                    filename="desktop.txt",
+                )
+                document = await document_service.create_document(db, user.id, uploaded)
+                document_id = document.id
+
+            loop = asyncio.get_running_loop()
+            deadline = loop.time() + 3
+            while True:
+                async with async_sessions() as db:
+                    current = await db.get(Document, document_id)
+                    assert current is not None
+                    if current.status in {DocumentStatus.COMPLETED, DocumentStatus.FAILED}:
+                        break
+                if loop.time() >= deadline:
+                    pytest.fail("desktop local document task did not reach a terminal state")
+                await asyncio.sleep(0.02)
+
+            assert current.status is DocumentStatus.COMPLETED
+            assert current.chunk_count == 1
+        finally:
+            await asyncio.to_thread(task_dispatcher.shutdown_local_executor)
+            await async_engine.dispose()
+            sync_engine.dispose()
 
 
 class TestListAndGet:

@@ -1,6 +1,37 @@
 // API 客户端：统一鉴权、错误处理、SSE 流式解析。
 
 const TOKEN_KEY = "docmind_token";
+let apiOrigin = "";
+
+// Browser deployments keep relative URLs. The Tauri host provides its loopback
+// sidecar origin only after that backend reports ready.
+export function configureApiOrigin(origin = "") {
+  if (!origin) {
+    apiOrigin = "";
+    return;
+  }
+
+  const parsed = new URL(origin);
+  if (
+    parsed.protocol !== "http:" ||
+    parsed.hostname !== "127.0.0.1" ||
+    parsed.username ||
+    parsed.password ||
+    parsed.pathname !== "/" ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new Error("桌面 API 地址必须是无凭据的 127.0.0.1 HTTP origin");
+  }
+  apiOrigin = parsed.origin;
+}
+
+export function resolveApiUrl(path) {
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    throw new Error(`API 路径必须以单个 / 开头：${path}`);
+  }
+  return apiOrigin ? `${apiOrigin}${path}` : path;
+}
 
 export const auth = {
   get token() {
@@ -35,7 +66,7 @@ async function request(path, { method = "GET", body, json = true } = {}) {
     }
   }
 
-  const resp = await fetch(path, opts);
+  const resp = await fetch(resolveApiUrl(path), opts);
   if (resp.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:expired"));
     throw new Error("登录已过期，请重新登录");
@@ -81,12 +112,13 @@ export const api = {
   listDatasets: () => request("/eval/datasets"),
   createRun: (datasetId) =>
     request("/eval/runs", { method: "POST", body: { dataset_id: datasetId } }),
+  getRun: (runId) => request(`/eval/runs/${runId}`),
   getRunDetails: (runId) => request(`/eval/runs/${runId}/details`),
 
   // SSE 流式问答：用 fetch + ReadableStream（EventSource 不能带 Authorization）。
   // 回调 onEvent(eventName, data) 逐事件触发。
   async streamChat({ question, conversationId, documentId }, onEvent) {
-    const resp = await fetch("/chat/stream", {
+    const resp = await fetch(resolveApiUrl("/chat/stream"), {
       method: "POST",
       headers: headers({ "Content-Type": "application/json" }),
       body: JSON.stringify({

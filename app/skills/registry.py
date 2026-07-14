@@ -30,16 +30,26 @@ def register_skill(cls: type[BaseSkill]) -> type[BaseSkill]:
 
 
 def get_skill(name: str) -> BaseSkill | None:
-    return _REGISTRY.get(name)
+    skill = _REGISTRY.get(name)
+    if skill is not None:
+        refresh = getattr(skill, "refresh_availability", None)
+        if refresh is not None:
+            refresh()
+    return skill
 
 
 def all_skills() -> list[BaseSkill]:
-    return list(_REGISTRY.values())
+    skills = list(_REGISTRY.values())
+    for skill in skills:
+        refresh = getattr(skill, "refresh_availability", None)
+        if refresh is not None:
+            refresh()
+    return skills
 
 
 def all_tools() -> list[dict]:
     """所有技能的 function calling 定义，喂给 LLM。"""
-    return [skill.to_tool() for skill in _REGISTRY.values() if skill.available]
+    return [skill.to_tool() for skill in all_skills() if skill.available]
 
 
 def register_generic_package_skills() -> None:

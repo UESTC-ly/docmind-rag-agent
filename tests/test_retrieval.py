@@ -5,11 +5,12 @@ import pytest
 from app.models.document import Document, DocumentChunk, DocumentStatus
 from app.models.user import User
 from app.services.retrieval import (
+    build_keyword_statement,
     fuse_dense_and_keyword,
     keyword_search,
     reciprocal_rank_fusion,
 )
-from app.services import skill_retrieval
+from app.services import rag_service, skill_retrieval
 
 
 class TestRRF:
@@ -95,7 +96,7 @@ class TestSkillRetrieval:
             lambda vector, user_id, top_k, document_id: dense,
         )
 
-        def _keyword(query, user_id, document_id, limit):
+        def _keyword(query, user_id, document_id, limit, db=None):
             captured.update(
                 query=query,
                 user_id=user_id,
@@ -122,14 +123,24 @@ class TestSkillRetrieval:
         monkeypatch.setattr(
             skill_retrieval,
             "search",
-            lambda vector, user_id, top_k, document_id: [{"content": "dense"}],
+            lambda vector, user_id, top_k, document_id: [
+                {
+                    "document_id": 1,
+                    "chunk_index": 0,
+                    "content": "dense",
+                    "score": 0.8,
+                }
+            ],
         )
         monkeypatch.setattr(
             skill_retrieval,
             "keyword_search_sync",
             lambda *args: (_ for _ in ()).throw(AssertionError("不应调用关键词检索")),
         )
-        assert skill_retrieval.retrieve_for_skill(1, "q") == [{"content": "dense"}]
+        hits = skill_retrieval.retrieve_for_skill(1, "q")
+        assert [hit["content"] for hit in hits] == ["dense"]
+        assert hits[0]["retrieval_sources"] == ["dense"]
+        assert hits[0]["reranker"] == "local"
 
 
 async def _seed(db, contents):
@@ -171,3 +182,84 @@ class TestKeywordSearch:
         # 另一个用户搜不到
         hits = await keyword_search(db_session, "机密", uid + 999, None, limit=10)
         assert hits == []
+
+    async def test_database_applies_candidate_limit(self, db_session):
+        uid, did = await _seed(db_session, [f"共同词 内容{i}" for i in range(200)])
+        hits = await keyword_search(db_session, "共同", uid, did, limit=7)
+        assert len(hits) == 7
+
+
+class TestKeywordSql:
+    def test_postgresql_uses_fts_rank_and_limit(self):
+        from sqlalchemy.dialects import postgresql
+
+        stmt = build_keyword_statement("型号 ABC", 7, 9, 12, "postgresql")
+        compiled = stmt.compile(dialect=postgresql.dialect())
+        sql = str(compiled)
+        assert "to_tsvector" in sql
+        assert "'simple'::regconfig, document_chunks.content" in sql
+        assert "coalesce" not in sql.lower()
+        assert "websearch_to_tsquery" in sql
+        assert "ts_rank_cd" in sql
+        assert "documents.user_id =" in sql
+        assert "document_chunks.document_id =" in sql
+        assert "LIMIT" in sql
+        assert 7 in compiled.params.values()
+        assert 9 in compiled.params.values()
+        assert 12 in compiled.params.values()
+
+    def test_sqlite_uses_sql_score_not_python_scan(self):
+        from sqlalchemy.dialects import sqlite
+
+        stmt = build_keyword_statement("存储 向量", 3, None, 5, "sqlite")
+        sql = str(
+            stmt.compile(
+                dialect=sqlite.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        assert "CASE WHEN" in sql
+        assert "ORDER BY keyword_score DESC" in sql
+        assert "LIMIT 5" in sql
+
+
+@pytest.mark.asyncio
+async def test_online_and_sync_paths_produce_same_final_order(db_session, monkeypatch):
+    dense = [
+        {"document_id": 1, "chunk_index": 0, "content": "一般内容", "score": 0.9},
+        {"document_id": 1, "chunk_index": 1, "content": "精确型号 X1", "score": 0.7},
+    ]
+    keyword = [
+        {
+            "document_id": 1,
+            "chunk_index": 1,
+            "content": "精确型号 X1",
+            "keyword_score": 2,
+            "score": 0.0,
+        }
+    ]
+    monkeypatch.setattr(skill_retrieval.settings, "retrieval_mode", "hybrid")
+    monkeypatch.setattr(skill_retrieval.settings, "reranker_mode", "local")
+    monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
+    monkeypatch.setattr(skill_retrieval, "search", lambda *args: dense)
+    monkeypatch.setattr(
+        skill_retrieval,
+        "keyword_search_sync",
+        lambda *args, **kwargs: keyword,
+    )
+    monkeypatch.setattr(rag_service, "embed_query", lambda query: [0.1])
+    monkeypatch.setattr(rag_service, "search", lambda *args: dense)
+
+    async def _keyword(*args, **kwargs):
+        return keyword
+
+    monkeypatch.setattr(rag_service, "keyword_search", _keyword)
+
+    sync_hits = skill_retrieval.retrieve_for_skill(7, "精确型号", top_k=2)
+    async_hits = await rag_service.retrieve(db_session, 7, "精确型号", None)
+    assert [hit["chunk_index"] for hit in async_hits] == [
+        hit["chunk_index"] for hit in sync_hits
+    ]
+    assert [hit["rerank_score"] for hit in async_hits] == [
+        hit["rerank_score"] for hit in sync_hits
+    ]

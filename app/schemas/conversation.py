@@ -20,6 +20,18 @@ class Source(BaseModel):
     chunk_index: int
     content: str
     score: float
+    retrieval_sources: list[str] = Field(default_factory=list)
+    dense_rank: int | None = None
+    dense_score: float | None = None
+    keyword_rank: int | None = None
+    keyword_score: float | None = None
+    rrf_score: float | None = None
+    fused_rank: int | None = None
+    lexical_score: float | None = None
+    local_rerank_score: float | None = None
+    rerank_score: float | None = None
+    reranker: str | None = None
+    final_rank: int | None = None
 
 
 class ChatResponse(BaseModel):

@@ -1,13 +1,18 @@
 {
   "name": "@docmind/desktop",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build:frontend": "node scripts/build-frontend.mjs",
+    "build:sidecar": "node scripts/build-sidecar.mjs",
     "serve:frontend": "node scripts/serve-frontend.mjs",
-    "dev": "tauri dev",
-    "build": "tauri build"
+    "smoke:sidecar": "node scripts/smoke-sidecar.mjs",
+    "test:sidecar": "node scripts/test-sidecar.mjs",
+    "test:frontend-origin": "npm run build:frontend",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "dev": "npm run build:sidecar && tauri dev --config src-tauri/tauri.sidecar.conf.json",
+    "build": "npm run build:sidecar && tauri build --config src-tauri/tauri.sidecar.conf.json"
   },
   "dependencies": {
     "@tauri-apps/api": "2.7.0",

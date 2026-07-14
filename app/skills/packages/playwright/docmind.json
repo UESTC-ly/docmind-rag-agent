@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖 Playwright CLI、浏览器进程和 shell；当前 DocMind Web 安全沙箱未开放。"
+  "status": "ready",
+  "reason": "已适配宿主授权域名内的持久 Playwright browser actions 与隔离截图工作区。",
+  "requires": ["browser", "workspace"]
 }

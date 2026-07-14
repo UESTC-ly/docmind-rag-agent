@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖完整代码仓库与架构证据；当前通用 runner 未提供受控仓库读取能力。"
+  "status": "ready",
+  "reason": "已适配显式挂载的只读 repository 工具。",
+  "requires": ["repository", "workspace"]
 }

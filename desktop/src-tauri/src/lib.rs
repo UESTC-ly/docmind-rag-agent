@@ -1,21 +1,70 @@
 use std::{
     collections::HashMap,
-    env,
-    ffi::OsString,
-    fs,
-    io::{Read, Write},
+    env, fs,
+    io::{self, Read, Write},
     net::{SocketAddr, TcpStream},
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
+const BACKEND_HOST: &str = "127.0.0.1";
 const BACKEND_PORT: u16 = 8000;
+const SIDECAR_NAME: &str = "docmind-sidecar";
+const TARGET_TRIPLE: &str = env!("DOCMIND_TARGET_TRIPLE");
+const DESKTOP_ENV_TEMPLATE: &str = include_str!("../../sidecar/default.env");
+const SIDECAR_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
+
+#[cfg(unix)]
+fn request_child_shutdown(child: &mut Child) -> io::Result<()> {
+    if child.try_wait()?.is_some() {
+        return Ok(());
+    }
+
+    // SAFETY: POSIX kill(2) does not dereference pointers. The child id comes
+    // from std::process::Child and SIGTERM (15) is defined by POSIX/macOS.
+    extern "C" {
+        fn kill(pid: i32, signal: i32) -> i32;
+    }
+    let result = unsafe { kill(child.id() as i32, 15) };
+    if result == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
+}
+
+#[cfg(not(unix))]
+fn request_child_shutdown(child: &mut Child) -> io::Result<()> {
+    // std has no cross-platform graceful console signal. Windows packaging is
+    // outside v2.2 validation; retain the existing force-stop fallback there.
+    child.kill()
+}
+
+fn terminate_child(child: &mut Child, timeout: Duration) -> bool {
+    if child.try_wait().ok().flatten().is_some() {
+        return true;
+    }
+    if request_child_shutdown(child).is_ok() {
+        let deadline = Instant::now() + timeout;
+        while Instant::now() < deadline {
+            match child.try_wait() {
+                Ok(Some(_)) => return true,
+                Ok(None) => thread::sleep(Duration::from_millis(100)),
+                Err(_) => break,
+            }
+        }
+    }
+
+    let _ = child.kill();
+    let _ = child.wait();
+    false
+}
 
 #[derive(Clone, Serialize)]
 struct BackendStatus {
@@ -56,8 +105,7 @@ impl BackendManager {
         }
 
         self.stop_children();
-        self.set_status("starting", "正在准备 DocMind 本地运行环境…");
-
+        self.set_status("starting", "正在准备 DocMind 本地数据目录…");
         if let Err(message) = self.launch(&app) {
             self.fail(&message);
         }
@@ -66,78 +114,44 @@ impl BackendManager {
     fn launch(&self, app: &AppHandle) -> Result<(), String> {
         if api_is_healthy() {
             return Err(
-                "127.0.0.1:8000 已有正在运行的 DocMind 服务。请先停止网页启动脚本启动的服务，再打开桌面 App。"
-                    .to_owned(),
+                "127.0.0.1:8000 已有服务占用。请先停止另一个 DocMind 实例，再重试。".to_owned(),
             );
         }
 
-        let backend_root = backend_root(app)?;
         let runtime_dir = app
             .path()
             .app_config_dir()
-            .map_err(|error| format!("无法创建桌面配置目录：{error}"))?;
+            .map_err(|error| format!("无法定位桌面配置目录：{error}"))?;
         let data_dir = runtime_dir.join("data");
         let log_dir = runtime_dir.join("logs");
-        fs::create_dir_all(data_dir.join("uploads"))
-            .map_err(|error| format!("无法创建上传目录：{error}"))?;
-        fs::create_dir_all(data_dir.join("skill_workspaces"))
-            .map_err(|error| format!("无法创建技能工作区：{error}"))?;
-        fs::create_dir_all(&log_dir).map_err(|error| format!("无法创建日志目录：{error}"))?;
+        prepare_runtime_directories(&data_dir, &log_dir)?;
+        let config_file = ensure_config_file(&runtime_dir)?;
+        let sidecar = locate_sidecar(app)?;
+        let environment = runtime_environment(&config_file, &data_dir);
 
-        let env_file = ensure_env_file(&backend_root, &runtime_dir)?;
-        let environment = runtime_environment(&env_file, &data_dir);
-
-        self.set_status("starting", "正在启动 PostgreSQL、Redis 和 Qdrant…");
-        ensure_docker()?;
-        start_compose(&backend_root)?;
-
-        self.set_status("starting", "正在检查 Python 运行环境…");
-        let python = ensure_python_environment(&backend_root, &runtime_dir)?;
-
-        self.set_status("starting", "正在启动文档解析后台任务…");
-        let celery = spawn_process(
-            &python,
-            [
-                "-m",
-                "celery",
-                "-A",
-                "app.celery_app",
-                "worker",
-                "--loglevel=info",
-                "--pool=solo",
-            ],
-            &backend_root,
+        self.set_status("starting", "正在启动内置 DocMind 服务…");
+        let mut child = spawn_sidecar(
+            &sidecar,
+            &config_file,
+            &data_dir,
+            &runtime_dir,
             &environment,
-            &log_dir.join("celery.log"),
+            &log_dir.join("sidecar.log"),
         )?;
+
+        self.set_status("starting", "正在迁移本地数据并检查服务…");
+        if let Err(message) = wait_for_api(&mut child) {
+            terminate_child(&mut child, SIDECAR_SHUTDOWN_TIMEOUT);
+            return Err(format!(
+                "{message} 详细信息：{}",
+                log_dir.join("sidecar.log").display()
+            ));
+        }
+
         self.children
             .lock()
-            .map_err(|_| "无法记录 Celery 子进程。".to_owned())?
-            .push(celery);
-
-        self.set_status("starting", "正在启动 DocMind API…");
-        let api = spawn_process(
-            &python,
-            [
-                "-m",
-                "uvicorn",
-                "app.main:app",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8000",
-            ],
-            &backend_root,
-            &environment,
-            &log_dir.join("api.log"),
-        )?;
-        self.children
-            .lock()
-            .map_err(|_| "无法记录 API 子进程。".to_owned())?
-            .push(api);
-
-        self.set_status("starting", "正在等待 DocMind API 就绪…");
-        wait_for_api()?;
+            .map_err(|_| "无法记录内置服务进程。".to_owned())?
+            .push(child);
         self.set_status("ready", "DocMind 本地服务已就绪。");
         Ok(())
     }
@@ -147,8 +161,7 @@ impl BackendManager {
             return;
         };
         for child in children.iter_mut() {
-            let _ = child.kill();
-            let _ = child.wait();
+            terminate_child(child, SIDECAR_SHUTDOWN_TIMEOUT);
         }
         children.clear();
     }
@@ -184,46 +197,63 @@ fn backend_status(manager: State<'_, Arc<BackendManager>>) -> BackendStatus {
 }
 
 #[tauri::command]
+fn backend_origin() -> String {
+    format!("http://{BACKEND_HOST}:{BACKEND_PORT}")
+}
+
+#[tauri::command]
 fn retry_backend(app: AppHandle, manager: State<'_, Arc<BackendManager>>) {
     manager.inner().start(app);
 }
 
-fn backend_root(app: &AppHandle) -> Result<PathBuf, String> {
-    let development_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    if development_root.join("app").is_dir() {
-        return development_root
-            .canonicalize()
-            .map_err(|error| format!("无法定位开发后端目录：{error}"));
+fn prepare_runtime_directories(data_dir: &Path, log_dir: &Path) -> Result<(), String> {
+    for directory in [
+        data_dir.to_path_buf(),
+        data_dir.join("uploads"),
+        data_dir.join("skill_workspaces"),
+        data_dir.join("qdrant"),
+        data_dir.join("secrets"),
+        log_dir.to_path_buf(),
+    ] {
+        fs::create_dir_all(&directory)
+            .map_err(|error| format!("无法创建 {}：{error}", directory.display()))?;
     }
-
-    app.path()
-        .resource_dir()
-        .map(|path| path.join("backend"))
-        .map_err(|error| format!("无法定位打包后的后端资源：{error}"))
+    Ok(())
 }
 
-fn ensure_env_file(backend_root: &Path, runtime_dir: &Path) -> Result<PathBuf, String> {
-    let env_file = runtime_dir.join(".env");
-    if env_file.exists() {
-        return Ok(env_file);
+fn ensure_config_file(runtime_dir: &Path) -> Result<PathBuf, String> {
+    let config_file = runtime_dir.join("desktop.env");
+    if !config_file.exists() {
+        fs::write(&config_file, DESKTOP_ENV_TEMPLATE)
+            .map_err(|error| format!("无法创建桌面配置 {}：{error}", config_file.display()))?;
     }
+    Ok(config_file)
+}
 
-    let example = backend_root.join(".env.example");
-    fs::copy(&example, &env_file)
-        .map_err(|error| format!("首次启动时无法创建配置文件 {}：{error}", env_file.display()))?;
-    Ok(env_file)
+fn sqlite_database_url(database_path: &Path) -> String {
+    let normalized = database_path.to_string_lossy().replace('\\', "/");
+    format!("sqlite+aiosqlite:///{normalized}")
 }
 
 fn runtime_environment(env_file: &Path, data_dir: &Path) -> HashMap<String, String> {
     let mut environment = HashMap::new();
     environment.insert(
-        "PATH".to_owned(),
-        desktop_command_path().to_string_lossy().into_owned(),
-    );
-    environment.insert(
         "DOCMIND_ENV_FILE".to_owned(),
         env_file.to_string_lossy().into_owned(),
     );
+    environment.insert(
+        "DOCMIND_DATA_DIR".to_owned(),
+        data_dir.to_string_lossy().into_owned(),
+    );
+    environment.insert(
+        "DATABASE_URL".to_owned(),
+        sqlite_database_url(&data_dir.join("docmind.db")),
+    );
+    environment.insert(
+        "QDRANT_PATH".to_owned(),
+        data_dir.join("qdrant").to_string_lossy().into_owned(),
+    );
+    environment.insert("TASK_EXECUTION_MODE".to_owned(), "local".to_owned());
     environment.insert(
         "UPLOAD_DIR".to_owned(),
         data_dir.join("uploads").to_string_lossy().into_owned(),
@@ -236,6 +266,9 @@ fn runtime_environment(env_file: &Path, data_dir: &Path) -> HashMap<String, Stri
             .into_owned(),
     );
     environment.insert("DOCMIND_DESKTOP".to_owned(), "1".to_owned());
+    environment.insert("PYTHONUTF8".to_owned(), "1".to_owned());
+    environment.insert("PYTHONUNBUFFERED".to_owned(), "1".to_owned());
+    environment.insert("NO_PROXY".to_owned(), "127.0.0.1,localhost".to_owned());
     environment.insert(
         "OBJC_DISABLE_INITIALIZE_FORK_SAFETY".to_owned(),
         "YES".to_owned(),
@@ -243,123 +276,123 @@ fn runtime_environment(env_file: &Path, data_dir: &Path) -> HashMap<String, Stri
     environment
 }
 
-fn ensure_docker() -> Result<(), String> {
-    if command_succeeds("docker", ["info"], None) {
-        return Ok(());
-    }
-
-    if cfg!(target_os = "macos") && command_succeeds("colima", ["version"], None) {
-        run_command("colima", ["start"], None, None)?;
-    }
-
-    if command_succeeds("docker", ["info"], None) {
-        Ok(())
-    } else {
-        Err(
-            "Docker 未运行。请启动 Docker Desktop（macOS 也可安装并启用 Colima）后重试。"
-                .to_owned(),
-        )
-    }
-}
-
-fn start_compose(backend_root: &Path) -> Result<(), String> {
-    let compose_file = backend_root.join("docker-compose.yml");
-    let compose_file = compose_file.to_string_lossy().into_owned();
-    if command_succeeds("docker", ["compose", "version"], Some(backend_root)) {
-        run_command(
-            "docker",
-            ["compose", "-f", compose_file.as_str(), "up", "-d"],
-            Some(backend_root),
-            None,
-        )
-    } else if command_succeeds("docker-compose", ["version"], Some(backend_root)) {
-        run_command(
-            "docker-compose",
-            ["-f", compose_file.as_str(), "up", "-d"],
-            Some(backend_root),
-            None,
-        )
-    } else {
-        Err("未找到 Docker Compose。请安装 Docker Compose plugin 后重试。".to_owned())
-    }
-}
-
-fn ensure_python_environment(backend_root: &Path, runtime_dir: &Path) -> Result<PathBuf, String> {
-    let environment_dir = runtime_dir.join("python-env");
-    let python = venv_python(&environment_dir);
-    if !python.exists() {
-        run_command(
-            "uv",
-            [
-                "venv",
-                "--python",
-                "3.12",
-                environment_dir.to_string_lossy().as_ref(),
-            ],
-            Some(backend_root),
-            None,
-        )?;
-    }
-    run_command(
-        "uv",
-        [
-            "pip",
-            "install",
-            "--python",
-            python.to_string_lossy().as_ref(),
-            "-r",
-            backend_root
-                .join("requirements.txt")
-                .to_string_lossy()
-                .as_ref(),
-        ],
-        Some(backend_root),
-        None,
-    )?;
-    Ok(python)
-}
-
-fn venv_python(environment_dir: &Path) -> PathBuf {
+fn executable_suffix() -> &'static str {
     if cfg!(target_os = "windows") {
-        environment_dir.join("Scripts").join("python.exe")
+        ".exe"
     } else {
-        environment_dir.join("bin").join("python")
+        ""
     }
 }
 
-fn spawn_process<I, S>(
+fn bundled_sidecar_name() -> String {
+    format!("{SIDECAR_NAME}{}", executable_suffix())
+}
+
+fn build_sidecar_name() -> String {
+    format!("{SIDECAR_NAME}-{TARGET_TRIPLE}{}", executable_suffix())
+}
+
+fn locate_sidecar(app: &AppHandle) -> Result<PathBuf, String> {
+    let mut candidates = Vec::new();
+    if let Some(configured) = env::var_os("DOCMIND_SIDECAR_PATH") {
+        candidates.push(PathBuf::from(configured));
+    }
+    if let Ok(current_executable) = env::current_exe() {
+        if let Some(directory) = current_executable.parent() {
+            candidates.push(directory.join(bundled_sidecar_name()));
+            candidates.push(directory.join(build_sidecar_name()));
+        }
+    }
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        candidates.push(resource_dir.join(bundled_sidecar_name()));
+        candidates.push(resource_dir.join("binaries").join(bundled_sidecar_name()));
+        candidates.push(resource_dir.join("binaries").join(build_sidecar_name()));
+    }
+    candidates.push(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("binaries")
+            .join(build_sidecar_name()),
+    );
+
+    if let Some(found) = candidates.iter().find(|candidate| candidate.is_file()) {
+        return found
+            .canonicalize()
+            .map_err(|error| format!("无法解析内置服务路径：{error}"));
+    }
+
+    let searched = candidates
+        .iter()
+        .map(|candidate| candidate.display().to_string())
+        .collect::<Vec<_>>()
+        .join("；");
+    Err(format!(
+        "安装包缺少 {SIDECAR_NAME}。请重新安装完整的 DocMind 安装包。已检查：{searched}"
+    ))
+}
+
+fn spawn_sidecar(
     program: &Path,
-    arguments: I,
+    config_file: &Path,
+    data_dir: &Path,
     current_dir: &Path,
     environment: &HashMap<String, String>,
     log_path: &Path,
-) -> Result<Child, String>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
+) -> Result<Child, String> {
     let log = fs::File::create(log_path)
         .map_err(|error| format!("无法创建日志文件 {}：{error}", log_path.display()))?;
-    Command::new(program)
-        .args(arguments.into_iter().map(|item| item.as_ref().to_owned()))
+    let backend_port = BACKEND_PORT.to_string();
+    let parent_pid = std::process::id().to_string();
+    let data_dir = data_dir.to_string_lossy().into_owned();
+    let config_file = config_file.to_string_lossy().into_owned();
+    let mut command = Command::new(program);
+    command
+        .args([
+            "serve",
+            "--host",
+            BACKEND_HOST,
+            "--port",
+            backend_port.as_str(),
+            "--parent-pid",
+            parent_pid.as_str(),
+            "--data-dir",
+            data_dir.as_str(),
+            "--config",
+            config_file.as_str(),
+        ])
         .current_dir(current_dir)
         .envs(environment)
+        .stdin(Stdio::null())
         .stdout(Stdio::from(
             log.try_clone().map_err(|error| error.to_string())?,
         ))
-        .stderr(Stdio::from(log))
+        .stderr(Stdio::from(log));
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    command
         .spawn()
-        .map_err(|error| format!("无法启动 {}：{error}", program.display()))
+        .map_err(|error| format!("无法启动内置服务 {}：{error}", program.display()))
 }
 
-fn wait_for_api() -> Result<(), String> {
-    for _ in 0..90 {
+fn wait_for_api(child: &mut Child) -> Result<(), String> {
+    for _ in 0..120 {
         if api_is_healthy() {
             return Ok(());
         }
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|error| format!("无法检查内置服务状态：{error}"))?
+        {
+            return Err(format!("内置服务在启动期间退出（{status}）。"));
+        }
         thread::sleep(Duration::from_secs(1));
     }
-    Err("DocMind API 在 90 秒内未就绪。请查看桌面配置目录 logs/api.log。".to_owned())
+    Err("DocMind 内置服务在 120 秒内未就绪。".to_owned())
 }
 
 fn api_is_healthy() -> bool {
@@ -377,85 +410,7 @@ fn api_is_healthy() -> bool {
     let mut response = String::new();
     stream
         .read_to_string(&mut response)
-        .is_ok_and(|_| response.starts_with("HTTP/1.1 200"))
-}
-
-fn command_succeeds<I, S>(program: &str, arguments: I, current_dir: Option<&Path>) -> bool
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    let mut command = desktop_command(program);
-    command.args(arguments.into_iter().map(|item| item.as_ref().to_owned()));
-    if let Some(path) = current_dir {
-        command.current_dir(path);
-    }
-    command
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .is_ok_and(|status| status.success())
-}
-
-fn run_command<I, S>(
-    program: &str,
-    arguments: I,
-    current_dir: Option<&Path>,
-    environment: Option<&HashMap<String, String>>,
-) -> Result<(), String>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    let mut command = desktop_command(program);
-    command.args(arguments.into_iter().map(|item| item.as_ref().to_owned()));
-    if let Some(path) = current_dir {
-        command.current_dir(path);
-    }
-    if let Some(values) = environment {
-        command.envs(values);
-    }
-    command
-        .status()
-        .map_err(|error| format!("无法执行 {program}：{error}"))?
-        .success()
-        .then_some(())
-        .ok_or_else(|| format!("命令执行失败：{program}"))
-}
-
-fn desktop_command(program: &str) -> Command {
-    let mut command = Command::new(program);
-    command.env("PATH", desktop_command_path());
-    command
-}
-
-fn desktop_command_path() -> OsString {
-    let mut paths: Vec<PathBuf> = env::var_os("PATH")
-        .map(|value| env::split_paths(&value).collect())
-        .unwrap_or_default();
-
-    for path in [
-        PathBuf::from("/opt/homebrew/bin"),
-        PathBuf::from("/usr/local/bin"),
-        PathBuf::from("/usr/bin"),
-        PathBuf::from("/bin"),
-        PathBuf::from("/usr/sbin"),
-        PathBuf::from("/sbin"),
-    ] {
-        if !paths.contains(&path) {
-            paths.push(path);
-        }
-    }
-
-    if let Some(home) = env::var_os("HOME").map(PathBuf::from) {
-        for path in [home.join(".local/bin"), home.join(".cargo/bin")] {
-            if !paths.contains(&path) {
-                paths.push(path);
-            }
-        }
-    }
-
-    env::join_paths(paths).unwrap_or_else(|_| OsString::from("/usr/local/bin:/usr/bin:/bin"))
+        .is_ok_and(|_| response.starts_with("HTTP/1.1 200") || response.starts_with("HTTP/1.0 200"))
 }
 
 pub fn run() {
@@ -468,7 +423,11 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
         .manage(backend_manager)
-        .invoke_handler(tauri::generate_handler![backend_status, retry_backend])
+        .invoke_handler(tauri::generate_handler![
+            backend_status,
+            backend_origin,
+            retry_backend
+        ])
         .setup(move |app| {
             startup_manager.start(app.handle().clone());
             Ok(())
@@ -500,35 +459,70 @@ mod tests {
     use super::*;
 
     #[test]
-    fn desktop_runtime_environment_uses_external_writable_directories() {
+    fn desktop_runtime_environment_selects_embedded_services() {
         let environment = runtime_environment(
-            Path::new("/tmp/docmind/.env"),
+            Path::new("/tmp/docmind/desktop.env"),
             Path::new("/tmp/docmind/data"),
         );
 
         assert_eq!(
-            environment.get("DOCMIND_ENV_FILE"),
-            Some(&"/tmp/docmind/.env".to_owned())
+            environment.get("DATABASE_URL"),
+            Some(&"sqlite+aiosqlite:////tmp/docmind/data/docmind.db".to_owned())
+        );
+        assert_eq!(
+            environment.get("QDRANT_PATH"),
+            Some(&"/tmp/docmind/data/qdrant".to_owned())
+        );
+        assert_eq!(
+            environment.get("TASK_EXECUTION_MODE"),
+            Some(&"local".to_owned())
         );
         assert_eq!(environment.get("DOCMIND_DESKTOP"), Some(&"1".to_owned()));
-        assert!(environment["UPLOAD_DIR"].ends_with("data/uploads"));
-        assert!(environment["SKILL_WORKSPACE_DIR"].ends_with("data/skill_workspaces"));
+        assert!(!environment.contains_key("REDIS_URL"));
     }
 
     #[test]
     fn managed_backend_starts_from_a_known_status() {
         let status = BackendStatus::default();
-
         assert_eq!(status.state, "starting");
         assert!(!status.message.is_empty());
     }
 
     #[test]
-    fn desktop_path_includes_homebrew_and_system_commands() {
-        let paths: Vec<PathBuf> = env::split_paths(&desktop_command_path()).collect();
+    fn frontend_origin_uses_the_managed_sidecar_address() {
+        assert_eq!(backend_origin(), "http://127.0.0.1:8000");
+    }
 
-        assert!(paths.contains(&PathBuf::from("/opt/homebrew/bin")));
-        assert!(paths.contains(&PathBuf::from("/usr/local/bin")));
-        assert!(paths.contains(&PathBuf::from("/usr/bin")));
+    #[test]
+    fn sidecar_names_cover_build_and_installed_layouts() {
+        assert_eq!(
+            bundled_sidecar_name(),
+            format!("docmind-sidecar{}", executable_suffix())
+        );
+        assert!(build_sidecar_name().contains(TARGET_TRIPLE));
+    }
+
+    #[test]
+    fn desktop_config_does_not_expose_runtime_storage_switches() {
+        assert!(!DESKTOP_ENV_TEMPLATE.contains("DATABASE_URL"));
+        assert!(!DESKTOP_ENV_TEMPLATE.contains("REDIS_URL"));
+        assert!(!DESKTOP_ENV_TEMPLATE.contains("QDRANT_PATH"));
+        assert!(!DESKTOP_ENV_TEMPLATE.contains("TASK_EXECUTION_MODE"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sidecar_shutdown_requests_sigterm_before_force_kill() {
+        let mut child = Command::new("/bin/sh")
+            .args(["-c", "trap 'exit 0' TERM; while :; do sleep 1; done"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("spawn SIGTERM-aware child");
+        thread::sleep(Duration::from_millis(100));
+
+        assert!(terminate_child(&mut child, Duration::from_secs(3)));
+        assert!(child.try_wait().expect("read child status").is_some());
     }
 }

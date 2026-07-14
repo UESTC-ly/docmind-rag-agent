@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖脚本执行、二进制 assets 复制和 Notebook 运行环境；当前通用 runner 尚未完整适配。"
+  "status": "ready",
+  "reason": "已适配 macOS confinement 下的 notebook scaffold、二进制 asset 与隔离工作区；不承诺 kernel 执行。",
+  "requires": ["package_scripts", "package_assets", "workspace"]
 }

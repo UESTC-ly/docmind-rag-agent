@@ -14,8 +14,10 @@ from app.skills import (  # noqa: F401
     web_search,
 )
 from app.skills.registry import register_generic_package_skills
+from app.skills.adapters import install_runtime_adapters
 
 # Python-backed 技能导入完成后，再扫描纯 SKILL.md package。
 # 已经由 Python 类注册的 package 会跳过；未注册的 Codex-style package 会变成
 # GenericPackageSkill，体现 v0.5 的“通用 skills 包”能力。
+install_runtime_adapters()
 register_generic_package_skills()

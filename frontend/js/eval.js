@@ -12,6 +12,19 @@ const METRICS = [
   { key: "answer_relevancy", label: "答案相关性" },
 ];
 
+const DEFAULT_POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 30 * 60 * 1000;
+
+function pollIntervalMs() {
+  const override = Number(globalThis.__DOCMIND_EVAL_POLL_MS__);
+  return Number.isFinite(override) && override >= 10
+    ? override
+    : DEFAULT_POLL_INTERVAL_MS;
+}
+
+const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 function metricCard(label, value) {
   const pct = typeof value === "number" ? Math.max(0, Math.min(1, value)) : 0;
   const bar = el("div", { class: "metric__bar" }, [el("span", {})]);
@@ -33,6 +46,38 @@ function renderRun(run) {
   return grid;
 }
 
+function runState(run) {
+  if (run.status === "completed") return renderRun(run);
+
+  const failed = run.status === "failed";
+  const labels = {
+    pending: "评估任务已进入队列，正在等待 Worker…",
+    running: "正在逐样本执行检索、生成与评分…",
+    failed: run.error_message || "评估运行失败",
+  };
+  return el("p", {
+    class: failed ? "empty eval-status eval-status--failed" : "empty eval-status",
+    role: failed ? "alert" : "status",
+    text: labels[run.status] || `评估状态：${run.status}`,
+  });
+}
+
+async function waitForRun(run, onUpdate) {
+  const startedAt = Date.now();
+  let current = run;
+
+  while (current.status === "pending" || current.status === "running") {
+    if (Date.now() - startedAt >= POLL_TIMEOUT_MS) {
+      throw new Error("评估仍在后台运行，请稍后重新打开评估页查看结果");
+    }
+    await wait(pollIntervalMs());
+    current = await api.getRun(current.id);
+    onUpdate(current);
+  }
+
+  return current;
+}
+
 function datasetBlock(ds) {
   const runBtn = el("button", {
     class: "btn btn--accent",
@@ -42,18 +87,32 @@ function datasetBlock(ds) {
 
   runBtn.addEventListener("click", async () => {
     runBtn.disabled = true;
-    runBtn.textContent = "评估中…（逐样本跑 RAG + LLM 打分）";
+    runBtn.textContent = "提交中…";
     try {
-      const run = await api.createRun(ds.id);
+      let run = await api.createRun(ds.id);
+      result.replaceChildren(runState(run));
+      runBtn.textContent = run.status === "pending" ? "排队中…" : "评估中…";
+
+      run = await waitForRun(run, (updated) => {
+        result.replaceChildren(runState(updated));
+        runBtn.textContent = updated.status === "pending" ? "排队中…" : "评估中…";
+      });
+
       if (run.status === "completed") {
         result.replaceChildren(renderRun(run));
         toast("评估完成");
       } else {
-        result.replaceChildren(
-          el("p", { class: "empty", text: run.error_message || "运行失败" })
-        );
+        result.replaceChildren(runState(run));
+        toast(run.error_message || "评估运行失败");
       }
     } catch (e) {
+      result.replaceChildren(
+        el("p", {
+          class: "empty eval-status eval-status--failed",
+          role: "alert",
+          text: e.message,
+        })
+      );
       toast(e.message);
     } finally {
       runBtn.disabled = false;

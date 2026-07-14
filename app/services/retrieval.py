@@ -1,53 +1,138 @@
-"""多路召回（Hybrid Retrieval）。
+"""Shared hybrid retrieval primitives.
 
-单一稠密向量检索抓不住精确关键词（如产品型号、专有名词）。这里再加一路
-关键词检索，用 RRF（Reciprocal Rank Fusion，倒数排名融合）把两路结果融合：
+PostgreSQL keyword recall uses ``to_tsvector``/``ts_rank_cd`` and a GIN-backed
+expression.  SQLite (desktop and tests) uses a bounded SQL ``LIKE`` score.  Both
+paths apply ownership/document filters, ranking, and LIMIT in the database; no
+path materializes a user's complete chunk collection in Python.
 
-    RRF_score(d) = Σ_i  1 / (k + rank_i(d))
-
-k 是平滑常数（经验值 60）。RRF 只看排名不看各路原始分数量纲，天然免归一化，
-是混合检索的业界标配。
-
-关键词检索用命中词数打分：实现简单、免额外依赖，sqlite 也能跑（便于测试）。
-生产可换成 PG 全文检索或 BM25，接口不变。
-
-注意：chunk_index 只在单文档内唯一，跨文档检索时用 (document_id, chunk_index)
-作为融合身份，避免不同文档的同序号块被误合并。
+Dense and keyword candidates are fused with scored RRF, annotated with their raw
+signals, then passed through the same reranker for online chat, Skills, and evals.
 """
 
-import re
+from __future__ import annotations
 
-from sqlalchemy import select
+import re
+from collections.abc import Hashable
+
+from sqlalchemy import case, func, literal, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SyncSessionLocal
 from app.models.document import Document, DocumentChunk
+from app.services.reranker import rerank
 
-ChunkKey = tuple[int, int]  # (document_id, chunk_index)
+ChunkKey = tuple[int, int]
+
+
+def reciprocal_rank_fusion_scores(
+    ranked_lists: list[list[Hashable]], k: int = 60
+) -> dict[Hashable, float]:
+    """Return stable RRF scores without discarding diagnostic information."""
+    scores: dict[Hashable, float] = {}
+    for ranked in ranked_lists:
+        for rank, key in enumerate(ranked, start=1):
+            scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
+    return scores
 
 
 def reciprocal_rank_fusion(
     ranked_lists: list[list[ChunkKey]], k: int = 60, top_k: int = 5
 ) -> list[ChunkKey]:
-    """对多个「按相关性降序的 key 列表」做 RRF 融合。
-
-    返回融合后按 RRF 分数降序的 key 列表（去重，取前 top_k）。
-    key 可以是任意可哈希标识（这里用 (document_id, chunk_index)）。
-    """
-    scores: dict[ChunkKey, float] = {}
+    """Fuse ranked identifiers with deterministic ordering for score ties."""
+    scores = reciprocal_rank_fusion_scores(ranked_lists, k=k)
+    first_seen: dict[Hashable, int] = {}
+    best_rank: dict[Hashable, int] = {}
+    position = 0
     for ranked in ranked_lists:
         for rank, key in enumerate(ranked, start=1):
-            scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
-
-    ordered = sorted(scores, key=lambda key: scores[key], reverse=True)
-    return ordered[:top_k]
+            first_seen.setdefault(key, position)
+            best_rank[key] = min(best_rank.get(key, rank), rank)
+            position += 1
+    ordered = sorted(
+        scores,
+        key=lambda key: (-scores[key], best_rank[key], first_seen[key]),
+    )
+    return list(ordered[:top_k])
 
 
 def _tokenize(text: str) -> list[str]:
-    """极简分词：英文按词、中文按单字，兼顾中英。仅用于关键词召回打分。"""
-    tokens = re.findall(r"[a-zA-Z0-9]+|[一-鿿]", text.lower())
-    return [t for t in tokens if t]
+    """Tokenize enough for the SQLite compatibility query and local reranker."""
+    return [
+        token
+        for token in re.findall(r"[a-zA-Z0-9]+|[\u4e00-\u9fff]", text.lower())
+        if token
+    ]
+
+
+def _escape_like(term: str) -> str:
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def build_keyword_statement(
+    query: str,
+    user_id: int,
+    document_id: int | None,
+    limit: int,
+    dialect_name: str,
+):
+    """Build the dialect-aware, database-ranked keyword candidate query."""
+    terms = list(dict.fromkeys(_tokenize(query)))
+    if not terms or limit <= 0:
+        return None
+
+    if dialect_name == "postgresql":
+        # Keep the regconfig literal identical to the migration's expression
+        # index so PostgreSQL can choose the GIN index under prepared statements.
+        simple_config = literal_column("'simple'::regconfig")
+        vector = func.to_tsvector(simple_config, DocumentChunk.content)
+        ts_query = func.websearch_to_tsquery(simple_config, query)
+        score = func.ts_rank_cd(vector, ts_query)
+        match_condition = vector.op("@@")(ts_query)
+    else:
+        # SQL-side compatibility scorer for desktop SQLite and unit tests.  Keep the
+        # number of terms bounded so a hostile query cannot generate unbounded SQL.
+        score = literal(0)
+        for term in terms[:64]:
+            pattern = f"%{_escape_like(term)}%"
+            score = score + case(
+                (func.lower(DocumentChunk.content).like(pattern, escape="\\"), 1),
+                else_=0,
+            )
+        match_condition = score > 0
+
+    keyword_score = score.label("keyword_score")
+    stmt = (
+        select(
+            DocumentChunk.document_id,
+            DocumentChunk.chunk_index,
+            DocumentChunk.content,
+            keyword_score,
+        )
+        .join(Document, DocumentChunk.document_id == Document.id)
+        .where(Document.user_id == user_id, match_condition)
+    )
+    if document_id is not None:
+        stmt = stmt.where(DocumentChunk.document_id == document_id)
+    return stmt.order_by(
+        keyword_score.desc(),
+        DocumentChunk.document_id.asc(),
+        DocumentChunk.chunk_index.asc(),
+    ).limit(limit)
+
+
+def _keyword_rows(result) -> list[dict]:
+    return [
+        {
+            "document_id": int(row["document_id"]),
+            "chunk_index": int(row["chunk_index"]),
+            "content": row["content"],
+            "keyword_score": float(row["keyword_score"] or 0.0),
+            "score": 0.0,
+        }
+        for row in result.mappings().all()
+    ]
 
 
 async def keyword_search(
@@ -57,50 +142,11 @@ async def keyword_search(
     document_id: int | None,
     limit: int,
 ) -> list[dict]:
-    """关键词召回：在用户（可限定文档）的 chunk 里按命中词数排序。
-
-    返回 [{chunk_index, content, document_id, keyword_score}, ...]，降序。
-    小规模知识库直接内存打分；数据量大时应下推到 DB 全文索引。
-    """
-    terms = _tokenize(query)
-    if not terms:
+    dialect = db.get_bind().dialect.name
+    stmt = build_keyword_statement(query, user_id, document_id, limit, dialect)
+    if stmt is None:
         return []
-
-    stmt = (
-        select(DocumentChunk)
-        .join(Document, DocumentChunk.document_id == Document.id)
-        .where(Document.user_id == user_id)
-    )
-    if document_id is not None:
-        stmt = stmt.where(DocumentChunk.document_id == document_id)
-
-    rows = (await db.execute(stmt)).scalars().all()
-    return _score_keyword_rows(rows, terms, limit)
-
-
-def _score_keyword_rows(
-    rows: list[DocumentChunk], terms: list[str], limit: int
-) -> list[dict]:
-    """对已限定用户范围的分块做关键词打分，供 async/sync 两条 DB 路径复用。"""
-    scored: list[dict] = []
-    for chunk in rows:
-        content_lower = chunk.content.lower()
-        hit = sum(1 for t in terms if t in content_lower)
-        if hit > 0:
-            scored.append(
-                {
-                    "chunk_index": chunk.chunk_index,
-                    "content": chunk.content,
-                    "document_id": chunk.document_id,
-                    "keyword_score": hit,
-                    # Source/Skill 响应统一要求 score 字段；关键词独占命中没有可比较的
-                    # 向量相似度，用 0.0 明确表示“由关键词路召回”。
-                    "score": 0.0,
-                }
-            )
-
-    scored.sort(key=lambda x: x["keyword_score"], reverse=True)
-    return scored[:limit]
+    return _keyword_rows(await db.execute(stmt))
 
 
 def keyword_search_sync(
@@ -108,29 +154,24 @@ def keyword_search_sync(
     user_id: int,
     document_id: int | None,
     limit: int,
+    db: Session | None = None,
 ) -> list[dict]:
-    """同步关键词召回，专供 Agent Skill 在线程池里的同步执行路径。
-
-    这里必须使用 SyncSessionLocal；FastAPI 的 AsyncSession 不能跨线程交给同步 Skill。
-    """
-    terms = _tokenize(query)
-    if not terms:
-        return []
-
-    with SyncSessionLocal() as db:
-        stmt = (
-            select(DocumentChunk)
-            .join(Document, DocumentChunk.document_id == Document.id)
-            .where(Document.user_id == user_id)
-        )
-        if document_id is not None:
-            stmt = stmt.where(DocumentChunk.document_id == document_id)
-        rows = db.execute(stmt).scalars().all()
-    return _score_keyword_rows(rows, terms, limit)
+    """Synchronous database keyword recall for Skills, evals, and local tasks."""
+    owns_session = db is None
+    session = db or SyncSessionLocal()
+    try:
+        dialect = session.get_bind().dialect.name
+        stmt = build_keyword_statement(query, user_id, document_id, limit, dialect)
+        if stmt is None:
+            return []
+        return _keyword_rows(session.execute(stmt))
+    finally:
+        if owns_session:
+            session.close()
 
 
 def _key(hit: dict) -> ChunkKey:
-    return (hit["document_id"], hit["chunk_index"])
+    return (int(hit["document_id"]), int(hit["chunk_index"]))
 
 
 def fuse_dense_and_keyword(
@@ -138,20 +179,60 @@ def fuse_dense_and_keyword(
     keyword_hits: list[dict],
     top_k: int,
 ) -> list[dict]:
-    """把稠密检索与关键词检索结果 RRF 融合，返回融合后的命中列表。
-
-    身份用 (document_id, chunk_index)；融合后优先保留稠密结果（它带 score）。
-    """
+    """Fuse candidates while preserving raw ranks/scores and recall provenance."""
+    dense_keys = [_key(hit) for hit in dense_hits]
+    keyword_keys = [_key(hit) for hit in keyword_hits]
+    scores = reciprocal_rank_fusion_scores(
+        [dense_keys, keyword_keys], k=settings.rrf_k
+    )
     fused_keys = reciprocal_rank_fusion(
-        [[_key(h) for h in dense_hits], [_key(h) for h in keyword_hits]],
-        k=settings.rrf_k,
-        top_k=top_k,
+        [dense_keys, keyword_keys], k=settings.rrf_k, top_k=top_k
     )
 
     by_key: dict[ChunkKey, dict] = {}
-    for h in keyword_hits:
-        by_key.setdefault(_key(h), h)
-    for h in dense_hits:
-        by_key[_key(h)] = h  # 稠密覆盖，保留 score
+    for rank, hit in enumerate(dense_hits, start=1):
+        key = _key(hit)
+        enriched = dict(hit)
+        enriched.update(
+            dense_rank=rank,
+            dense_score=float(hit.get("score", 0.0) or 0.0),
+            retrieval_sources=["dense"],
+        )
+        by_key[key] = enriched
 
-    return [by_key[key] for key in fused_keys if key in by_key]
+    for rank, hit in enumerate(keyword_hits, start=1):
+        key = _key(hit)
+        enriched = by_key.setdefault(key, dict(hit))
+        enriched["keyword_rank"] = rank
+        enriched["keyword_score"] = float(hit.get("keyword_score", 0.0) or 0.0)
+        sources = enriched.setdefault("retrieval_sources", [])
+        if "keyword" not in sources:
+            sources.append("keyword")
+        enriched.setdefault("score", 0.0)
+        enriched.setdefault("dense_score", None)
+
+    fused: list[dict] = []
+    for rank, key in enumerate(fused_keys, start=1):
+        hit = dict(by_key[key])
+        hit["rrf_score"] = float(scores[key])
+        hit["fused_rank"] = rank
+        fused.append(hit)
+    return fused
+
+
+def finalize_retrieval(
+    query: str,
+    dense_hits: list[dict],
+    keyword_hits: list[dict],
+    top_k: int,
+) -> list[dict]:
+    """Shared candidate fusion + bounded reranking stage for every caller."""
+    candidate_limit = max(
+        top_k,
+        min(
+            settings.reranker_candidate_limit,
+            max(len(dense_hits) + len(keyword_hits), top_k),
+        ),
+    )
+    fused = fuse_dense_and_keyword(dense_hits, keyword_hits, candidate_limit)
+    return rerank(query, fused, top_k)

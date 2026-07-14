@@ -3,17 +3,16 @@
 端点：
   POST /eval/datasets        — 从文档生成评估数据集（同步，LLM 出题）
   GET  /eval/datasets        — 列出当前用户的数据集
-  POST /eval/runs            — 触发一次评估运行（同步执行，结果完成后返回）
+  POST /eval/runs            — 创建 pending run 并派发后台任务（202）
   GET  /eval/runs/{run_id}   — 查看某次运行的聚合结果
   GET  /eval/runs/{run_id}/details — 查看逐条样本明细
 """
 
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from app.models.document import Document
 from app.models.evaluation import EvalDataset, EvalResult, EvalRun, RunStatus
@@ -105,15 +104,19 @@ async def list_datasets(
 
 # ── 评估运行端点 ──────────────────────────────────────────────────────────────
 
-@router.post("/runs", response_model=RunResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/runs",
+    response_model=RunResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def create_run(
     req: RunCreateRequest,
+    response: Response,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """触发一次评估运行（同步执行，等待全部样本跑完后返回结果）。"""
-    from app.database import SyncSessionLocal
-    from app.services.evaluation.runner import run_evaluation
+    """创建评估运行并立即返回；实际执行由后台任务完成。"""
+    from app.services.task_dispatcher import dispatch_evaluation
 
     # 确认数据集属于当前用户
     result = await db.execute(
@@ -129,7 +132,6 @@ async def create_run(
     document_id = dataset.document_id
 
     # 先在异步层建 run 记录，拿到 run_id
-    from app.models.evaluation import EvalRun
     run = EvalRun(dataset_id=req.dataset_id)
     db.add(run)
     await db.flush()
@@ -137,20 +139,20 @@ async def create_run(
     run_id = run.id
     await db.commit()
 
-    # 在线程里执行同步评估（会阻塞，适合小数据集；大数据集改用 Celery task）
-    def _sync():
-        with SyncSessionLocal() as sync_db:
-            run_evaluation(sync_db, run_id, current_user.id, document_id)
+    try:
+        receipt = dispatch_evaluation(run_id, current_user.id, document_id)
+    except Exception as exc:  # broker/local executor unavailable
+        run.status = RunStatus.FAILED
+        run.error_message = f"后台任务派发失败: {str(exc)[:1000]}"
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="评估后台任务暂不可用",
+        ) from exc
 
-    await asyncio.to_thread(_sync)
-
-    # 评估在独立的 sync session 里提交；本 async session 配了
-    # expire_on_commit=False，身份映射里缓存的 run 仍是旧的 pending 快照。
-    # 必须 expire 掉，重新 select 才会从库读到 completed 的最新状态。
-    db.expire_all()
-    result = await db.execute(select(EvalRun).where(EvalRun.id == run_id))
-    updated_run = result.scalar_one()
-    return updated_run
+    response.headers["X-Task-ID"] = receipt.task_id
+    response.headers["X-Task-Mode"] = receipt.mode
+    return run
 
 
 @router.get("/runs/{run_id}", response_model=RunResponse)
@@ -160,8 +162,6 @@ async def get_run(
     db: AsyncSession = Depends(get_db),
 ):
     """查看某次评估运行的聚合结果。"""
-    from app.models.evaluation import EvalRun
-
     result = await db.execute(
         select(EvalRun)
         .join(EvalDataset, EvalRun.dataset_id == EvalDataset.id)
@@ -180,8 +180,6 @@ async def get_run_details(
     db: AsyncSession = Depends(get_db),
 ):
     """查看某次运行的逐条样本明细分数。"""
-    from app.models.evaluation import EvalRun
-
     # 先确认运行存在且属于当前用户
     result = await db.execute(
         select(EvalRun)

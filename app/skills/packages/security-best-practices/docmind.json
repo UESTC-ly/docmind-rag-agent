@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖读取真实代码仓库；当前通用 runner 只能访问用户隔离工作区和上传文档。"
+  "status": "ready",
+  "reason": "已适配显式挂载的只读 repository 工具。",
+  "requires": ["repository", "workspace"]
 }

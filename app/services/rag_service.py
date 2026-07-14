@@ -12,7 +12,7 @@ from app.models.conversation import Conversation, Message, MessageRole
 from app.schemas.conversation import ChatResponse, Source
 from app.services.embedding_service import embed_query
 from app.services.llm_service import chat_completion, chat_completion_stream
-from app.services.retrieval import fuse_dense_and_keyword, keyword_search
+from app.services.retrieval import finalize_retrieval, keyword_search
 from app.services.vector_store import search
 from app.utils.logging import logger
 
@@ -25,21 +25,39 @@ async def retrieve(
     向量检索是同步 I/O（放线程池）；关键词检索用当前 async session。
     """
     top_k = settings.retrieval_top_k
+    dense_limit = max(
+        top_k,
+        min(settings.dense_candidates, settings.reranker_candidate_limit),
+    )
     query_vector = await asyncio.to_thread(embed_query, question)
     dense_hits = await asyncio.to_thread(
-        search, query_vector, user_id, top_k, document_id
+        search, query_vector, user_id, dense_limit, document_id
     )
 
-    if settings.retrieval_mode != "hybrid":
-        return dense_hits
-
-    keyword_hits = await keyword_search(
-        db, question, user_id, document_id, settings.keyword_candidates
+    keyword_hits: list[dict] = []
+    if settings.retrieval_mode == "hybrid":
+        keyword_hits = await keyword_search(
+            db,
+            question,
+            user_id,
+            document_id,
+            min(settings.keyword_candidates, settings.reranker_candidate_limit),
+        )
+    # The optional HTTP reranker is synchronous; keep it off the ASGI event
+    # loop just like embedding and Qdrant calls.
+    fused = await asyncio.to_thread(
+        finalize_retrieval,
+        question,
+        dense_hits,
+        keyword_hits,
+        top_k,
     )
-    fused = fuse_dense_and_keyword(dense_hits, keyword_hits, top_k)
     logger.bind(
-        dense=len(dense_hits), keyword=len(keyword_hits), fused=len(fused)
-    ).info("hybrid retrieval")
+        mode=settings.retrieval_mode,
+        dense=len(dense_hits),
+        keyword=len(keyword_hits),
+        fused=len(fused),
+    ).info("retrieval completed")
     return fused
 
 SYSTEM_PROMPT = """你是 DocMind 的文档问答助手。请严格根据下面提供的「文档片段」回答用户问题。

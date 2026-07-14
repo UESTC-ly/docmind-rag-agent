@@ -1,0 +1,5 @@
+# Build-time dependencies only. The resulting one-file sidecar embeds Python and
+# all imported runtime packages; none of these are required on the user's host.
+-r requirements-runtime.txt
+pyinstaller==6.16.0
+pyinstaller-hooks-contrib==2026.6

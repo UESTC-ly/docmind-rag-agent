@@ -6,6 +6,8 @@
   - payload：document_id / chunk_index / user_id / content，检索后可直接拿到原文
 """
 
+from pathlib import Path
+
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
@@ -18,7 +20,18 @@ from qdrant_client.models import (
 
 from app.config import settings
 
-_client = QdrantClient(url=settings.qdrant_url)
+
+def _create_client(path: str | None, url: str) -> QdrantClient:
+    if path:
+        resolved = Path(path).expanduser().resolve()
+        resolved.mkdir(parents=True, exist_ok=True)
+        return QdrantClient(path=str(resolved))
+    # Avoid a network/version probe during module import; real operations surface
+    # connectivity errors at their own bounded boundary.
+    return QdrantClient(url=url, check_compatibility=False)
+
+
+_client = _create_client(settings.qdrant_path, settings.qdrant_url)
 
 _ID_STRIDE = 100_000  # 每个文档最多 10 万个 chunk，够用
 
@@ -108,3 +121,10 @@ def delete_document(document_id: int) -> None:
             ]
         ),
     )
+
+
+def close() -> None:
+    """Release local storage locks and HTTP resources during process shutdown."""
+    close_client = getattr(_client, "close", None)
+    if callable(close_client):
+        close_client()

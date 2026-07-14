@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -22,7 +23,11 @@ def find_repo_root(start: Path) -> Path:
 
 
 def load_template(skill_dir: Path, kind: str) -> dict[str, Any]:
-    asset_name = "experiment-template.ipynb" if kind == "experiment" else "tutorial-template.ipynb"
+    asset_name = (
+        "experiment-template.ipynb"
+        if kind == "experiment"
+        else "tutorial-template.ipynb"
+    )
     template_path = skill_dir / "assets" / asset_name
     if not template_path.exists():
         raise SystemExit(f"Missing template: {template_path}")
@@ -76,7 +81,9 @@ def default_output(repo_root: Path, title: str) -> Path:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Scaffold a Jupyter notebook for experiments or tutorials.")
+    parser = argparse.ArgumentParser(
+        description="Scaffold a Jupyter notebook for experiments or tutorials."
+    )
     parser.add_argument(
         "--kind",
         choices=["experiment", "tutorial"],
@@ -108,15 +115,28 @@ def main() -> None:
     script_path = Path(__file__).resolve()
     skill_dir = script_path.parents[1]
     repo_root = find_repo_root(skill_dir)
+    workspace_raw = os.environ.get("DOCMIND_SKILL_WORKSPACE")
+    workspace = Path(workspace_raw).resolve() if workspace_raw else None
 
     notebook = load_template(skill_dir, args.kind)
     update_title(notebook, args.kind, args.title)
 
-    out_path = args.out or default_output(repo_root, args.title)
+    output_root = workspace or repo_root
+    out_path = args.out or default_output(output_root, args.title)
+    if workspace is not None and not out_path.is_absolute():
+        out_path = workspace / out_path
     out_path = out_path.resolve()
+    if (
+        workspace is not None
+        and out_path != workspace
+        and workspace not in out_path.parents
+    ):
+        raise SystemExit("Output path must stay inside DOCMIND_SKILL_WORKSPACE")
 
     if out_path.exists() and not args.force:
-        raise SystemExit(f"Refusing to overwrite existing file without --force: {out_path}")
+        raise SystemExit(
+            f"Refusing to overwrite existing file without --force: {out_path}"
+        )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:

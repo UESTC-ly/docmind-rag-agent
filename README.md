@@ -2,19 +2,20 @@
 
 一个基于 **RAG + Agent 编排**的文档智能系统。用户上传文档后，Agent 通过 OpenAI
 Function Calling 自主判断该调用哪些技能（Skills）来完成任务：知识库问答、思维导图、
-关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及 v1.0.0 正式包含的
+关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及
 **Codex-style 通用 Skills 包**。系统还内置一套 **RAG 评估模块**，用检索指标
 （hit_rate / MRR / recall / precision）和 LLM-as-judge 生成指标
 （faithfulness / answer_relevancy）量化问答质量。
 
-配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。v2.0 额外提供 **Tauri 桌面 App**：保留
-同一套前端与 FastAPI API，但以原生窗口、系统文件选择/保存和系统通知交互。后端
-**210 个测试、92% 覆盖率**，接了 GitHub Actions CI。
+配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、运行时零构建），覆盖
+登录、流式对话、文档管理、评估看板四大界面。v2.2.0 提供 **自包含 Tauri 桌面 App**：
+保留同一套前端与 FastAPI API，通过 PyInstaller sidecar 内置 Python 后端，使用 SQLite、
+Qdrant local 与本地任务执行器；安装后的终端用户不需要 Docker、PostgreSQL、Redis、
+Qdrant Server、uv 或系统 Python。
 
-**亮点**：ReAct Agent 编排 · Codex-style 通用 Skills · 可插拔 Python Skills ·
-多路召回（向量 + 关键词 RRF 融合）· SSE 流式输出 · RAG 评估闭环 ·
-结构化日志（request_id 全链路追踪）。
+**亮点**：ReAct Agent 编排 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
+多路召回（向量 + 数据库关键词 + RRF + reranker）· 异步 RAG 评估 · Alembic ·
+Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 
 ## 目录
 
@@ -22,7 +23,8 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 - [技术栈](#技术栈)
 - [核心设计](#核心设计)
 - [快速启动](#快速启动)
-- [桌面 App（v2.0）](#桌面-appv20)
+- [桌面 App（v2.2）](#桌面-appv22)
+- [Web 开发启动](#web-开发启动)
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
 - [Skills 技能系统](#skills-技能系统)
@@ -57,24 +59,26 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
            └──────────────┬─────────────────────┘ │
                           │                         │
    ┌──────────────────────▼─────────────────────────▼─────────────┐
-   │  PostgreSQL(元数据/分块)   Qdrant(向量)   Redis(队列)          │
-   └───────────────────────────────────┬───────────────────────────┘
-                                        │ .delay()
-                            ┌───────────▼────────────┐
-                            │  Celery Worker          │
-                            │  解析→分块→向量化→写库   │
-                            └─────────────────────────┘
+   │  共享检索：dense + DB keyword → scored RRF → reranker          │
+   └──────────────────────────────┬────────────────────────────────┘
+                                  │
+              ┌───────────────────┴────────────────────┐
+              │ Web：PostgreSQL + Qdrant + Redis/Celery │
+              │ Desktop：SQLite + Qdrant local + local  │
+              │          task executor                  │
+              └─────────────────────────────────────────┘
 ```
 
-文档上传后**不阻塞请求**：API 只落库并派发 Celery 任务，解析与向量化在后台完成，
-前端轮询文档状态（pending → processing → completed / failed）。
+文档解析与评估运行都**不阻塞创建请求**。Web 部署把工作派发给 Celery；桌面部署把同一
+任务提交给受控本地线程执行器。前端分别轮询文档或评估状态，直到 completed / failed。
 
 ## 技术栈
 
 - **后端**：FastAPI + SQLAlchemy 2.0 (async) + Pydantic v2 + pydantic-settings
 - **AI**：OpenAI 兼容 API（默认 `gpt-4o-mini` + `text-embedding-3-small`）+ Function Calling
-- **存储**：PostgreSQL（元数据 + 分块文本）+ Qdrant（向量）+ Redis（Celery broker）
-- **异步**：Celery（文档解析不阻塞 API）
+- **Web 存储**：PostgreSQL（元数据 + 分块/全文检索）+ Qdrant Server（向量）+ Redis
+- **桌面存储**：SQLite + Qdrant local（均在用户应用数据目录）
+- **后台任务**：Web 使用 Celery；桌面使用本地任务执行器
 - **鉴权**：JWT（python-jose）+ bcrypt 密码哈希（passlib）
 - **文档解析**：pymupdf（PDF）+ python-docx（Word）+ 纯文本
 - **联网搜索**：ddgs（DuckDuckGo，无需 API key）
@@ -82,23 +86,23 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 
 ## 核心设计
 
-### 双数据库引擎（async + sync）
+### 双数据库引擎（async + sync）与两种部署配置
 
-FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database.py` 同时暴露两套引擎：
+FastAPI 用异步驱动，后台任务用同步 Session——所以 `app/database.py` 同时暴露两套引擎：
 
 | 引擎 | 驱动 | 用途 |
 |---|---|---|
-| `AsyncSessionLocal` | asyncpg | FastAPI 路由（经 `get_db` 依赖注入） |
-| `SyncSessionLocal` | psycopg2 | Celery worker、评估脚本、`to_thread` 里的同步逻辑 |
+| `AsyncSessionLocal` | asyncpg / aiosqlite | FastAPI 路由（经 `get_db` 依赖注入） |
+| `SyncSessionLocal` | psycopg2 / sqlite | Celery worker、桌面本地任务、评估/Skill 同步逻辑 |
 
-同步 URL 由 `settings.sync_database_url` 自动从异步 URL 去掉 `+asyncpg` 得到。
+同步 URL 由 `settings.sync_database_url` 自动从异步 URL 去掉 `+asyncpg` / `+aiosqlite` 得到。
 **不要在异步路由里用同步 Session，反之亦然。**
 
 ### 异步 / 同步边界
 
-所有 OpenAI 调用（LLM、embedding）与 Agent 主循环都是**同步阻塞**的。在异步路由里
-必须用 `asyncio.to_thread(...)` 包一层，避免阻塞事件循环。参考 `services/rag_service.py`、
-`services/agent_service.py`、`routers/evaluation.py`。
+OpenAI 调用（LLM、embedding）与 Agent 主循环仍是**同步阻塞**的，在异步服务层用
+`asyncio.to_thread(...)` 隔离。评估运行不再留在请求线程：创建 run 后由 Celery 或桌面
+本地任务执行器完成。
 
 ### 数据隔离
 
@@ -107,7 +111,9 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 
 ## 快速启动
 
-### 0. 前置要求
+### Web 前置要求
+
+下表只针对源码运行的 Web 开发/服务部署；安装后的桌面 App 不需要这些运行时。
 
 | 平台 | 必需软件 | 说明 |
 |---|---|---|
@@ -118,24 +124,28 @@ FastAPI 用异步驱动，Celery 任务是同步函数——所以 `app/database
 安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
 Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
 
-## 桌面 App（v2.0）
+## 桌面 App（v2.2）
 
-桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI；Rust 宿主负责
-启动和停止 Docker Compose、Celery 与 FastAPI。首次运行需要本机已有 Docker/Compose、uv 和
-Python 3.12；它们仍是 PostgreSQL、Redis、Qdrant 与 Python AI 后端的运行时依赖。
+桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI。生产安装包携带
+一个由 PyInstaller 冻结的 `docmind-sidecar`，其中包含 Python 解释器、FastAPI 和后端依赖。
+Rust 宿主只启动这个 sidecar；桌面数据层使用 SQLite + Qdrant local，文档解析与评估使用
+本地任务执行器。终端用户无需安装 Docker、PostgreSQL、Redis、Qdrant Server、uv 或 Python。
+
+桌面基础运行完全本地，但聊天和 embedding 仍需要可访问的 OpenAI 兼容服务及相应凭据；
+显式启用的 MCP、浏览器或 App bridge 也可能需要各自的服务、浏览器运行时或系统权限。
 
 ### 日常使用
 
-从 GitHub Release 下载与当前操作系统匹配的桌面安装包后直接启动 `DocMind`。桌面 App 会：
+从 GitHub Release 下载与当前操作系统/架构匹配的安装包后直接启动 `DocMind`。桌面 App 会：
 
-1. 在 macOS 尝试启动 Colima（仅当 Docker 尚未运行且已安装 Colima）；
-2. 启动 PostgreSQL / Redis / Qdrant；
-3. 首次创建独立 Python 环境并安装 `requirements.txt`；
-4. 用 `--pool=solo` 启动 Celery，再启动仅监听 `127.0.0.1:8000` 的 FastAPI；
-5. 等待 `/health` 端口就绪后显示登录页。
+1. 创建独立、卸载不删除的用户数据目录与随机 JWT 密钥；
+2. 首次生成 `desktop.env`，并强制注入本地 SQLite、Qdrant path 与 local task 配置；
+3. 启动只监听 `127.0.0.1:8000` 的内置 sidecar；
+4. 在接受请求前执行 Alembic migration；
+5. 等待 `/health` 就绪后显示登录页。
 
-配置与可写数据不放在安装包内：桌面端首次启动会从 `.env.example` 创建自己的 `.env`。填入真实
-`OPENAI_API_KEY` 后重启 App 即可使用 AI 功能。
+在 `desktop.env` 中填入真实 `OPENAI_API_KEY`（以及可选的独立 embedding 配置）后重启
+App 即可使用 AI 功能。数据库、向量、上传文件、Skill 工作区、密钥和日志都不放在只读安装包内。
 
 | 平台 | 配置目录 |
 |---|---|
@@ -143,29 +153,38 @@ Python 3.12；它们仍是 PostgreSQL、Redis、Qdrant 与 Python AI 后端的�
 | Windows | `%APPDATA%\\com.docmind.desktop\\` |
 | Linux | `~/.config/com.docmind.desktop/` |
 
-目录中包含 `.env`、`data/uploads/`、`data/skill_workspaces/` 和 `logs/api.log` / `logs/celery.log`。
-删除安装包不会删除这些用户数据；数据库、Redis 与 Qdrant 则继续由 Docker volume 持久化。
+目录中包含 `desktop.env`、`data/docmind.db`、`data/qdrant/`、`data/uploads/`、
+`data/skill_workspaces/`、`data/secrets/` 和 `logs/sidecar.log`。删除或升级安装包不会主动
+删除这些用户数据。
 
 ### 开发与打包
 
 ```bash
 cd desktop
-npm install
-npm run dev       # 启动 Tauri 窗口与受管后端
-npm run build     # 在当前操作系统生成安装包
+npm ci
+npm run dev       # 构建本机 sidecar 并启动 Tauri 开发窗口
+npm run build     # 验证 sidecar 后在当前操作系统生成安装包
 ```
 
-Tauri 只能在目标操作系统上原生签名/打包：macOS 生成 `.app/.dmg`，Windows 生成 `.msi/.exe`，
-Linux 生成 `.AppImage/.deb`。发布工程可在对应操作系统或 CI runner 执行 `npm run build`。
+构建机（不是终端用户）需要 Node 22、Rust 和 Python 3.12+。`npm run build` 会建立私有构建
+环境、冻结并自检 sidecar、运行本地 SQLite/Qdrant/任务 smoke，再把目标三元组命名的
+可执行文件写入 Tauri `externalBin`。PyInstaller 原生扩展不能跨平台冻结，因此 macOS、
+Windows、Linux/不同架构都必须使用对应原生 runner，并配置平台签名/公证凭据。
+v2.2 的自动验收只运行 macOS arm64：默认 ad-hoc 签名通过 bundle 完整性检查，公开分发时
+仍须用 Developer ID 覆盖该身份并完成 Apple notarization/stapling。Linux/Windows 不在本次
+验证范围。
 
-桌面端保留网页入口：执行根目录 `./start.sh` 或 `start.ps1` 后仍可通过
-`http://127.0.0.1:8000/` 使用。两种入口共享同一个后端，不应同时占用同一台机器的 `8000` 端口。
+桌面端保留网页开发入口：执行根目录 `./start.sh` 或 `start.ps1` 后仍可通过
+`http://127.0.0.1:8000/` 使用。Web 开发栈仍需要 Docker/uv/Python/PG/Redis/Qdrant，
+与桌面 sidecar 是两套存储配置；两者也不应同时占用同一台机器的 `8000` 端口。
 
 ### 原生交互
 
 - 文档页提供系统文件选择器，仍兼容网页拖拽/选择上传。
 - 删除文档改用系统确认框；解析完成会发送系统通知。
 - 周报、PPT 与通用 Skill 文件产出会打开系统“另存为”对话框，而不是浏览器下载栏。
+
+## Web 开发启动
 
 ### 1. 克隆项目
 
@@ -223,8 +242,9 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 4. 清理旧的 `uvicorn` / Celery 进程；
 5. 启动 PostgreSQL / Redis / Qdrant；
 6. 等待 PostgreSQL 从宿主机可达；
-7. 后台启动 Celery worker（统一 `--pool=solo`，macOS 额外设置 fork 安全环境变量）；
-8. 前台启动 `uvicorn app.main:app --reload --port 8000`。
+7. 执行 `alembic upgrade head`；
+8. 后台启动 Celery worker（统一 `--pool=solo`，macOS 额外设置 fork 安全环境变量）；
+9. 前台启动 `uvicorn app.main:app --reload --port 8000`。
 
 启动成功后访问：
 
@@ -271,6 +291,12 @@ uv pip install -r requirements.txt
 
 #### 4.3 启动 Celery worker
 
+先把 schema 升级到当前版本：
+
+```bash
+uv run alembic upgrade head
+```
+
 macOS：
 
 ```bash
@@ -284,7 +310,8 @@ Linux / Windows：
 uv run celery -A app.celery_app worker --loglevel=info --pool=solo
 ```
 
-文档解析靠 Celery，**必须启动**，否则上传文档会停在 `pending`。
+Web 模式下文档解析和评估运行都依赖 Celery，**必须启动**；否则任务会停在 `pending`
+或派发失败。桌面模式由本地任务执行器接管，不启动 Celery。
 
 #### 4.4 启动 API 服务
 
@@ -297,7 +324,9 @@ uv run uvicorn app.main:app --reload --port 8000
 - 前端：<http://127.0.0.1:8000/>
 - Swagger API 文档：<http://127.0.0.1:8000/docs>
 
-启动时会自动建表（`Base.metadata.create_all`，仅开发用；生产应改用 Alembic 迁移）。
+FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schema 生命周期不再使用
+`Base.metadata.create_all`。已有 v2.1 数据库的首次接管步骤见
+[`doc/08-v2.2.0发布说明.md`](doc/08-v2.2.0发布说明.md)。
 
 ### 5. 常见启动问题
 
@@ -352,8 +381,8 @@ uv run uvicorn app.main:app --reload --port 8000
 | Agent | `GET /agent/skills` | 列出技能及 available / grounding / download 元数据 |
 | 评估 | `POST /eval/datasets` | 从文档 LLM 反向出题生成数据集 |
 | 评估 | `GET /eval/datasets` | 我的评估数据集列表 |
-| 评估 | `POST /eval/runs` | 触发一次评估运行（同步执行） |
-| 评估 | `GET /eval/runs/{id}` | 某次运行的聚合指标 |
+| 评估 | `POST /eval/runs` | 创建 pending run，派发后台任务并返回 `202 Accepted` |
+| 评估 | `GET /eval/runs/{id}` | 轮询 pending/running/completed/failed 与聚合指标 |
 | 评估 | `GET /eval/runs/{id}/details` | 逐条样本明细分数 |
 | 健康 | `GET /health` | 健康检查 |
 
@@ -361,7 +390,7 @@ uv run uvicorn app.main:app --reload --port 8000
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v1.0.0 正式版采用**两条执行路径并存**：
+技能是 Agent 的能力单元。v2.2.0 保持**两条执行路径并存**：
 
 ```text
 Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界
@@ -371,9 +400,9 @@ Codex-style Generic Skill：只需 SKILL.md，可选 templates / references / sc
 也就是说，DocMind 现在既保留原来的 Python 技能，也能扫描
 `app/skills/packages/<slug>/SKILL.md` 这种主流 Agent Skills 文件夹。若 package 没有
 对应 Python 类，系统会注册为 `GenericPackageSkill`，由内部 ReAct runner 按
-Markdown 指令规划并调用受控工具执行。**注册不等于可执行**：通用包还需要
-`docmind.json` 通过运行时兼容性审计；未审计或依赖未接入工具的包仍显示在技能列表，
-但不会暴露给 Function Calling，也不能被技能卡锁定调用。
+Markdown 指令规划并调用受控工具执行。**`status: ready` 只代表包已审计，不代表获得
+宿主权限**：`docmind.json.requires` 还要通过运行时 capability 检查；未满足时会返回
+明确配置原因，且不会暴露给 Function Calling 或被技能卡锁定调用。
 
 通用 runner 当前内置的动作能力：
 
@@ -381,12 +410,23 @@ Markdown 指令规划并调用受控工具执行。**注册不等于可执行**�
 - `search_uploaded_documents`：复用向量 + 关键词 RRF 的 DocMind RAG 检索；
 - `list_files` / `read_file` / `write_file`：读写用户隔离工作区；
 - `modify_code`：在隔离工作区写入/替换代码文件；
-- `run_shell`：默认关闭，开启后仍需命令 allowlist，且不使用 `shell=True`；
-- `call_mcp` / `use_browser_tool` / `use_app_tool`：预留 adapter 扩展点，未配置时安全失败。
+- `read_skill_asset` / `copy_skill_asset`：受控读取或复制 package 文本/二进制资源；
+- `run_skill_script`：只执行已审计的 package 固定脚本；除解释器、环境变量和超时 allowlist
+  外，还要求 macOS `sandbox-exec` 写入隔离探测成功，拒绝绝对路径、`..`、符号链接和
+  workspace 外产物；
+- `list_repository_files` / `read_repository_file` / `search_repository` / `git_history`：
+  只读访问显式挂载的仓库根目录；
+- `call_mcp`：生产 Streamable HTTP MCP adapter，服务、工具、认证和超时都由宿主配置；
+- `use_browser_tool`：生产 Playwright adapter，按 execution 隔离会话、限制域名，截图只写工作区；
+- `use_app_tool`：带 token 的 loopback HTTP bridge，仅暴露应用/动作 allowlist。
 
-安全边界：通用技能的文件读写默认只发生在
-`skill_workspaces/user_<id>/<skill_slug>/`，不会直接改 DocMind 仓库源码；shell 默认关闭，
-避免把 `/agent/chat` 变成远程代码执行入口。
+adapter 统一返回 `status / summary / next_actions / artifacts`。未配置、越权、超时或外部
+服务失败时给出可恢复诊断，不把失败伪装成普通聊天成功。
+
+安全边界：每个工具同时通过“宿主授权 ∩ package 声明”的双重 capability gate，工具发现和
+实际执行各检查一次，伪造 tool call 不能绕过。通用技能的文件读写只发生在
+`skill_workspaces/user_<id>/<skill_slug>/`；生产运行时不开放任意 shell，需执行动作时使用
+受审计 package script 或专用 adapter，避免把 `/agent/chat` 变成远程代码执行入口。
 
 | 技能名 | Grounding | 作用 | 下载 |
 |---|---|---|---|
@@ -402,7 +442,8 @@ Markdown 指令规划并调用受控工具执行。**注册不等于可执行**�
 产出 `type` 属于 `mindmap` / `relation_graph` / `report` / `weekly_report` /
 `presentation`，或带 `artifact_kind=file` 的通用技能结果，会被收进响应的
 `artifacts`。通用技能即使只返回聊天正文、没有主动调用 `write_file`，runner 也会把
-最终正文落成 Markdown 并打 ZIP，保证文件型任务始终有下载入口。
+最终正文落成 Markdown 并打 ZIP；该 fallback 仅对同时声明并获授 `workspace` 的文件型
+package 生效，纯文本 package 不会获得隐式文档检索或写盘权限。
 
 ### 通用包兼容性隔离
 
@@ -411,17 +452,27 @@ Markdown 指令规划并调用受控工具执行。**注册不等于可执行**�
 ```json
 {
   "status": "ready",
-  "reason": "已适配 DocMind RAG 与受控文件工具。"
+  "reason": "已适配 DocMind 的受控运行时。",
+  "requires": ["repository", "git", "package_scripts"]
 }
 ```
 
-- `ready`：进入 Agent 的 Function Calling 工具列表；
-- `blocked`：已审计但依赖尚未接入（如真实 MCP、GitHub CLI、Playwright、系统截图）；
+- `ready`：包已审计；工具只在宿主 capability 与 `requires` 的交集内暴露和执行；
+- `blocked`：包本身仍存在明确的不兼容实现（不是缺凭据/缺配置的常态）；
 - 缺少文件：视为 `unreviewed`，默认隔离，防止复制一个 Codex 包后“看起来可用、实际只会聊天回答”。
 
-仓库内从上游安装的 10 个 GitHub/Notebook/OpenAI Docs/PDF/Playwright/Screenshot/Security
-包都已逐个审计。当前它们因需要仓库挂载、shell、MCP、浏览器或系统权限而标记为
-`blocked`；`codex_note`、周报和 PPT 包为 `ready`。这比静默降级成普通聊天更安全、也更可诊断。
+当前审计结果：
+
+- Ready（9）：`codex-note`、`jupyter-notebook`、`openai-docs`、`playwright`、
+  `presentation`、`screenshot`、`security-best-practices`、
+  `security-threat-model`、`weekly-report`；
+- Blocked（4）：`gh-fix-ci`（缺 GitHub CLI/认证/写入工作流）、`pdf`（尚无 PDF
+  action/scripts）、`playwright-interactive`（依赖 `js_repl`/Electron/danger-full-access）、
+  `security-ownership-map`（依赖未提供的直接仓库脚本与图分析运行时）。
+
+Ready 不等于始终可调用：若宿主未启用 package scripts、MCP、浏览器或仓库等声明能力，
+对应 package 会显示 missing capability 并保持隔离。Blocked 则是明确实现不兼容，不能靠扩大
+默认权限“解锁”。修改 manifest 本身也不能绕过宿主 capability gate。
 
 ### 两种 Skill Package 目录结构
 
@@ -431,7 +482,7 @@ Python-backed package（例如周报）：
 app/skills/packages/weekly-report/
 ├── SKILL.md                         给 Agent/开发者看的技能说明
 ├── skill.json                       Function Calling metadata（name/description/parameters）
-├── docmind.json                     DocMind 运行时兼容状态（ready/blocked）
+├── docmind.json                     审计状态 + requires capability 清单
 ├── templates/
 │   └── prompt.md                    LLM 提示词模板
 └── references/
@@ -448,7 +499,7 @@ app/skills/packages/codex-note/
 │   └── note.md
 ├── references/                      可选
 │   └── style.md
-├── scripts/                         可选，shell 开启且 allowlist 命中时才可运行
+├── scripts/                         可选，由受控 package script executor 运行
 └── assets/                          可选
 ```
 
@@ -495,7 +546,14 @@ ReAct 式循环，最多 `agent_max_steps`（默认 6）步防死循环：
 
 ### 指标
 
-评估运行（`runner.py`）遍历样本，对每条跑一次 RAG，计算：
+`POST /eval/runs` 只创建 pending run 并返回 `202 Accepted`。Web 模式由 Celery task、桌面
+模式由本地任务执行器调用同一个 runner；前端轮询 pending、running、completed 或 failed。
+runner 使用条件 UPDATE/CAS 领取带 token 的租约并发送独立 heartbeat，终态写入也校验 token；
+临时失败回到 pending，Celery 使用 late ack/worker-lost 重投，桌面重启会重派 pending 与中断的
+running。数据库唯一约束保证同一 `(run_id, sample_id)` 不会重复追加明细。
+
+评估运行（`runner.py`）遍历样本，对每条复用线上 dense + keyword + RRF + reranker 检索，
+再计算：
 
 | 类别 | 指标 | 含义 |
 |---|---|---|
@@ -507,7 +565,8 @@ ReAct 式循环，最多 `agent_max_steps`（默认 6）步防死循环：
 | 生成 | `answer_relevancy` | LLM-as-judge：答案是否切题、完整 |
 
 检索指标是纯函数（`retrieval_metrics.py`，无 I/O，易单测）；生成指标用 LLM 打分
-（`generation_judge.py`，温度 0 求稳定）。逐条明细存 `EvalResult`，聚合均值存 `EvalRun`。
+（`generation_judge.py`，温度 0 求稳定）。逐条明细存 `EvalResult`，包括检索模式、实际
+reranker、候选来源/原始排名/分数与最终顺序；聚合均值存 `EvalRun`。
 
 ### 导入公开数据集（CLI）
 
@@ -520,19 +579,24 @@ uv run python data/import_datasets.py --user-id 1
 uv run python data/import_datasets.py --user-id 1 --only ms_marco --limit 50
 ```
 
-导入完成后，用返回的 `dataset_id` 调 `POST /eval/runs` 触发评估。
+导入完成后，用返回的 `dataset_id` 调 `POST /eval/runs` 入队，再轮询返回的 run id。
 
 ## 多路召回
 
-`app/services/retrieval.py`。单一稠密向量检索抓不住精确关键词（型号、专有名词），
-所以并联一路**关键词检索**，用 **RRF（Reciprocal Rank Fusion，倒数排名融合）**
-把两路结果融合：`RRF(d) = Σ 1/(k + rank_i(d))`（k=60）。RRF 只看排名不看原始分数
-量纲，天然免归一化，是混合检索业界标配。
+`app/services/retrieval.py` 是在线问答、Skills 与 evaluation runner 的共享入口。单一稠密
+向量检索抓不住型号、专有名词等精确关键词，所以并联数据库关键词召回，再用
+**RRF（Reciprocal Rank Fusion，倒数排名融合）**合并两路候选：
+`RRF(d) = Σ 1/(k + rank_i(d))`（默认 k=60）。融合结果进入有界二阶段 reranker。
 
 - 融合身份用 `(document_id, chunk_index)` 复合键，避免跨文档同序号块被误合并。
 - `RETRIEVAL_MODE=hybrid`（默认）走多路；`dense` 退回纯向量检索。
-- 关键词路用命中词数打分，实现简单、sqlite 也能跑（便于测试）；生产可换 PG 全文
-  检索或 BM25，接口不变。
+- PostgreSQL 用 `to_tsvector('simple', content)`、`websearch_to_tsquery` 和 `ts_rank_cd`，
+  v2.2 migration 建立对应 GIN expression index。
+- 桌面 SQLite/测试使用 SQL `CASE + LIKE` 兼容评分；两种方言都在同一查询中应用
+  user/document 条件、排序和 `LIMIT`，不会把用户全部 chunks 读进 Python。
+- `RERANKER_MODE=local` 默认组合 RRF、dense、keyword 与直接词项重合信号，采用稳定
+  tie-break；`http` 可接 cross-encoder provider，超时或响应异常自动回退 local；`off`
+  保留融合顺序。
 
 ## 流式输出
 
@@ -544,15 +608,16 @@ uv run python data/import_datasets.py --user-id 1 --only ms_marco --limit 50
 
 ## 前端界面
 
-`frontend/`，原生 HTML/CSS/JS 单页，**零构建、无 Node 工具链**，由 FastAPI
-`StaticFiles` 直接托管（API 路由优先匹配，`/` 兜底返回单页）。编辑/瑞士极简风格：
+`frontend/`，原生 HTML/CSS/JS 单页，**运行时零构建**，由 FastAPI `StaticFiles` 直接
+托管（API 路由优先匹配，`/` 兜底返回单页）。Node/Playwright 只用于自动化测试与桌面
+资源构建，不是 Web 页面运行依赖。编辑/瑞士极简风格：
 纯白底 + 单一瑞士红强调 + sans 标题/衬线正文配对，跟随系统明暗。
 
 四大界面：
 - **登录/注册**：JWT 存 localStorage，401 自动清 token 回登录屏。
 - **流式对话**：SSE 逐字浮现（带光标动画）、来源引用卡、左侧会话历史、Enter 发送。
 - **文档管理**：拖拽上传、解析状态轮询（pending→completed 脉冲动画）、删除。
-- **评估看板**：列数据集、一键触发运行、6 指标条形可视化。
+- **评估看板**：列数据集、一键入队、轮询 pending/running/completed/failed、6 指标可视化。
 
 工程：模块化 JS（`api/ui/chat/docs/eval/main`）、CSS 按 surface 分文件、
 compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、无 `innerHTML` 注入。
@@ -560,21 +625,32 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 ## 测试与 CI
 
-`tests/`，**210 个测试、覆盖率 92%**（`pytest` + `pytest-asyncio` + `pytest-cov`）。
+自动化门禁覆盖 Python、浏览器、JavaScript 和 Rust；不要在文档中写死容易漂移的用例数
+或一次性覆盖率快照，以当前 CI 输出为准。
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
-- **服务单测**：评估 runner、dataset_gen、Celery 任务、8 个 Skills、LLM 流式聚合——
-  mock 外部边界。
+- **服务单测**：共享检索/reranker、评估 runner/Celery task、Alembic、Skills adapters、
+  capability gate、LLM 流式聚合——mock 外部边界。
 - **路由集成测**：用内存 sqlite 替 PG、mock 掉 Celery/embedding/LLM，真实 HTTP 打
   auth/documents/chat/agent/eval 全部端点（含 SSE 流式、评估双路径）。
+- **真实全栈 E2E**：独立 Playwright 配置启动真实 FastAPI，使用临时 SQLite、Qdrant local
+  和本地任务执行器，验证迁移、健康检查、401、注册/JWT、文档/会话/Skills API，以及页面
+  reload 后登录态；它与 mock/视觉套件分开运行，不调用外部 LLM/adapters。
 
-`.coveragerc` 配了 `concurrency=greenlet,thread`，正确追踪 async 端点在事件循环里
-执行的行。CI（`.github/workflows/ci.yml`）在 push/PR 时用 uv + Python 3.12 跑
-`pytest --cov-fail-under=90`；测试全 mock + 内存库，**CI 无需 PG/Redis/Qdrant/
-embedding**，必填配置喂假值即可。
+`.coveragerc` 配置并发追踪。`.github/workflows/ci.yml` 在 push/PR 时执行 Python
+runtime-error lint、模型/API contract typecheck、pytest 覆盖率门槛、JavaScript 语法检查，
+以及 Rust fmt/clippy/test。`.github/workflows/frontend-e2e.yml` 在 macOS Chromium 上分别运行
+Page Object 驱动的 mock/视觉回归与真实 FastAPI 全栈路径；失败时上传 HTML report、trace、
+截图、视频和 JUnit 结果。E2E 使用稳定 API fixture 与网络/状态等待，不依赖固定 sleep。
+Linux/Windows 不属于 v2.2 验收矩阵。
 
 ```bash
 uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
+
+cd frontend
+npm ci
+npm run test:e2e                                   # Chromium E2E + 视觉回归
+npm run test:e2e:fullstack                         # 真实 FastAPI + SQLite/Qdrant local
 ```
 
 ## 配置项
@@ -583,7 +659,7 @@ uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
 
 | 变量 | 必填 | 默认 | 说明 |
 |---|---|---|---|
-| `DATABASE_URL` | ✅ | — | 须用 `postgresql+asyncpg://` scheme |
+| `DATABASE_URL` | ✅ | — | Web 用 `postgresql+asyncpg://`；桌面宿主注入 `sqlite+aiosqlite:///...` |
 | `SECRET_KEY` | ✅ | — | JWT 签名密钥 |
 | `OPENAI_API_KEY` | ✅ | — | 对话 LLM key（未单独配 embedding 时也复用它） |
 | `REDIS_URL` | | `redis://localhost:6379/0` | Celery broker |
@@ -597,19 +673,30 @@ uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
 | `EMBEDDING_DIM` | | `1536` | **必须与模型实际维度一致** |
 | `EMBEDDING_BATCH_SIZE` | | `10` | 部分服务（如 DashScope）单次批量有上限 |
 | `QDRANT_URL` | | `http://localhost:6333` | Qdrant 地址 |
+| `QDRANT_PATH` | | — | 设置后使用 Qdrant local；桌面宿主强制注入用户数据目录 |
 | `QDRANT_COLLECTION` | | `docmind_chunks` | 向量集合名 |
 | `UPLOAD_DIR` | | `./uploads` | 上传文件落盘目录 |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | | `800` / `100` | 分块字符数 / 相邻块重叠 |
 | `RETRIEVAL_TOP_K` | | `5` | 检索返回块数 |
 | `RETRIEVAL_MODE` | | `hybrid` | `hybrid`=向量+关键词 RRF；`dense`=纯向量 |
 | `RRF_K` | | `60` | RRF 融合常数 |
-| `KEYWORD_CANDIDATES` | | `20` | 关键词召回候选数 |
+| `DENSE_CANDIDATES` / `KEYWORD_CANDIDATES` | | `20` / `20` | 融合前两路候选上限 |
+| `RERANKER_MODE` | | `local` | `local` / `http`（失败回退 local）/ `off` |
+| `RERANKER_CANDIDATE_LIMIT` | | `40` | 二阶段重排最大候选数 |
+| `RERANKER_HTTP_*` | | — | 可选 cross-encoder URL、key、model、timeout |
+| `TASK_EXECUTION_MODE` | | `celery` | Web 用 `celery`；桌面宿主强制使用 `local` |
+| `LOCAL_TASK_WORKERS` | | `2` | 本地任务执行器线程数 |
+| `EVALUATION_LEASE_SECONDS` | | `2100` | 评估 worker 租约过期/崩溃接管窗口 |
+| `EVALUATION_TASK_*_TIME_LIMIT_SECONDS` | | `1740/1800` | Celery 评估任务软/硬时限，短于租约 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
 | `SKILL_RUNNER_MAX_STEPS` | | `8` | Codex-style 通用 skill 内部工具循环最大步数 |
 | `SKILL_WORKSPACE_DIR` | | `./skill_workspaces` | 通用 skill 的用户隔离文件工作区 |
-| `SKILL_SHELL_ENABLED` | | `false` | 是否允许通用 skill 调用 shell；默认关闭 |
-| `SKILL_SHELL_ALLOWED_COMMANDS` | | `echo,cat,...` | shell 开启后允许执行的命令名 allowlist |
-| `SKILL_SHELL_TIMEOUT_SECONDS` | | `10` | 单次 shell 命令超时秒数 |
+| `SKILL_PACKAGE_SCRIPTS_ENABLED` | | `false` | 是否启用已审计固定脚本；还需 package 声明和 macOS confinement |
+| `SKILL_PACKAGE_SCRIPT_*` | | 见 `.env.example` | 解释器、环境变量 allowlist 与超时；任意 shell 始终不可用 |
+| `SKILL_REPOSITORY_ENABLED` / `ROOT` | | `false` / — | 显式挂载只读仓库能力 |
+| `SKILL_MCP_ENABLED` / `SERVERS_JSON` | | `false` / `{}` | MCP URL、工具 allowlist、token env 等配置 |
+| `SKILL_BROWSER_ENABLED` / `ALLOWED_HOSTS` | | `false` / loopback | Playwright adapter 与域名 allowlist |
+| `SKILL_APP_ENABLED` / `BRIDGE_*` | | `false` / — | loopback bridge URL/token 与应用动作 allowlist |
 | `LOG_LEVEL` | | `INFO` | 日志级别 |
 | `LOG_JSON` | | `true` | `true`=结构化 JSON（生产）；`false`=彩色文本（本地） |
 
@@ -621,7 +708,7 @@ uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
 
 ```
 app/
-├── main.py            FastAPI 入口（注册路由、启动建表）
+├── main.py            FastAPI 入口（注册路由、lifespan 执行 Alembic）
 ├── config.py          全局配置单例
 ├── database.py        异步 + 同步双引擎，get_db 依赖
 ├── celery_app.py      Celery 实例
@@ -630,25 +717,30 @@ app/
 ├── routers/           路由层（auth / documents / chat / agent / evaluation）
 ├── services/          业务逻辑
 │   ├── auth / document / rag / agent / embedding / llm / vector_store
-│   ├── retrieval.py   多路召回（RRF 融合 + 关键词检索）
+│   ├── retrieval.py   数据库关键词 + scored RRF 的共享召回
+│   ├── reranker.py    本地二阶段排序 + HTTP provider 回退
+│   ├── task_dispatcher.py  Celery / desktop local task 路由
 │   ├── skill_retrieval.py  同步 Skills 复用 Hybrid RAG 的入口
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
 ├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
-├── skills/            可插拔技能（Python Skills + Codex-style generic runner）
+├── skills/            Python Skills + generic runner + capability gate + adapters
+│   ├── adapters/      MCP / Playwright / loopback App bridge
 │   └── packages/      SKILL.md / docmind.json / templates / references / scripts / assets
-├── tasks/             Celery 异步任务（document_tasks 解析流水线）
+├── tasks/             文档解析与评估 Celery tasks
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
-frontend/              原生单页前端（FastAPI 托管，零构建）
-desktop/               Tauri 2 桌面壳、原生能力与打包配置
+alembic/               v2.1 baseline + v2.2 schema/FTS migration
+frontend/              原生单页前端 + Playwright E2E/视觉基线
 ├── index.html
 ├── styles/            tokens / base / layout / components（按 surface 分文件）
-└── js/                api / ui / chat / docs / eval / main（ES modules）
+├── js/                api / ui / chat / docs / eval / main（ES modules）
+└── e2e/               Page Object、API fixtures、视觉测试
 
-tests/                 210 个测试，pytest + 内存 sqlite + mock 外部边界
+desktop/               Tauri 2 宿主 + PyInstaller sidecar + 打包/smoke 脚本
+tests/                 pytest + 内存 SQLite + mock 外部边界
 data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + manifest.json
-.github/workflows/     CI（pytest + 90% 覆盖率门槛）
+.github/workflows/     Python/JS/Rust CI + Chromium E2E/视觉 CI
 ```
 
 ## 新增一个 Skill（体现可插拔）
@@ -674,10 +766,12 @@ data/                  评估数据集下载 / 导入脚本 + parquet 缓存 + m
 2. 可选增加：
    - `templates/`：提示词、文档骨架；
    - `references/`：写作规范、API 说明、业务资料；
-   - `scripts/`：需要 shell 开启且命令 allowlist 命中后才能运行；
+   - `scripts/`：由固定路径的 package script executor 执行，受解释器/环境/超时、
+     参数逃逸校验、macOS 写入 sandbox 和 artifact 边界限制；
    - `assets/`：模板文件、图片等资源。
-3. 增加 `docmind.json`。新复制的包默认是 `unreviewed`；确认它只依赖 DocMind 已实现的
-   受控工具并完成测试后，才设置 `{"status":"ready"}`。
+3. 增加 `docmind.json`。新复制的包默认是 `unreviewed`；审计其依赖后写明 `requires`，
+   例如 `{"status":"ready","requires":["repository"]}`。包标为 ready 后仍必须由宿主
+   显式开启相应 capability，manifest 不能自我授权。
 4. 重启服务，`GET /agent/skills` 会看到该技能、兼容状态和执行模式。
 
 ### 方式 B：写 Python-backed Skill

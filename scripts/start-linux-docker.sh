@@ -86,6 +86,10 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
+info "应用数据库迁移..."
+uv run alembic upgrade head
+ok "数据库 schema 已升级"
+
 info "启动 Celery worker..."
 uv run celery -A app.celery_app worker --loglevel=info --pool=solo >"$CELERY_LOG" 2>&1 &
 CELERY_PID=$!

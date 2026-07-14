@@ -1,4 +1,5 @@
 {
   "status": "blocked",
-  "reason": "依赖持久 js_repl/Playwright 会话；当前 DocMind 没有对应浏览器 adapter。"
+  "reason": "复制包要求 js_repl、Electron 和 danger-full-access；受控 Browser adapter 不提供这些高权限语义。",
+  "requires": ["browser"]
 }

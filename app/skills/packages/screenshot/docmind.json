@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖操作系统截图权限和本地应用工具；当前 DocMind 未配置 app adapter。"
+  "status": "ready",
+  "reason": "已适配 macOS confinement 下的 screenshot script 和隔离工作区；屏幕录制权限由系统显式授予。",
+  "requires": ["package_scripts", "workspace"]
 }

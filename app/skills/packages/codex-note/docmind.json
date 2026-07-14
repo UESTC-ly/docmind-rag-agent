@@ -1,4 +1,5 @@
 {
   "status": "ready",
-  "reason": "已适配 DocMind 文档 RAG、受控文件写入和 ZIP 下载协议。"
+  "reason": "已适配 DocMind 文档 RAG、受控文件写入和 ZIP 下载协议。",
+  "requires": ["documents", "workspace"]
 }

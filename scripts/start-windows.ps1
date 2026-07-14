@@ -99,6 +99,11 @@ for ($i = 1; $i -le 30; $i++) {
 }
 if (-not $ready) { Fail "PostgreSQL 30s 内仍不可达。请检查 docker ps 与端口 5432。" }
 
+Write-Info "应用数据库迁移..."
+& uv run alembic upgrade head
+if ($LASTEXITCODE -ne 0) { Fail "数据库迁移失败" }
+Write-Ok "数据库 schema 已升级"
+
 Write-Info "启动 Celery worker..."
 $celery = Start-Process -FilePath "uv" `
     -ArgumentList @("run", "celery", "-A", "app.celery_app", "worker", "--loglevel=info", "--pool=solo") `

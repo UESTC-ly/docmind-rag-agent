@@ -1,4 +1,5 @@
 {
   "status": "blocked",
-  "reason": "依赖 GitHub CLI、仓库工作区和外部授权；当前 Web 安全沙箱未提供这些能力。"
+  "reason": "复制包需要 gh CLI、GitHub 认证、Actions 网络读取和仓库写入；当前生产 action surface 仅提供只读仓库工具。",
+  "requires": ["repository", "git", "package_scripts"]
 }

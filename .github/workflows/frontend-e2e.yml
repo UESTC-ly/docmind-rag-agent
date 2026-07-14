@@ -1,0 +1,71 @@
+name: Frontend E2E
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: macOS Chromium mock, full-stack, and visual regression
+    runs-on: macos-14
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up isolated Python runtime
+        working-directory: .
+        run: |
+          uv python install 3.12
+          uv venv --python 3.12
+          uv pip install -r requirements.txt
+
+      - name: Install locked test dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Chromium
+        run: npx playwright install chromium
+
+      - name: Run E2E and visual regression
+        run: npm run test:e2e:ci
+
+      - name: Run real FastAPI full-stack E2E
+        run: npm run test:e2e:fullstack
+
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence-${{ github.run_attempt }}
+          path: |
+            frontend/playwright-report/
+            frontend/playwright-report-fullstack/
+            frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 14

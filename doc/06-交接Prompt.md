@@ -27,21 +27,25 @@
 
 【一句话定位】
 Agentic RAG 文档智能问答系统：上传文档→Agent 用 OpenAI Function Calling 自主编排
-8 个可插拔技能（问答/思维导图/关系图谱/报告/周报/PPT/联网/通用包）→流式回答附来源。内置 RAG 评估
-闭环（检索指标 hit_rate/MRR/recall/precision + LLM-as-judge faithfulness/relevancy）。
+Python-backed 与 Codex-style 通用技能（问答/思维导图/关系图谱/报告/周报/PPT/联网等）
+→流式回答附来源。内置 RAG 评估闭环（检索指标 hit_rate/MRR/recall/precision +
+LLM-as-judge faithfulness/relevancy）。在线问答、Skills 与评估共用数据库关键词 + dense
+候选、scored RRF 与 reranker。
 技术栈：Python 3.12 · FastAPI async · SQLAlchemy 2.0 · PostgreSQL · Qdrant · Celery ·
-Redis · 原生单页前端 + Tauri 桌面壳。210 个测试、覆盖率 92%、GitHub Actions CI（90% 门槛）。
+Redis · 原生单页前端 + Tauri 自包含桌面运行时。GitHub Actions 覆盖 Python（90% 覆盖率门槛）、
+JavaScript、Rust、Playwright E2E 与视觉回归；测试数量和即时结果以当前分支 CI 为准。
 
 【必须遵守的关键约定（否则会引入 bug）】
 - 双 DB 引擎：FastAPI 用 AsyncSessionLocal(asyncpg)，Celery 用 SyncSessionLocal(psycopg2)，
   绝不混用。
 - 所有同步调用（OpenAI/embedding/Qdrant）在 async 路由里必须 asyncio.to_thread 包一层。
 - Celery worker 在 macOS 必须 --pool=solo（否则原生扩展 fork 会 SIGSEGV）。
+- Alembic 是唯一运行时 schema 管理路径；应用启动前执行 migration，禁止恢复 `create_all`。
 - LLM 统一走 stream=True（中转 gzxsy.vip 强制流式，非流式会返回 str 报错）。
 - 改动后跑 `uv run pytest`（用 uv，不用 pip/conda）；push 前先 source .venv/bin/activate
   （pre-push hook 用 venv 的 pytest）。
 - 数据隔离：所有 id 查询校验 user_id 归属，向量检索强制按 user_id 过滤。
-- .env 含真实密钥、不入库；改 .github/workflows/ 下文件本地无法 push（gh token 缺 workflow scope）。
+- `.env` 含真实密钥、不入库；adapter、repository、script 等高权限能力默认关闭并使用 allowlist。
 
 【启动方式】
 macOS/Linux：./start.sh；Windows：powershell -ExecutionPolicy Bypass -File .\\start.ps1；浏览器 http://localhost:8000/
@@ -55,9 +59,11 @@ macOS/Linux：./start.sh；Windows：powershell -ExecutionPolicy Bypass -File .\
 - 关键概念（JWT/异步/RAG/Agent/RRF）随代码顺带解释，并适时埋面试题。
 - 修改前先读相关代码和测试，遵循既有分层与风格；改完补/更新对应测试。
 
-【当前已知缺口（若要做增强，从这里挑）】
-rerank 重排 / 评估改异步 / Alembic 迁移 / 关键词检索下推 DB / 前端视觉回归 / E2E 自动化。
-详见 doc/05 第 7 节。
+【当前已知边界（若要做增强，从这里挑）】
+脑图/关系图谱的超长文档全文 map-reduce；外部 MCP/browser/App bridge/HTTP reranker 的部署与
+凭据轮换；macOS 对外安装包的 Developer ID 签名、公证和干净机器验收。Linux/Windows 不在
+v2.2 验收范围。已完成能力与运维责任详见
+doc/05 第 7 节和 doc/08-v2.2.0发布说明.md。
 
 【本次任务】
 <在这里写清你这次要做什么，例如："带我精读 Agent 编排模块" 或 "给检索加 rerank">

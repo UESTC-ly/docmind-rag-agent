@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.models.document import Document, DocumentStatus
 from app.services import vector_store
-from app.tasks.document_tasks import process_document
+from app.services.task_dispatcher import dispatch_document
 
 ALLOWED_SUFFIXES = {".pdf", ".docx", ".doc", ".txt", ".md"}
 
@@ -18,7 +18,7 @@ ALLOWED_SUFFIXES = {".pdf", ".docx", ".doc", ".txt", ".md"}
 async def create_document(
     db: AsyncSession, user_id: int, file: UploadFile
 ) -> Document:
-    """保存上传文件到磁盘，建记录，派发 Celery 解析任务。"""
+    """保存上传文件、建记录，并派发 Celery/桌面本地解析任务。"""
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
         raise HTTPException(
@@ -44,8 +44,28 @@ async def create_document(
     await db.flush()
     await db.refresh(doc)
 
-    # 派发异步任务（.delay 把任务丢进 Redis 队列，立即返回，不阻塞请求）
-    process_document.delay(doc.id)
+    # The background worker owns a separate synchronous connection.  Commit
+    # before dispatch so both Celery and the desktop thread executor can see
+    # the row immediately; relying on the request dependency's later commit
+    # creates a race where a fast local task observes "document not found".
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        saved_path.unlink(missing_ok=True)
+        raise
+
+    try:
+        dispatch_document(doc.id)
+    except Exception as exc:  # broker/local executor unavailable
+        doc.status = DocumentStatus.FAILED
+        doc.error_message = "文档处理后台任务派发失败"
+        await db.commit()
+        saved_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="文档处理后台任务暂不可用",
+        ) from exc
     return doc
 
 

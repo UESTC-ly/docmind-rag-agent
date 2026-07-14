@@ -10,7 +10,16 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, Text, func
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -100,6 +109,14 @@ class EvalRun(Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Background workers claim a run with a random lease token. ``task_id`` is
+    # stable across a Celery redelivery, while ``lease_token`` changes on every
+    # claim so an old worker cannot commit after a replacement has taken over.
+    task_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    lease_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     dataset: Mapped["EvalDataset"] = relationship(back_populates="runs")
     results: Mapped[list["EvalResult"]] = relationship(
@@ -111,6 +128,13 @@ class EvalResult(Base):
     """单条样本在某次运行中的明细分数。"""
 
     __tablename__ = "eval_results"
+    __table_args__ = (
+        UniqueConstraint(
+            "run_id",
+            "sample_id",
+            name="uq_eval_results_run_sample",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     run_id: Mapped[int] = mapped_column(
@@ -120,7 +144,7 @@ class EvalResult(Base):
         ForeignKey("eval_samples.id", ondelete="CASCADE"), index=True
     )
     # 检索明细（该样本的）
-    hit: Mapped[int] = mapped_column(Integer, default=0)    # 0 or 1
+    hit: Mapped[int] = mapped_column(Integer, default=0)  # 0 or 1
     reciprocal_rank: Mapped[float] = mapped_column(Float, default=0.0)
     recall_at_k: Mapped[float] = mapped_column(Float, default=0.0)
     precision_at_k: Mapped[float] = mapped_column(Float, default=0.0)
@@ -129,6 +153,10 @@ class EvalResult(Base):
     answer_relevancy_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     # 检索器实际返回的 chunk_index 列表（JSON），便于调试
     retrieved_chunk_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 可复现检索轨迹：策略、实际 reranker，以及不含正文的候选/最终排序 JSON。
+    retrieval_mode: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reranker_mode: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retrieval_trace: Mapped[str | None] = mapped_column(Text, nullable=True)
     # LLM 生成的答案（评估时实际跑一遍 RAG）
     generated_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
 

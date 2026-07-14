@@ -20,7 +20,9 @@ from app.main import app
 from app.models.document import Document, DocumentChunk, DocumentStatus
 from app.models.evaluation import EvalDataset, EvalSample
 from app.models.user import User
+from app.services import task_dispatcher
 from app.services.evaluation import dataset_gen, runner
+from app.services.task_dispatcher import DispatchReceipt
 from app.utils.security import create_access_token, hash_password
 
 pytestmark = pytest.mark.asyncio
@@ -71,6 +73,14 @@ async def eval_env(tmp_path, monkeypatch):
         user_id = user.id
     headers = {"Authorization": f"Bearer {create_access_token('ev@test.com')}"}
 
+    dispatched = []
+
+    def _dispatch(run_id, user_id, document_id):
+        dispatched.append((run_id, user_id, document_id))
+        return DispatchReceipt(task_id=f"test-{run_id}", mode="celery")
+
+    monkeypatch.setattr(task_dispatcher, "dispatch_evaluation", _dispatch)
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield {
@@ -78,6 +88,7 @@ async def eval_env(tmp_path, monkeypatch):
             "headers": headers,
             "user_id": user_id,
             "SyncSession": SyncSession,
+            "dispatched": dispatched,
         }
 
     app.dependency_overrides.clear()
@@ -147,27 +158,26 @@ class TestListDatasets:
 
 
 class TestCreateRun:
-    async def test_run_completes_with_metrics(self, eval_env, monkeypatch):
+    async def test_run_returns_pending_without_calling_runner(self, eval_env, monkeypatch):
         doc_id = _seed_document(eval_env["SyncSession"], eval_env["user_id"])
         ds_id = _seed_dataset(eval_env["SyncSession"], eval_env["user_id"], doc_id, [[0], [0]])
-        # mock runner 的 RAG + judge 边界
-        monkeypatch.setattr(runner, "embed_query", lambda q: [0.1])
-        monkeypatch.setattr(runner, "search", lambda *a, **k: [
-            {"score": 0.9, "content": "片段0", "document_id": doc_id, "chunk_index": 0}
-        ])
-        monkeypatch.setattr(runner, "chat_completion", lambda m: _FakeMsg("答案"))
-        monkeypatch.setattr(runner, "judge_faithfulness", lambda c, a: 1.0)
-        monkeypatch.setattr(runner, "judge_answer_relevancy", lambda q, a: 0.9)
+        monkeypatch.setattr(
+            runner,
+            "run_evaluation",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                AssertionError("request must not execute the evaluation runner")
+            ),
+        )
 
         resp = await eval_env["client"].post(
             "/eval/runs", headers=eval_env["headers"], json={"dataset_id": ds_id},
         )
-        assert resp.status_code == 201
+        assert resp.status_code == 202
         body = resp.json()
-        # 双路径共享库生效：sync 跑完的结果 async 能读到
-        assert body["status"] == "completed"
-        assert body["hit_rate"] == 1.0
-        assert body["faithfulness"] == 1.0
+        assert body["status"] == "pending"
+        assert body["hit_rate"] is None
+        assert eval_env["dispatched"] == [(body["id"], eval_env["user_id"], doc_id)]
+        assert resp.headers["X-Task-ID"] == f"test-{body['id']}"
 
     async def test_run_on_others_dataset_404(self, eval_env):
         resp = await eval_env["client"].post(
@@ -180,9 +190,19 @@ class TestGetRunAndDetails:
     async def _make_completed_run(self, eval_env, monkeypatch):
         doc_id = _seed_document(eval_env["SyncSession"], eval_env["user_id"])
         ds_id = _seed_dataset(eval_env["SyncSession"], eval_env["user_id"], doc_id, [[0]])
-        monkeypatch.setattr(runner, "embed_query", lambda q: [0.1])
-        monkeypatch.setattr(runner, "search", lambda *a, **k: [
-            {"score": 0.9, "content": "片段0", "document_id": doc_id, "chunk_index": 0}
+        monkeypatch.setattr(runner, "retrieve_for_skill", lambda **kwargs: [
+            {
+                "score": 0.9,
+                "content": "片段0",
+                "document_id": doc_id,
+                "chunk_index": 0,
+                "retrieval_sources": ["dense", "keyword"],
+                "rrf_score": 0.03,
+                "fused_rank": 1,
+                "rerank_score": 0.9,
+                "reranker": "local",
+                "final_rank": 1,
+            }
         ])
         monkeypatch.setattr(runner, "chat_completion", lambda m: _FakeMsg("答案"))
         monkeypatch.setattr(runner, "judge_faithfulness", lambda c, a: 1.0)
@@ -190,7 +210,16 @@ class TestGetRunAndDetails:
         resp = await eval_env["client"].post(
             "/eval/runs", headers=eval_env["headers"], json={"dataset_id": ds_id},
         )
-        return resp.json()["id"]
+        assert resp.status_code == 202
+        run_id = resp.json()["id"]
+        with eval_env["SyncSession"]() as sync_db:
+            runner.run_evaluation(
+                sync_db,
+                run_id,
+                eval_env["user_id"],
+                doc_id,
+            )
+        return run_id
 
     async def test_get_run(self, eval_env, monkeypatch):
         run_id = await self._make_completed_run(eval_env, monkeypatch)
@@ -209,6 +238,8 @@ class TestGetRunAndDetails:
         details = resp.json()
         assert len(details) == 1
         assert details[0]["generated_answer"] == "答案"
+        assert details[0]["retrieval_mode"]
+        assert details[0]["reranker_mode"] == "local"
 
     async def test_get_missing_run_404(self, eval_env):
         resp = await eval_env["client"].get("/eval/runs/99999", headers=eval_env["headers"])

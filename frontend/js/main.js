@@ -1,6 +1,6 @@
 // 入口：鉴权流转、视图路由、各模块装配。
 
-import { api, auth } from "./api.js";
+import { api, auth, configureApiOrigin } from "./api.js";
 import { $, $$, el, toast } from "./ui.js";
 import { initChat, loadConversation, newConversation } from "./chat.js";
 import { initDocs, refreshDocs } from "./docs.js";
@@ -121,9 +121,10 @@ async function waitForDesktopServices() {
   status.hidden = false;
   retry.hidden = true;
   try {
-    await waitForDesktopBackend((backend) => {
+    const backendOrigin = await waitForDesktopBackend((backend) => {
       status.textContent = backend.message;
     });
+    configureApiOrigin(backendOrigin);
     status.hidden = true;
     return true;
   } catch (error) {

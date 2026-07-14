@@ -1,4 +1,5 @@
 {
-  "status": "blocked",
-  "reason": "依赖 OpenAI Docs MCP 和联网脚本；当前 DocMind 未配置对应 MCP adapter。"
+  "status": "ready",
+  "reason": "已接入带 URL、凭据和 tool allowlist 的 Streamable HTTP MCP；不执行复制包中的网络 helper。",
+  "requires": ["mcp"]
 }

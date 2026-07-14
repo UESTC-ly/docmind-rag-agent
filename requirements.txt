@@ -10,6 +10,7 @@ python-dotenv
 
 # ── 数据库 ───────────────────────────────
 sqlalchemy
+alembic                    # 生产数据库 schema 迁移（替代启动时 create_all）
 asyncpg                   # 异步驱动（FastAPI）
 psycopg2-binary           # 同步驱动（Celery）
 greenlet                  # SQLAlchemy async 依赖
@@ -33,6 +34,7 @@ qdrant-client
 
 # ── Agent 技能 ───────────────────────────
 ddgs                      # DuckDuckGo 联网搜索
+playwright==1.61.0        # 受控 Browser adapter；部署后按需安装 Chromium runtime
 
 # ── 日志 ─────────────────────────────────
 loguru

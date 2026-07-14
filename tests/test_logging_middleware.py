@@ -8,9 +8,6 @@ import pytest
 
 from app.utils import logging as app_logging
 
-pytestmark = pytest.mark.asyncio
-
-
 class TestSetupLogging:
     def test_json_mode(self, monkeypatch):
         monkeypatch.setattr(app_logging.settings, "log_json", True)
@@ -22,6 +19,8 @@ class TestSetupLogging:
 
 
 class TestRequestMiddleware:
+    pytestmark = pytest.mark.asyncio
+
     async def test_response_carries_request_id(self, client, registered_user):
         resp = await client.get("/auth/me", headers=registered_user["headers"])
         assert resp.headers.get("X-Request-ID")

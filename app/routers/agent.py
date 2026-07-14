@@ -55,6 +55,7 @@ async def list_skills(current_user: User = Depends(get_current_user)):
                 "assets": package.asset_names,
                 "runtime_status": package.runtime_status,
                 "runtime_reason": package.runtime_reason,
+                "required_capabilities": list(package.required_capabilities),
             }
         out.append(item)
     return out

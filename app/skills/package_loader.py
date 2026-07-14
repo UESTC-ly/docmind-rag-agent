@@ -40,6 +40,7 @@ class SkillPackage:
     asset_names: list[str]
     runtime_status: str
     runtime_reason: str
+    required_capabilities: tuple[str, ...]
 
     @property
     def template_names(self) -> list[str]:
@@ -194,6 +195,14 @@ def load_skill_package(slug: str) -> SkillPackage:
             else ""
         )
     ).strip()
+    raw_capabilities = runtime.get("requires") or []
+    if not isinstance(raw_capabilities, list) or not all(
+        isinstance(item, str) for item in raw_capabilities
+    ):
+        raise ValueError(f"Skill package {slug} has invalid capability requirements")
+    required_capabilities = tuple(
+        dict.fromkeys(item.strip() for item in raw_capabilities if item.strip())
+    )
 
     return SkillPackage(
         slug=slug,
@@ -210,6 +219,7 @@ def load_skill_package(slug: str) -> SkillPackage:
         asset_names=_list_files(package_dir / "assets"),
         runtime_status=runtime_status,
         runtime_reason=runtime_reason,
+        required_capabilities=required_capabilities,
     )
 
 

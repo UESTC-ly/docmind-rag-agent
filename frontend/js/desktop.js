@@ -12,12 +12,12 @@ async function invoke(command, args) {
 }
 
 export async function waitForDesktopBackend(onStatus) {
-  if (!isDesktopApp()) return;
+  if (!isDesktopApp()) return null;
 
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const status = await invoke("backend_status");
     onStatus?.(status);
-    if (status.state === "ready") return;
+    if (status.state === "ready") return invoke("backend_origin");
     if (status.state === "error") throw new Error(status.message);
     await delay(1000);
   }
