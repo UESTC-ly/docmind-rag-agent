@@ -51,12 +51,13 @@ jobs:
 
       - name: Verify macOS bundle signature and disk image
         run: |
+          version="$(node -p "require('./desktop/package.json').version")"
           codesign --verify --deep --strict --verbose=2 \
             desktop/src-tauri/target/release/bundle/macos/DocMind.app
           node desktop/scripts/smoke-sidecar.mjs \
             desktop/src-tauri/target/release/bundle/macos/DocMind.app/Contents/MacOS/docmind-sidecar
           hdiutil verify \
-            desktop/src-tauri/target/release/bundle/dmg/DocMind_2.2.0_aarch64.dmg
+            "desktop/src-tauri/target/release/bundle/dmg/DocMind_${version}_aarch64.dmg"
 
       - name: Upload native packages
         uses: actions/upload-artifact@v4
