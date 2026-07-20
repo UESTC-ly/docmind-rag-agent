@@ -22,6 +22,7 @@ htmlcov/
 data/*.parquet
 data/**/*.parquet
 data/manifest.json
+data/agent-checkpoints.sqlite3*
 uploads/
 skill_workspaces/
 

@@ -116,7 +116,7 @@ class StreamableHttpMcpAdapter:
             {
                 "protocolVersion": "2025-03-26",
                 "capabilities": {},
-                "clientInfo": {"name": "docmind", "version": "2.2.0"},
+                "clientInfo": {"name": "docmind", "version": "3.0.0"},
             },
         )
         if response.get("error"):

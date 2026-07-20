@@ -38,8 +38,18 @@ datas += collect_data_files(
 )
 binaries += collect_dynamic_libs("qdrant_client")
 hiddenimports += collect_submodules("qdrant_client", filter=is_qdrant_runtime_module)
+hiddenimports += collect_submodules("langgraph")
 
-for distribution in ("fastapi", "pydantic", "qdrant-client", "sqlalchemy", "uvicorn"):
+for distribution in (
+    "fastapi",
+    "langgraph",
+    "langgraph-checkpoint",
+    "langgraph-checkpoint-sqlite",
+    "pydantic",
+    "qdrant-client",
+    "sqlalchemy",
+    "uvicorn",
+):
     try:
         datas += copy_metadata(distribution)
     except Exception:

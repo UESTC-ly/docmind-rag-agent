@@ -8,12 +8,14 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、运行时零构建），覆盖
-登录、流式对话、文档管理、评估看板四大界面。v2.2.0 提供 **自包含 Tauri 桌面 App**：
+登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.0.0 在 v2.2 自包含
+Tauri 桌面 App 基础上，把**外层 Agent 编排迁移到 LangGraph**：高风险 Skill 可在副作用
+发生前暂停审批，SQLite checkpoint 支持服务或 App 重启后恢复。桌面版
 保留同一套前端与 FastAPI API，通过 PyInstaller sidecar 内置 Python 后端，使用 SQLite、
 Qdrant local 与本地任务执行器；安装后的终端用户不需要 Docker、PostgreSQL、Redis、
 Qdrant Server、uv 或系统 Python。
 
-**亮点**：ReAct Agent 编排 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
+**亮点**：LangGraph durable Agent · 人工审批与恢复 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
 多路召回（向量 + 数据库关键词 + RRF + reranker）· 异步 RAG 评估 · Alembic ·
 Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 
@@ -23,7 +25,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 - [技术栈](#技术栈)
 - [核心设计](#核心设计)
 - [快速启动](#快速启动)
-- [桌面 App（v2.2）](#桌面-appv22)
+- [桌面 App（v3.0）](#桌面-appv30)
 - [Web 开发启动](#web-开发启动)
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
@@ -46,9 +48,9 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
                    └──────┬──────────────────────┬──────────────┘
                           │                       │
            ┌──────────────▼────────┐   ┌──────────▼─────────────┐
-           │  Agent Orchestrator    │   │  RAG 问答 (chat)        │
-           │  ReAct 主循环          │   │  检索→拼Prompt→LLM      │
-           │  Function Calling      │   └──────────┬─────────────┘
+           │  LangGraph Outer Agent │   │  RAG 问答 (chat)        │
+           │  supervisor / approval │   │  检索→拼Prompt→LLM      │
+           │  checkpoint / resume   │   └──────────┬─────────────┘
            └──────────────┬────────┘              │
                           │ 自主调度               │
            ┌──────────────▼─────────────────────┐ │
@@ -64,6 +66,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
                                   │
               ┌───────────────────┴────────────────────┐
               │ Web：PostgreSQL + Qdrant + Redis/Celery │
+              │      + SQLite Agent checkpoints          │
               │ Desktop：SQLite + Qdrant local + local  │
               │          task executor                  │
               └─────────────────────────────────────────┘
@@ -75,7 +78,8 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 ## 技术栈
 
 - **后端**：FastAPI + SQLAlchemy 2.0 (async) + Pydantic v2 + pydantic-settings
-- **AI**：OpenAI 兼容 API（默认 `gpt-4o-mini` + `text-embedding-3-small`）+ Function Calling
+- **AI / Agent**：OpenAI 兼容 API（默认 `gpt-4o-mini` + `text-embedding-3-small`）+
+  Function Calling + LangGraph 1.2（interrupt / checkpoint / resume）
 - **Web 存储**：PostgreSQL（元数据 + 分块/全文检索）+ Qdrant Server（向量）+ Redis
 - **桌面存储**：SQLite + Qdrant local（均在用户应用数据目录）
 - **后台任务**：Web 使用 Celery；桌面使用本地任务执行器
@@ -104,6 +108,21 @@ OpenAI 调用（LLM、embedding）与 Agent 主循环仍是**同步阻塞**的�
 `asyncio.to_thread(...)` 隔离。评估运行不再留在请求线程：创建 run 后由 Celery 或桌面
 本地任务执行器完成。
 
+### LangGraph durable Agent 与审批边界
+
+`app/agent/orchestrator.py` 的外层状态图由 `supervisor → select_tool →
+approval_gate/execute_tool` 组成。每个节点只做一种工作，工具一次执行一个；高风险调用在
+任何副作用前 `interrupt()`，`POST /agent/resume` 用同一 `thread_id` 继续。Web 默认把
+checkpoint 写到 `./data/agent-checkpoints.sqlite3`，桌面 sidecar 强制写入用户数据目录。
+完成态 Assistant 消息使用 `agent_run_id` 幂等落库；工具执行回执则在 checkpoint 节点重放时
+复用已完成结果，并把结果不确定的副作用重新交给人工决定，而不是静默重试。
+
+本版迁移范围是**外层 Agent**。Generic Skill 内部仍使用既有 ReAct runner；若 package
+声明脚本、MCP、浏览器、App 或仓库能力，会在进入整个 package 前审批，但尚不是内部每个
+action 的独立审批/checkpoint。Generic Skill 子图和完整 Multi-Agent 拆分留待后续版本。
+详细状态、恢复 API 和已知边界见
+[`doc/09-v3.0.0-LangGraph实施与发布.md`](doc/09-v3.0.0-LangGraph实施与发布.md)。
+
 ### 数据隔离
 
 - 每个 Qdrant point 的 payload 都带 `user_id`，所有向量检索强制按 `user_id` 过滤。
@@ -124,7 +143,7 @@ OpenAI 调用（LLM、embedding）与 Agent 主循环仍是**同步阻塞**的�
 安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
 Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
 
-## 桌面 App（v2.2）
+## 桌面 App（v3.0）
 
 桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI。生产安装包携带
 一个由 PyInstaller 冻结的 `docmind-sidecar`，其中包含 Python 解释器、FastAPI 和后端依赖。
@@ -153,8 +172,9 @@ App 即可使用 AI 功能。数据库、向量、上传文件、Skill 工作区
 | Windows | `%APPDATA%\\com.docmind.desktop\\` |
 | Linux | `~/.config/com.docmind.desktop/` |
 
-目录中包含 `desktop.env`、`data/docmind.db`、`data/qdrant/`、`data/uploads/`、
-`data/skill_workspaces/`、`data/secrets/` 和 `logs/sidecar.log`。删除或升级安装包不会主动
+目录中包含 `desktop.env`、`data/docmind.db`、`data/agent-checkpoints.sqlite3`、
+`data/qdrant/`、`data/uploads/`、`data/skill_workspaces/`、`data/secrets/` 和
+`logs/sidecar.log`。删除或升级安装包不会主动
 删除这些用户数据。
 
 ### 开发与打包
@@ -355,9 +375,13 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 5. 技能卡的“选择并填入模板”会把 `skill_name` 一并提交，首轮强制调用该技能，避免
    LLM 只在聊天窗口模拟产出；若选了 `document_id` 且未锁定技能，首轮强制调用
    `search_knowledge_base`，先取得 RAG 片段再继续编排。
-6. 返回体含 `answer`（最终回复）、`artifacts`（思维导图/图谱/报告/周报/PPT 等结构化或文件产出）、
-   `trace`（技能、参数、成功状态和 grounding 模式）
-7. `GET /agent/skills` 查看技能、运行时兼容状态、grounding 模式与下载能力
+6. 若返回 `status=waiting_approval`，检查 `approval.tool / args / reason / scope`，在 UI
+   选择“批准并继续”或“拒绝本次调用”；也可调用 `POST /agent/resume`。刷新或重启后用
+   `GET /agent/runs/{run_id}` 找回当前状态。
+7. 前端在发送前生成并保存 `run_id`；请求响应丢失时，同一 ID 可幂等查询。若状态为
+   `running + recoverable=true`，调用 `POST /agent/runs/{run_id}/recover` 从未完成节点继续。
+8. 完成响应含 `answer`、`artifacts`、`trace`，并始终带本次 `run_id/thread_id`。
+9. `GET /agent/skills` 查看技能、运行时兼容状态、grounding 模式与下载能力。
 
 `POST /chat/` 是**不带 Agent 编排的纯 RAG 问答**：直接检索 → 拼 Prompt → 生成，返回
 `answer` + `sources`（引用片段）。适合只需要问答、不需要工具调度的场景。
@@ -378,6 +402,9 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 | 问答 | `GET /chat/conversations` | 我的对话列表 |
 | 问答 | `GET /chat/conversations/{id}` | 某对话的消息历史 |
 | Agent | `POST /agent/chat` | 与 Agent 对话；可传 `skill_name` 锁定首轮技能 |
+| Agent | `POST /agent/resume` | 批准/拒绝并恢复等待中的 LangGraph run；可修订参数 |
+| Agent | `GET /agent/runs/{run_id}` | 按当前用户读取 checkpoint 的公开状态 |
+| Agent | `POST /agent/runs/{run_id}/recover` | 从非 interrupt 的未完成节点继续；执行回执防静默重复 |
 | Agent | `GET /agent/skills` | 列出技能及 available / grounding / download 元数据 |
 | 评估 | `POST /eval/datasets` | 从文档 LLM 反向出题生成数据集 |
 | 评估 | `GET /eval/datasets` | 我的评估数据集列表 |
@@ -390,7 +417,7 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v2.2.0 保持**两条执行路径并存**：
+技能是 Agent 的能力单元。v3.0.0 保持**两条执行路径并存**：
 
 ```text
 Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界
@@ -427,6 +454,8 @@ adapter 统一返回 `status / summary / next_actions / artifacts`。未配置�
 实际执行各检查一次，伪造 tool call 不能绕过。通用技能的文件读写只发生在
 `skill_workspaces/user_<id>/<skill_slug>/`；生产运行时不开放任意 shell，需执行动作时使用
 受审计 package script 或专用 adapter，避免把 `/agent/chat` 变成远程代码执行入口。
+此外，外层 LangGraph 会在进入声明高风险 capability 的 Generic package 前请求人工审批。
+这个审批覆盖本次 package 调用，并不等价于内部 action 级审批；后者将在 runner 子图化后迁移。
 
 | 技能名 | Grounding | 作用 | 下载 |
 |---|---|---|---|
@@ -516,16 +545,23 @@ description: Explain exactly when this skill should be used.
 Follow these steps and write final files into outputs/.
 ```
 
-### Agent 主循环（`app/agent/orchestrator.py`）
+### 外层 Agent 状态图（`app/agent/orchestrator.py`）
 
-ReAct 式循环，最多 `agent_max_steps`（默认 6）步防死循环：
+LangGraph 状态图最多执行 `agent_max_steps`（默认 6）轮模型决策：
 
-1. 把系统提示 + 历史 + 用户消息 + 所有已通过兼容审计的工具定义交给 LLM；技能卡
-   传 `skill_name` 时强制首轮调用指定技能；选定文档且未锁定技能时，首轮强制走
-   `search_knowledge_base`
-2. LLM 要么直接回答（结束），要么返回 `tool_calls`
-3. 逐个执行技能，结果作为 `role: tool` 消息塞回上下文
-4. 回到第 1 步，直到 LLM 给出最终答案或达到最大步数
+1. `supervisor` 把系统提示、历史、用户消息和已通过审计的工具定义交给 LLM；技能卡
+   传 `skill_name` 时强制首轮指定技能，选定文档且未锁定技能时首轮强制 RAG；
+2. `select_tool` 把同轮多个 `tool_calls` 拆成一次一个可 checkpoint 的调用；
+3. 低风险调用进入 `execute_tool`；高风险调用先进入 `approval_gate` 并 `interrupt()`；
+4. 批准后执行（可替换参数），拒绝则形成 `role: tool` observation，不产生副作用；
+5. 每个节点完成后 saver 保存状态，再处理下一调用或回到 `supervisor`，直至最终答案/上限。
+
+`run_id` 就是 LangGraph `thread_id`。HTTP 层总是使用持久化 SQLite saver；一次性直接调用
+`run_agent()` 默认使用内存 saver，避免测试脚本污染仓库。
+
+外层工具另有 `run_id + tool_call_id` 执行回执：工具已返回但图 checkpoint 尚未写入时崩溃，
+恢复会复用已保存结果；若崩溃发生在工具执行期间、外部副作用是否完成无法判断，图会再次
+interrupt 请求“是否重试”，不会静默执行第二次。
 
 对话历史由 `app/agent/memory.py` 管理，只带入最近 `WINDOW_SIZE`（10）条消息控制 token。
 
@@ -630,7 +666,7 @@ compositor 友好动画、`prefers-reduced-motion` 降级、键盘焦点环、�
 
 - **纯函数单测**：检索指标、RRF 融合、密码哈希/JWT、数据集解析、分块——无 I/O，秒级。
 - **服务单测**：共享检索/reranker、评估 runner/Celery task、Alembic、Skills adapters、
-  capability gate、LLM 流式聚合——mock 外部边界。
+  capability gate、LangGraph interrupt/checkpoint/restart resume、LLM 流式聚合——mock 外部边界。
 - **路由集成测**：用内存 sqlite 替 PG、mock 掉 Celery/embedding/LLM，真实 HTTP 打
   auth/documents/chat/agent/eval 全部端点（含 SSE 流式、评估双路径）。
 - **真实全栈 E2E**：独立 Playwright 配置启动真实 FastAPI，使用临时 SQLite、Qdrant local
@@ -642,7 +678,7 @@ runtime-error lint、模型/API contract typecheck、pytest 覆盖率门槛、Ja
 以及 Rust fmt/clippy/test。`.github/workflows/frontend-e2e.yml` 在 macOS Chromium 上分别运行
 Page Object 驱动的 mock/视觉回归与真实 FastAPI 全栈路径；失败时上传 HTML report、trace、
 截图、视频和 JUnit 结果。E2E 使用稳定 API fixture 与网络/状态等待，不依赖固定 sleep。
-Linux/Windows 不属于 v2.2 验收矩阵。
+Linux/Windows 安装包不属于 v3.0 本地验收矩阵。
 
 ```bash
 uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
@@ -689,6 +725,9 @@ npm run test:e2e:fullstack                         # 真实 FastAPI + SQLite/Qdr
 | `EVALUATION_LEASE_SECONDS` | | `2100` | 评估 worker 租约过期/崩溃接管窗口 |
 | `EVALUATION_TASK_*_TIME_LIMIT_SECONDS` | | `1740/1800` | Celery 评估任务软/硬时限，短于租约 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
+| `AGENT_CHECKPOINT_PATH` | | `./data/agent-checkpoints.sqlite3` | LangGraph SQLite checkpoint；桌面宿主覆盖到用户数据目录 |
+| `AGENT_HIGH_RISK_SKILLS` | | 空 | 必须审批的外层 Skill 名称，逗号分隔 |
+| `AGENT_HIGH_RISK_CAPABILITIES` | | `package_scripts,mcp,browser,app,repository` | Generic package 声明这些能力时整次调用需审批 |
 | `SKILL_RUNNER_MAX_STEPS` | | `8` | Codex-style 通用 skill 内部工具循环最大步数 |
 | `SKILL_WORKSPACE_DIR` | | `./skill_workspaces` | 通用 skill 的用户隔离文件工作区 |
 | `SKILL_PACKAGE_SCRIPTS_ENABLED` | | `false` | 是否启用已审计固定脚本；还需 package 声明和 macOS confinement |
@@ -723,14 +762,14 @@ app/
 │   ├── skill_retrieval.py  同步 Skills 复用 Hybrid RAG 的入口
 │   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
 │                      retrieval_metrics / generation_judge）
-├── agent/             Agent 编排（orchestrator 主循环 / memory 对话记忆）
+├── agent/             LangGraph 外层编排、interrupt/checkpoint/resume、memory 对话记忆
 ├── skills/            Python Skills + generic runner + capability gate + adapters
 │   ├── adapters/      MCP / Playwright / loopback App bridge
 │   └── packages/      SKILL.md / docmind.json / templates / references / scripts / assets
 ├── tasks/             文档解析与评估 Celery tasks
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
-alembic/               v2.1 baseline + v2.2 schema/FTS migration
+alembic/               v2.1 baseline + v2.2 schema/FTS migration（v3 无新业务表）
 frontend/              原生单页前端 + Playwright E2E/视觉基线
 ├── index.html
 ├── styles/            tokens / base / layout / components（按 surface 分文件）

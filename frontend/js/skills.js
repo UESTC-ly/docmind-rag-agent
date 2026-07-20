@@ -9,6 +9,9 @@ let agentConversationId = null;
 let mermaidPromise = null;
 let mermaidRenderSeq = 0;
 let selectedSkillName = null;
+let pendingRestoreAttempted = false;
+
+const PENDING_AGENT_RUN_KEY = "docmind_pending_agent_run";
 
 const MERMAID_CDN =
   "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -98,10 +101,32 @@ export async function refreshSkills() {
     const skills = await api.listSkills();
     renderSkills(skills);
     skillsLoaded = true;
+    await restorePendingAgentRun();
   } catch (e) {
     list.replaceChildren(el("p", { class: "empty", text: e.message }));
     toast(e.message);
   }
+}
+
+async function restorePendingAgentRun() {
+  if (pendingRestoreAttempted) return;
+  pendingRestoreAttempted = true;
+  const runId = localStorage.getItem(PENDING_AGENT_RUN_KEY);
+  if (!runId) return;
+  try {
+    await renderCheckpoint(runId);
+  } catch (error) {
+    // Run 可能已经清理、属于上一个登录用户或不再可访问；不让恢复失败阻塞技能列表。
+    // 只在权威 404 时丢弃 ID；401/网络/服务端暂时失败都保留，便于重新登录或刷新后再试。
+    if (error.status === 404) localStorage.removeItem(PENDING_AGENT_RUN_KEY);
+  }
+}
+
+async function renderCheckpoint(runId) {
+  const result = await api.getAgentRun(runId);
+  agentConversationId = result.conversation_id;
+  renderAgentResult(result);
+  return result;
 }
 
 function renderTrace(trace) {
@@ -113,7 +138,13 @@ function renderTrace(trace) {
         el("span", { text: `#${step.step + 1}` }),
         el("strong", { text: step.skill }),
         el("code", { text: JSON.stringify(step.args ?? {}) }),
-      ])
+        step.approval
+          ? el("span", {
+              class: "status",
+              text: step.approval.approved ? "已审批" : "已拒绝",
+            })
+          : null,
+      ].filter(Boolean))
     ),
   ]);
 }
@@ -279,7 +310,110 @@ function renderArtifacts(artifacts) {
   ]);
 }
 
+function approvalCard(result) {
+  const approval = result.approval;
+  if (result.status !== "waiting_approval" || !approval || !result.run_id) return null;
+
+  const approve = el("button", {
+    class: "btn btn--accent",
+    type: "button",
+    text: "批准并继续",
+  });
+  const reject = el("button", {
+    class: "btn btn--ghost",
+    type: "button",
+    text: "拒绝本次调用",
+  });
+  const controls = [approve, reject];
+
+  async function decide(approved) {
+    for (const button of controls) button.disabled = true;
+    approve.textContent = approved ? "正在恢复…" : "批准并继续";
+    reject.textContent = approved ? "拒绝本次调用" : "正在拒绝…";
+    try {
+      const resumed = await api.resumeAgent({ runId: result.run_id, approved });
+      agentConversationId = resumed.conversation_id;
+      renderAgentResult(resumed);
+      window.dispatchEvent(new CustomEvent("chat:conversation", { detail: resumed }));
+    } catch (e) {
+      try {
+        await renderCheckpoint(result.run_id);
+      } catch {
+        toast(e.message);
+        for (const button of controls) button.disabled = false;
+        approve.textContent = "批准并继续";
+        reject.textContent = "拒绝本次调用";
+      }
+    }
+  }
+
+  approve.addEventListener("click", () => decide(true));
+  reject.addEventListener("click", () => decide(false));
+  const riskCapabilities = approval.risk_capabilities?.length
+    ? `高风险能力：${approval.risk_capabilities.join("、")}`
+    : "高风险外层工具调用";
+  return el("article", { class: "approval-card", role: "alert" }, [
+    el("div", { class: "section-kicker", text: "需要人工审批" }),
+    el("h3", { text: approval.tool || "未命名工具" }),
+    el("p", { text: approval.reason || riskCapabilities }),
+    el("div", { class: "doc__meta", text: riskCapabilities }),
+    el("pre", { text: JSON.stringify(approval.args ?? {}, null, 2) }),
+    approval.scope === "outer_skill"
+      ? el("p", {
+          class: "approval-card__scope",
+          text: "审批范围：本次外层 Skill 调用。Generic Skill 内部逐动作审批将在后续子图迁移中实现。",
+        })
+      : null,
+    el("div", { class: "approval-card__actions" }, controls),
+  ].filter(Boolean));
+}
+
+function recoveryCard(result) {
+  if (result.status !== "running" || !result.recoverable || !result.run_id) return null;
+  const recover = el("button", {
+    class: "btn btn--accent",
+    type: "button",
+    text: "从 checkpoint 继续",
+  });
+  recover.addEventListener("click", async () => {
+    recover.disabled = true;
+    recover.textContent = "正在恢复…";
+    try {
+      const resumed = await api.recoverAgent(result.run_id);
+      agentConversationId = resumed.conversation_id;
+      renderAgentResult(resumed);
+      window.dispatchEvent(new CustomEvent("chat:conversation", { detail: resumed }));
+    } catch (e) {
+      try {
+        await renderCheckpoint(result.run_id);
+      } catch {
+        recover.disabled = false;
+        recover.textContent = "从 checkpoint 继续";
+        toast(e.message);
+      }
+    }
+  });
+  return el("article", { class: "approval-card recovery-card", role: "status" }, [
+    el("div", { class: "section-kicker", text: "发现未完成的 Agent run" }),
+    el("p", {
+      text: "确认原执行已停止后，可从该节点继续。恢复会复用工具执行回执；结果不确定的副作用会再次请求人工决定，绝不会静默重试。",
+    }),
+    recover,
+  ]);
+}
+
 function renderAgentResult(result) {
+  if (
+    (result.status === "waiting_approval" || result.recoverable) &&
+    result.run_id
+  ) {
+    localStorage.setItem(PENDING_AGENT_RUN_KEY, result.run_id);
+  } else if (
+    result.run_id &&
+    localStorage.getItem(PENDING_AGENT_RUN_KEY) === result.run_id
+  ) {
+    localStorage.removeItem(PENDING_AGENT_RUN_KEY);
+  }
   const root = $("#skill-agent-result");
   const children = [
     el("article", { class: "agent-answer" }, [
@@ -289,6 +423,10 @@ function renderAgentResult(result) {
   ];
   const trace = renderTrace(result.trace);
   const artifacts = renderArtifacts(result.artifacts);
+  const approval = approvalCard(result);
+  const recovery = recoveryCard(result);
+  if (approval) children.push(approval);
+  if (recovery) children.push(recovery);
   if (trace) children.push(trace);
   if (artifacts) children.push(artifacts);
   root.replaceChildren(...children);
@@ -308,12 +446,15 @@ async function submitAgentTask() {
   );
 
   const documentId = docInput.value ? Number(docInput.value) : null;
+  const runId = crypto.randomUUID();
+  localStorage.setItem(PENDING_AGENT_RUN_KEY, runId);
   try {
     const result = await api.agentChat({
       message,
       conversationId: agentConversationId,
       documentId,
       skillName: selectedSkillName,
+      runId,
     });
     agentConversationId = result.conversation_id;
     renderAgentResult(result);
@@ -321,8 +462,15 @@ async function submitAgentTask() {
     $("#selected-skill-name").textContent = "未锁定技能：Agent 自动选择";
     window.dispatchEvent(new CustomEvent("chat:conversation", { detail: result }));
   } catch (e) {
-    $("#skill-agent-result").replaceChildren(el("p", { class: "empty", text: e.message }));
-    toast(e.message);
+    try {
+      await renderCheckpoint(runId);
+    } catch (checkpointError) {
+      if (checkpointError.status === 404) {
+        localStorage.removeItem(PENDING_AGENT_RUN_KEY);
+      }
+      $("#skill-agent-result").replaceChildren(el("p", { class: "empty", text: e.message }));
+      toast(e.message);
+    }
   } finally {
     submit.disabled = false;
     submit.textContent = "调用 Agent";
@@ -330,6 +478,10 @@ async function submitAgentTask() {
 }
 
 export function initSkills() {
+  window.addEventListener("auth:expired", () => {
+    pendingRestoreAttempted = false;
+    agentConversationId = null;
+  });
   $("#refresh-skills-btn").addEventListener("click", () => {
     skillsLoaded = false;
     refreshSkills();

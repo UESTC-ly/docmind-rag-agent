@@ -26,10 +26,14 @@ def sandbox_backend_available() -> bool:
         return False
     try:
         with tempfile.TemporaryDirectory(prefix="docmind-sandbox-probe-") as root:
-            workspace = Path(root) / "workspace"
+            # macOS resolves /var and /tmp through /private before matching a
+            # sandbox profile.  Use the canonical path in both -D and argv;
+            # otherwise a valid confinement backend is reported unavailable.
+            probe_root = Path(root).resolve()
+            workspace = probe_root / "workspace"
             workspace.mkdir()
             allowed = workspace / "allowed"
-            denied = Path(root) / "denied"
+            denied = probe_root / "denied"
             subprocess.run(  # noqa: S603 - fixed system binary/profile
                 [
                     str(SANDBOX_EXEC),

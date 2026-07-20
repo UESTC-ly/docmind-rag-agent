@@ -36,6 +36,7 @@ const environment = {
   QDRANT_PATH: join(runtimeRoot, "qdrant"),
   UPLOAD_DIR: join(runtimeRoot, "uploads"),
   SKILL_WORKSPACE_DIR: join(runtimeRoot, "skill-workspaces"),
+  AGENT_CHECKPOINT_PATH: join(runtimeRoot, "agent-checkpoints.sqlite3"),
   DOCMIND_DESKTOP: "false",
   DOCMIND_FRONTEND_DIR: resolve(repoRoot, "frontend"),
   ALEMBIC_CONFIG: resolve(repoRoot, "alembic.ini"),

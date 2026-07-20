@@ -26,6 +26,9 @@ def test_configure_runtime_owns_all_local_service_paths(tmp_path, monkeypatch):
 
     assert values["DATABASE_URL"].startswith("sqlite+aiosqlite:////")
     assert values["QDRANT_PATH"] == str((tmp_path / "data/qdrant").resolve())
+    assert values["AGENT_CHECKPOINT_PATH"] == str(
+        (tmp_path / "data/agent-checkpoints.sqlite3").resolve()
+    )
     assert values["TASK_EXECUTION_MODE"] == "local"
     assert os.environ["DATABASE_URL"] == values["DATABASE_URL"]
     assert (tmp_path / "data/uploads").is_dir()
@@ -47,6 +50,8 @@ def test_secret_is_stable_and_not_exposed_by_manifest(tmp_path):
     assert manifest["database"] == "sqlite"
     assert manifest["vector_store"] == "qdrant-local"
     assert manifest["task_executor"] == "local"
+    assert manifest["agent_checkpointer"] == "sqlite"
+    assert manifest["version"] == "3.0.0"
     assert manifest["package_script_confinement"] == "macos-sandbox-exec"
 
 

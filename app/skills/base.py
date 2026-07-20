@@ -30,6 +30,8 @@ class BaseSkill(ABC):
     execution_mode: str = "python"
     grounding_mode: str = "none"
     produces_download: bool = False
+    # v3 外层 LangGraph 在调用显式标记的 Skill 前 interrupt，等待用户审批。
+    requires_approval: bool = False
     available: bool = True
     unavailable_reason: str = ""
     _package: Any = None

@@ -75,6 +75,14 @@ class Settings(BaseSettings):
 
     # Agent
     agent_max_steps: int = 6  # Agent 主循环最大步数，防死循环
+    # LangGraph SQLite checkpointer。Web 可改为独立持久化路径；桌面 sidecar 会把
+    # 它覆盖到用户 data_dir，确保重启应用后仍可恢复等待审批的 Agent。
+    agent_checkpoint_path: str = "./data/agent-checkpoints.sqlite3"
+    # 逗号分隔的外层 Skill 名称；用于部署方追加必须人工审批的具体工具。
+    agent_high_risk_skills: str = ""
+    # Generic Skill 只要声明下列宿主能力，就在进入整个 package 前暂停审批。
+    # 内部逐动作审批要等 Generic Skill 迁移为 LangGraph 子图后才能可靠实现。
+    agent_high_risk_capabilities: str = "package_scripts,mcp,browser,app,repository"
     # Codex-style 通用 Skill runner
     skill_runner_max_steps: int = 8  # 单个通用 skill 内部工具循环最大步数
     skill_workspace_dir: str = "./skill_workspaces"  # 通用 skill 文件读写工作区
@@ -194,6 +202,22 @@ class Settings(BaseSettings):
         return {
             item.strip().lower()
             for item in self.skill_browser_allowed_hosts.split(",")
+            if item.strip()
+        }
+
+    @property
+    def agent_high_risk_skill_set(self) -> set[str]:
+        return {
+            item.strip()
+            for item in self.agent_high_risk_skills.split(",")
+            if item.strip()
+        }
+
+    @property
+    def agent_high_risk_capability_set(self) -> set[str]:
+        return {
+            item.strip().lower()
+            for item in self.agent_high_risk_capabilities.split(",")
             if item.strip()
         }
 

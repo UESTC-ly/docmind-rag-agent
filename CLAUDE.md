@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-DocMind v2.2.0 is an agentic document intelligence system. Users upload documents; the Agent autonomously selects and chains Python-backed or Codex-style Skills through OpenAI Function Calling. Online chat, document-grounded Skills, and evaluation share the same hybrid retrieval pipeline: dense candidates, database-side keyword candidates, scored RRF fusion, and bounded reranking.
+DocMind v3.0.0 is an agentic document intelligence system. Its outer Agent orchestration runs as a durable LangGraph with human approval before high-risk Skills and SQLite checkpoint recovery. Users upload documents; the Agent autonomously selects and chains Python-backed or Codex-style Skills through OpenAI Function Calling. Online chat, document-grounded Skills, and evaluation share the same hybrid retrieval pipeline: dense candidates, database-side keyword candidates, scored RRF fusion, and bounded reranking.
 
 The repository supports two deployment profiles:
 
@@ -52,7 +52,7 @@ npm run test:rust
 ## Architecture
 
 ```text
-FastAPI (async) ──► Agent Orchestrator ──► Skills (Python + generic packages)
+FastAPI (async) ──► LangGraph Outer Agent ──► Skills (Python + generic packages)
      │                       │                    │
      ├──────────────► shared hybrid retrieval ◄──┘
      │                 dense + DB keyword
@@ -98,7 +98,9 @@ Document upload calls `dispatch_document()`. Web mode sends `process_document` t
 
 ### Agent orchestration and Skills
 
-`run_agent()` is synchronous and is called from the async service layer via `asyncio.to_thread`. The loop is capped by `settings.agent_max_steps`.
+`run_agent()` is synchronous and is called from the async service layer via `asyncio.to_thread`. The outer orchestration is a LangGraph with supervisor, tool-selection, approval, and single-tool execution nodes. It is capped by `settings.agent_max_steps`. HTTP runs use a persistent SQLite saver and a random run/thread ID; `POST /agent/resume` resumes an interrupt after ownership validation.
+
+High-risk Python Skills may set `requires_approval = True`. Generic packages that declare configured high-risk capabilities are approved before the whole outer Skill invocation. The internal Generic Skill ReAct runner is not a LangGraph subgraph in v3.0, and full Multi-Agent decomposition is explicitly deferred.
 
 Skills have two execution paths:
 
@@ -119,10 +121,11 @@ All adapters return the normalized `status`, `summary`, `next_actions`, and `art
 
 All settings are in `app/config.py` via pydantic-settings.
 
-Required application values are `DATABASE_URL`, `SECRET_KEY`, and `OPENAI_API_KEY`. Important v2.2 groups are:
+Required application values are `DATABASE_URL`, `SECRET_KEY`, and `OPENAI_API_KEY`. Important v3.0 groups are:
 
 - Retrieval: `DENSE_CANDIDATES`, `KEYWORD_CANDIDATES`, `RRF_K`, `RERANKER_MODE`, and optional `RERANKER_HTTP_*`.
 - Tasks/storage: `TASK_EXECUTION_MODE` and optional `QDRANT_PATH` for desktop local persistence.
+- Agent durability: `AGENT_CHECKPOINT_PATH`, `AGENT_HIGH_RISK_SKILLS`, and `AGENT_HIGH_RISK_CAPABILITIES`.
 - Capabilities: `SKILL_PACKAGE_SCRIPTS_ENABLED`, `SKILL_REPOSITORY_*`, `SKILL_MCP_*`, `SKILL_BROWSER_*`, and `SKILL_APP_*`.
 - Desktop: `DOCMIND_ENV_FILE`, `DOCMIND_FRONTEND_DIR`, and `ALEMBIC_CONFIG` are injected by the sidecar host.
 
@@ -132,6 +135,7 @@ Required application values are `DATABASE_URL`, `SECRET_KEY`, and `OPENAI_API_KE
 - SQL keyword queries join documents and apply `user_id`/`document_id` filters before a database-level limit.
 - HTTP reranker failure falls back to deterministic local ranking instead of failing document Q&A.
 - Host capability checks are authoritative; a copied manifest cannot enable repository, script, browser, MCP, or App access.
+- `interrupt()` must stay before high-risk side effects. Nodes that can be replayed after resume must not perform untracked pre-interrupt writes.
 - Desktop runtime-owned database/vector/task settings override dotenv values, preventing an old config from reconnecting the installed app to external infrastructure.
 - `bcrypt==4.0.1` remains pinned because passlib 1.7.4 is incompatible with bcrypt 5.x.
 - `EMBEDDING_DIM` must match the configured embedding model; changing dimensions requires rebuilding the vector collection.

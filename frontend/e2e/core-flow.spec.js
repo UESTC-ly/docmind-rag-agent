@@ -53,6 +53,9 @@ test.describe("核心用户流程", () => {
     const api = await installApiMocks(page, {
       agentResult: {
         conversation_id: 24,
+        run_id: "run-weekly",
+        thread_id: "run-weekly",
+        status: "completed",
         answer: "周报已生成。",
         trace: [{ step: 0, skill: "search_knowledge_base", args: { query: "本周进展" } }],
         artifacts: [
@@ -89,5 +92,97 @@ test.describe("核心用户流程", () => {
     expect(download.suggestedFilename()).toBe("docmind-weekly.md");
     expect(api.requests.find((request) => request.path === "/agent/chat")?.body.skill_name)
       .toBe("search_knowledge_base");
+  });
+
+  test("高风险 Skill 必须人工批准后才继续", async ({ page }) => {
+    const api = await installApiMocks(page, {
+      agentResult: {
+        conversation_id: 24,
+        run_id: "run-waiting-approval",
+        thread_id: "run-waiting-approval",
+        status: "waiting_approval",
+        answer: "检测到高风险工具调用，等待人工审批后继续。",
+        trace: [],
+        artifacts: [],
+        approval: {
+          kind: "tool_approval",
+          scope: "outer_skill",
+          tool: "repository_update",
+          args: { path: "README.md" },
+          reason: "该工具会修改仓库文件。",
+          risk_capabilities: ["repository"],
+        },
+      },
+      resumeResult: {
+        conversation_id: 24,
+        run_id: "run-waiting-approval",
+        thread_id: "run-waiting-approval",
+        status: "completed",
+        answer: "审批后已完成仓库更新。",
+        trace: [{
+          step: 0,
+          skill: "repository_update",
+          args: { path: "README.md" },
+          approval: { required: true, approved: true },
+        }],
+        artifacts: [],
+        approval: null,
+      },
+    });
+    const app = new DocMindPage(page);
+
+    await app.goto();
+    await app.login();
+    await app.openView("技能");
+    await page.locator("#skill-agent-input").fill("修改仓库说明");
+    await page.locator("#skill-agent-submit").click();
+
+    const approval = page.locator(".approval-card");
+    await expect(approval).toContainText("repository_update");
+    await expect(approval).toContainText("本次外层 Skill 调用");
+    await approval.getByRole("button", { name: "批准并继续" }).click();
+    await expect(page.locator(".agent-answer")).toContainText("审批后已完成仓库更新");
+    expect(api.requests.find((request) => request.path === "/agent/resume")?.body)
+      .toEqual({
+        run_id: "run-waiting-approval",
+        approved: true,
+        comment: null,
+        edited_args: null,
+      });
+  });
+
+  test("刷新页面后可从 checkpoint 找回待审批 run", async ({ page }) => {
+    const waiting = {
+      conversation_id: 24,
+      run_id: "run-after-reload",
+      thread_id: "run-after-reload",
+      status: "waiting_approval",
+      answer: "等待恢复。",
+      trace: [],
+      artifacts: [],
+      approval: {
+        kind: "tool_approval",
+        scope: "outer_skill",
+        tool: "browser_task",
+        args: { url: "https://example.com" },
+        reason: "需要浏览器能力。",
+        risk_capabilities: ["browser"],
+      },
+    };
+    const api = await installApiMocks(page, { agentRunResult: waiting });
+    const app = new DocMindPage(page);
+
+    await app.goto();
+    await app.login();
+    await page.evaluate(() => {
+      localStorage.setItem("docmind_pending_agent_run", "run-after-reload");
+    });
+    await page.reload();
+    await expect(app.app).toBeVisible();
+    await app.openView("技能");
+
+    await expect(page.locator(".approval-card")).toContainText("browser_task");
+    expect(api.requests.some((request) => request.path === "/agent/runs/run-after-reload"))
+      .toBe(true);
   });
 });

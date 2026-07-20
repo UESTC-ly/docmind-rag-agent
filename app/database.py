@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine
+from datetime import UTC, datetime
+
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -35,6 +37,32 @@ sync_engine = create_engine(
 )
 
 SyncSessionLocal = sessionmaker(sync_engine, class_=Session, expire_on_commit=False)
+
+
+def _install_sqlite_compatibility_functions(
+    dbapi_connection: object, _connection_record: object
+) -> None:
+    """Support v2.2 SQLite files whose timestamp defaults call ``now()``.
+
+    PostgreSQL provides ``now()`` natively, while SQLite does not.  The v2.2
+    Alembic baseline used that expression verbatim, so existing desktop files
+    need a connection-local compatibility function until their schema is
+    rebuilt.  Registering it on both engines keeps request and background-task
+    writes consistent without a destructive migration.
+    """
+    create_function = getattr(dbapi_connection, "create_function")
+    create_function(
+        "now",
+        0,
+        lambda: datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S.%f"),
+    )
+
+
+if _is_sqlite:
+    event.listen(
+        engine.sync_engine, "connect", _install_sqlite_compatibility_functions
+    )
+    event.listen(sync_engine, "connect", _install_sqlite_compatibility_functions)
 
 
 # 所有 ORM 模型的基类

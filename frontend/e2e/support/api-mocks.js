@@ -111,9 +111,55 @@ export async function installApiMocks(page, options = {}) {
     state.requests.push({ path: "/agent/chat", body: route.request().postDataJSON() });
     return fulfillJson(route, options.agentResult || {
       conversation_id: 24,
+      run_id: "run-completed",
+      thread_id: "run-completed",
+      status: "completed",
       answer: "已完成知识库检索。",
       trace: [],
       artifacts: [],
+      approval: null,
+    });
+  });
+  await page.route("**/agent/resume", (route) => {
+    state.requests.push({ path: "/agent/resume", body: route.request().postDataJSON() });
+    return fulfillJson(route, options.resumeResult || {
+      conversation_id: 24,
+      run_id: "run-approved",
+      thread_id: "run-approved",
+      status: "completed",
+      answer: "审批后已完成。",
+      trace: [],
+      artifacts: [],
+      approval: null,
+    });
+  });
+  await page.route(/\/agent\/runs\/[^/]+$/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    state.requests.push({ path });
+    return fulfillJson(route, options.agentRunResult || {
+      conversation_id: 24,
+      run_id: path.split("/").at(-1),
+      thread_id: path.split("/").at(-1),
+      status: "completed",
+      answer: "Agent run 已完成。",
+      trace: [],
+      artifacts: [],
+      approval: null,
+    });
+  });
+  await page.route(/\/agent\/runs\/[^/]+\/recover$/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    state.requests.push({ path, method: route.request().method() });
+    return fulfillJson(route, options.recoverResult || {
+      conversation_id: 24,
+      run_id: path.split("/").at(-2),
+      thread_id: path.split("/").at(-2),
+      status: "completed",
+      recoverable: false,
+      answer: "已从 checkpoint 恢复。",
+      trace: [],
+      artifacts: [],
+      approval: null,
     });
   });
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DocMind",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "identifier": "com.docmind.desktop",
   "build": {
     "beforeDevCommand": "npm run build:frontend && npm run serve:frontend",

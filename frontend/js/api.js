@@ -54,6 +54,12 @@ function headers(extra = {}) {
   return h;
 }
 
+function httpError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
 // 统一请求：非 2xx 抛带 message 的错误；401 触发登出事件。
 async function request(path, { method = "GET", body, json = true } = {}) {
   const opts = { method, headers: headers() };
@@ -69,11 +75,11 @@ async function request(path, { method = "GET", body, json = true } = {}) {
   const resp = await fetch(resolveApiUrl(path), opts);
   if (resp.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:expired"));
-    throw new Error("登录已过期，请重新登录");
+    throw httpError("登录已过期，请重新登录", resp.status);
   }
   if (!resp.ok) {
     const detail = await resp.json().catch(() => ({}));
-    throw new Error(detail.detail || `请求失败 (${resp.status})`);
+    throw httpError(detail.detail || `请求失败 (${resp.status})`, resp.status);
   }
   return resp.status === 204 ? null : resp.json();
 }
@@ -98,7 +104,7 @@ export const api = {
   getHistory: (id) => request(`/chat/conversations/${id}`),
 
   listSkills: () => request("/agent/skills"),
-  agentChat: ({ message, conversationId, documentId, skillName }) =>
+  agentChat: ({ message, conversationId, documentId, skillName, runId = null }) =>
     request("/agent/chat", {
       method: "POST",
       body: {
@@ -106,8 +112,22 @@ export const api = {
         conversation_id: conversationId ?? null,
         document_id: documentId ?? null,
         skill_name: skillName ?? null,
+        run_id: runId,
       },
     }),
+  resumeAgent: ({ runId, approved, comment = null, editedArgs = null }) =>
+    request("/agent/resume", {
+      method: "POST",
+      body: {
+        run_id: runId,
+        approved,
+        comment,
+        edited_args: editedArgs,
+      },
+    }),
+  getAgentRun: (runId) => request(`/agent/runs/${encodeURIComponent(runId)}`),
+  recoverAgent: (runId) =>
+    request(`/agent/runs/${encodeURIComponent(runId)}/recover`, { method: "POST" }),
 
   listDatasets: () => request("/eval/datasets"),
   createRun: (datasetId) =>
@@ -129,9 +149,9 @@ export const api = {
     });
     if (resp.status === 401) {
       window.dispatchEvent(new CustomEvent("auth:expired"));
-      throw new Error("登录已过期");
+      throw httpError("登录已过期", resp.status);
     }
-    if (!resp.ok) throw new Error(`流式请求失败 (${resp.status})`);
+    if (!resp.ok) throw httpError(`流式请求失败 (${resp.status})`, resp.status);
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();

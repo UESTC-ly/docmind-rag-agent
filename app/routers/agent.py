@@ -1,15 +1,23 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.agent import AgentRequest, AgentResponse
-from app.services.agent_service import chat_with_agent
+from app.schemas.agent import AgentRequest, AgentResponse, AgentResumeRequest
+from app.services.agent_service import (
+    chat_with_agent,
+    get_agent_run,
+    recover_agent_run,
+    resume_agent_run,
+)
 from app.skills.registry import all_skills
 from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/agent", tags=["Agent"])
+AgentRunId = Annotated[str, Path(min_length=1, max_length=128)]
 
 
 @router.post("/chat", response_model=AgentResponse, summary="与 Agent 对话")
@@ -25,7 +33,46 @@ async def agent_chat(
         conversation_id=data.conversation_id,
         document_id=data.document_id,
         requested_skill=data.skill_name,
+        run_id=data.run_id,
     )
+
+
+@router.post(
+    "/resume",
+    response_model=AgentResponse,
+    summary="审批并恢复暂停的 Agent",
+)
+async def agent_resume(
+    data: AgentResumeRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await resume_agent_run(db, current_user.id, data)
+
+
+@router.get(
+    "/runs/{run_id}",
+    response_model=AgentResponse,
+    summary="读取 Agent checkpoint 状态",
+)
+async def agent_run_status(
+    run_id: AgentRunId,
+    current_user: User = Depends(get_current_user),
+):
+    return await get_agent_run(current_user.id, run_id)
+
+
+@router.post(
+    "/runs/{run_id}/recover",
+    response_model=AgentResponse,
+    summary="从未完成 checkpoint 继续 Agent",
+)
+async def agent_run_recover(
+    run_id: AgentRunId,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await recover_agent_run(db, current_user.id, run_id)
 
 
 @router.get("/skills", summary="列出所有可用技能")

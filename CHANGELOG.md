@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.0.0 - 2026-07-20
+
+### Durable LangGraph Agent
+
+- Replaced the handwritten outer ReAct loop with an explicit LangGraph state graph containing `supervisor`, `select_tool`, `approval_gate`, and `execute_tool` nodes while preserving selected-skill and document-first-tool enforcement.
+- Added SQLite-backed LangGraph checkpoints keyed by a random run/thread ID. Web and desktop requests can inspect a run and resume it after application or process restart with the same checkpoint.
+- Added `POST /agent/resume` and `GET /agent/runs/{run_id}`. Checkpoint ownership is verified against the authenticated user before status or resume data is returned.
+- Added client-generated idempotent run IDs and `POST /agent/runs/{run_id}/recover`. Per-tool execution receipts reuse completed results after checkpoint-write crashes; an in-flight result with unknown side effects interrupts for an explicit retry decision instead of running twice silently. Completed Assistant history is also repaired idempotently when a graph commit survives but its business transaction does not.
+- Added human approval before any side effect from an explicitly high-risk outer Skill. Approvers may approve, reject, comment, or replace the proposed arguments; rejection is returned to the Supervisor as a tool observation.
+- Generic Skills that declare package-script, MCP, browser, App, or repository capabilities are gated before entering the package. Their existing internal ReAct runner is intentionally not represented as a subgraph yet, so this release does not claim per-inner-action checkpointing.
+- Added frontend approval/rejection controls and deterministic Playwright coverage for the interrupt/resume flow.
+
+### Runtime and compatibility
+
+- Pinned `langgraph==1.2.9` and `langgraph-checkpoint-sqlite==3.1.0` in both Web and frozen desktop runtimes, and included LangGraph modules/metadata in the PyInstaller sidecar.
+- Desktop checkpoints now live beside other user data rather than inside the application bundle. No application-database schema migration is required for v3.0.0.
+- Canonicalized the macOS script-sandbox probe paths so `/var` and `/tmp` symlink resolution cannot incorrectly disable the frozen sidecar's supported sandbox backend.
+- Kept existing v2.2 desktop SQLite files writable by registering the PostgreSQL-compatible `now()` timestamp function on both request and background-task connections.
+- Preserved the existing `/agent/chat` fields and added `run_id`, `thread_id`, `status`, and optional `approval` metadata.
+- Deferred Generic Skill subgraph migration and full Multi-Agent decomposition to a later release so those changes can receive their own state, idempotency, session-lifecycle, and evaluation design.
+
+See `doc/09-v3.0.0-LangGraph实施与发布.md` for architecture, API, recovery, and rollout guidance.
+
 ## v2.2.0 - 2026-07-13
 
 ### Agent capabilities
