@@ -25,6 +25,11 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 import app.skills  # noqa: F401  触发所有技能注册
+from app.agent.checkpoint_store import (
+    prepare_checkpoint_connection,
+    record_agent_run,
+    unindexed_checkpoint_ids,
+)
 from app.config import settings
 from app.services.llm_service import chat_completion
 from app.skills.base import BaseSkill, SkillContext
@@ -448,21 +453,7 @@ def _route_after_tool(state: AgentState) -> str:
 
 def _receipt_connection(path: str) -> sqlite3.Connection:
     connection = sqlite3.connect(path, timeout=30, check_same_thread=False)
-    connection.execute("PRAGMA journal_mode=WAL")
-    connection.execute("PRAGMA busy_timeout=30000")
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS docmind_tool_receipts (
-            run_id TEXT NOT NULL,
-            tool_call_id TEXT NOT NULL,
-            status TEXT NOT NULL,
-            result_json TEXT,
-            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (run_id, tool_call_id)
-        )
-        """
-    )
-    connection.commit()
+    prepare_checkpoint_connection(connection)
     return connection
 
 
@@ -587,9 +578,7 @@ def _open_checkpointer(
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(str(path), timeout=30, check_same_thread=False)
     try:
-        connection.execute("PRAGMA journal_mode=WAL")
-        connection.execute("PRAGMA synchronous=NORMAL")
-        connection.execute("PRAGMA busy_timeout=30000")
+        prepare_checkpoint_connection(connection)
         saver = SqliteSaver(connection)
         saver.setup()
         yield saver
@@ -654,6 +643,69 @@ def _checkpoint_state(graph: Any, run_id: str, expected_user_id: int | None):
     return snapshot, values
 
 
+def _record_persistent_run(
+    checkpoint_path: str | Path | None,
+    state: dict[str, Any],
+    run_id: str,
+    status: str,
+    *,
+    only_if_missing: bool = False,
+    now: float | None = None,
+) -> None:
+    """Index run lifecycle metadata without copying private graph messages."""
+    if checkpoint_path is None:
+        return
+    user_id = state.get("user_id")
+    if not isinstance(user_id, int):
+        return
+    conversation_id = state.get("conversation_id")
+    record_agent_run(
+        checkpoint_path,
+        run_id=run_id,
+        user_id=user_id,
+        conversation_id=(conversation_id if isinstance(conversation_id, int) else None),
+        status=status,
+        only_if_missing=only_if_missing,
+        now=now,
+    )
+
+
+def backfill_agent_run_index(
+    checkpoint_path: str | Path,
+    *,
+    batch_size: int,
+    now: float | None = None,
+) -> int:
+    """Index pre-v3.1 checkpoints without immediately expiring user state."""
+    run_ids = unindexed_checkpoint_ids(checkpoint_path, batch_size=batch_size)
+    recovered: list[tuple[str, dict[str, Any], str]] = []
+    with _open_checkpointer(checkpoint_path) as saver:
+        graph = build_agent_graph(saver)
+        for run_id in run_ids:
+            try:
+                snapshot, values = _checkpoint_state(graph, run_id, None)
+            except AgentRunNotFoundError:
+                continue
+            approval = _interrupt_value(snapshot)
+            public = _public_result(
+                values,
+                run_id,
+                approval,
+                recoverable=bool(snapshot.next) and approval is None,
+            )
+            recovered.append((run_id, values, public["status"]))
+    for run_id, values, status_value in recovered:
+        _record_persistent_run(
+            checkpoint_path,
+            values,
+            run_id,
+            status_value,
+            only_if_missing=True,
+            now=now,
+        )
+    return len(recovered)
+
+
 def run_agent(
     user_id: int,
     question: str,
@@ -716,8 +768,11 @@ def run_agent(
         existing = graph.get_state(_graph_config(run_id))
         if existing.values:
             raise AgentRunStateError(f"Agent run_id 已存在: {run_id}")
+        _record_persistent_run(checkpoint_path, initial, run_id, "running")
         result = graph.invoke(initial, _graph_config(run_id))
-    return _public_result(result, run_id, _interrupt_value(result))
+    public = _public_result(result, run_id, _interrupt_value(result))
+    _record_persistent_run(checkpoint_path, result, run_id, public["status"])
+    return public
 
 
 def inspect_agent_run(
@@ -732,7 +787,15 @@ def inspect_agent_run(
         snapshot, values = _checkpoint_state(graph, run_id, expected_user_id)
         approval = _interrupt_value(snapshot)
         recoverable = bool(snapshot.next) and approval is None
-    return _public_result(values, run_id, approval, recoverable=recoverable)
+    public = _public_result(values, run_id, approval, recoverable=recoverable)
+    _record_persistent_run(
+        checkpoint_path,
+        values,
+        run_id,
+        public["status"],
+        only_if_missing=True,
+    )
+    return public
 
 
 def resume_agent(
@@ -751,11 +814,14 @@ def resume_agent(
 
     with _open_checkpointer(checkpoint_path) as saver:
         graph = build_agent_graph(saver)
-        snapshot, _ = _checkpoint_state(graph, run_id, expected_user_id)
+        snapshot, values = _checkpoint_state(graph, run_id, expected_user_id)
         if _interrupt_value(snapshot) is None:
             raise AgentRunStateError("Agent run 当前不在等待审批")
+        _record_persistent_run(checkpoint_path, values, run_id, "running")
         result = graph.invoke(Command(resume=resume_value), _graph_config(run_id))
-    return _public_result(result, run_id, _interrupt_value(result))
+    public = _public_result(result, run_id, _interrupt_value(result))
+    _record_persistent_run(checkpoint_path, result, run_id, public["status"])
+    return public
 
 
 def recover_agent(
@@ -767,10 +833,13 @@ def recover_agent(
     """从非 interrupt 的未完成节点继续，工具执行回执负责防重复。"""
     with _open_checkpointer(checkpoint_path) as saver:
         graph = build_agent_graph(saver)
-        snapshot, _ = _checkpoint_state(graph, run_id, expected_user_id)
+        snapshot, values = _checkpoint_state(graph, run_id, expected_user_id)
         if _interrupt_value(snapshot) is not None:
             raise AgentRunStateError("Agent run 正在等待人工审批，请使用 resume")
         if not snapshot.next:
             raise AgentRunStateError("Agent run 已完成，没有可恢复节点")
+        _record_persistent_run(checkpoint_path, values, run_id, "running")
         result = graph.invoke(None, _graph_config(run_id))
-    return _public_result(result, run_id, _interrupt_value(result))
+    public = _public_result(result, run_id, _interrupt_value(result))
+    _record_persistent_run(checkpoint_path, result, run_id, public["status"])
+    return public

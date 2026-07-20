@@ -3,6 +3,7 @@
 import asyncio
 import json
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -17,6 +18,13 @@ from app.agent.orchestrator import (
     recover_agent,
     resume_agent,
     run_agent,
+)
+from app.agent.run_lock import (
+    AgentRunLeaseBackendError,
+    AgentRunLeaseBusyError,
+    AgentRunLeaseLostError,
+    RunLockConfig,
+    create_agent_run_lease,
 )
 from app.config import settings
 from app.models.conversation import Conversation, Message, MessageRole
@@ -47,6 +55,60 @@ async def _get_or_create_conversation(
     return conv
 
 
+def _new_agent_run_lease(run_id: str):
+    config = RunLockConfig(
+        backend=settings.resolved_agent_run_lock_backend,
+        checkpoint_path=settings.agent_checkpoint_path,
+        redis_url=settings.redis_url,
+        ttl_seconds=settings.agent_run_lock_ttl_seconds,
+        heartbeat_seconds=settings.agent_run_lock_heartbeat_seconds,
+        namespace=settings.agent_run_lock_namespace,
+    )
+    return create_agent_run_lease(run_id, config)
+
+
+def _lease_http_error(error: Exception) -> HTTPException:
+    if isinstance(error, AgentRunLeaseBusyError):
+        return HTTPException(
+            status_code=423,
+            detail="Agent run 正由另一个 worker 执行，请稍后重试",
+            headers={"Retry-After": "2"},
+        )
+    if isinstance(error, AgentRunLeaseLostError):
+        detail = "Agent run 执行期间失去租约，请读取 checkpoint 状态后重试"
+    else:
+        detail = "Agent run 锁服务暂不可用，请稍后重试"
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=detail,
+        headers={"Retry-After": "2"},
+    )
+
+
+@asynccontextmanager
+async def _agent_run_guard(run_id: str):
+    lease = _new_agent_run_lease(run_id)
+    try:
+        await asyncio.to_thread(lease.acquire)
+    except (AgentRunLeaseBusyError, AgentRunLeaseBackendError) as exc:
+        raise _lease_http_error(exc) from exc
+    try:
+        yield
+    except BaseException:
+        try:
+            await asyncio.to_thread(lease.release)
+        except (AgentRunLeaseBackendError, AgentRunLeaseLostError):
+            # Preserve the original business/cancellation exception. The lease
+            # has a TTL, so a crashed or partitioned owner cannot deadlock a run.
+            pass
+        raise
+    else:
+        try:
+            await asyncio.to_thread(lease.release)
+        except (AgentRunLeaseBackendError, AgentRunLeaseLostError) as exc:
+            raise _lease_http_error(exc) from exc
+
+
 async def chat_with_agent(
     db: AsyncSession,
     user_id: int,
@@ -56,33 +118,52 @@ async def chat_with_agent(
     requested_skill: str | None = None,
     run_id: str | None = None,
 ) -> AgentResponse:
+    effective_run_id = run_id or uuid.uuid4().hex
+    async with _agent_run_guard(effective_run_id):
+        return await _chat_with_agent_locked(
+            db,
+            user_id,
+            message,
+            conversation_id,
+            document_id,
+            requested_skill,
+            effective_run_id,
+        )
+
+
+async def _chat_with_agent_locked(
+    db: AsyncSession,
+    user_id: int,
+    message: str,
+    conversation_id: int | None,
+    document_id: int | None,
+    requested_skill: str | None,
+    run_id: str,
+) -> AgentResponse:
     # 客户端可在发请求前持久化随机 run_id。若响应丢失后重试同一 ID，直接返回
     # checkpoint，而不是创建第二个会话或重复执行工具。
-    if run_id is not None:
-        try:
-            existing = await asyncio.to_thread(
-                inspect_agent_run,
-                run_id,
-                checkpoint_path=settings.agent_checkpoint_path,
-                expected_user_id=user_id,
+    try:
+        existing = await asyncio.to_thread(
+            inspect_agent_run,
+            run_id,
+            checkpoint_path=settings.agent_checkpoint_path,
+            expected_user_id=user_id,
+        )
+    except AgentRunNotFoundError:
+        existing = None
+    except AgentRunOwnershipError as exc:
+        raise _checkpoint_http_error(exc) from exc
+    if existing is not None:
+        existing_conversation_id = existing.get("conversation_id")
+        if not isinstance(existing_conversation_id, int):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Agent checkpoint 缺少 conversation_id",
             )
-        except AgentRunNotFoundError:
-            existing = None
-        except AgentRunOwnershipError as exc:
-            raise _checkpoint_http_error(exc) from exc
-        if existing is not None:
-            existing_conversation_id = existing.get("conversation_id")
-            if not isinstance(existing_conversation_id, int):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Agent checkpoint 缺少 conversation_id",
-                )
-            await _get_or_create_conversation(db, user_id, existing_conversation_id, "")
-            if existing["status"] == "completed":
-                await _persist_assistant_message(
-                    db, existing_conversation_id, existing
-                )
-            return _agent_response(existing, existing_conversation_id)
+        await _get_or_create_conversation(db, user_id, existing_conversation_id, "")
+        if existing["status"] == "completed":
+            await _persist_assistant_message(db, existing_conversation_id, existing)
+        return _agent_response(existing, existing_conversation_id)
 
     conv = await _get_or_create_conversation(db, user_id, conversation_id, message)
 
@@ -105,7 +186,6 @@ async def chat_with_agent(
     await db.commit()
 
     # 跑 Agent 状态图（含同步 LLM/Skill 调用，放线程池）
-    run_id = run_id or uuid.uuid4().hex
     try:
         result = await asyncio.to_thread(
             run_agent,
@@ -218,6 +298,15 @@ async def resume_agent_run(
     user_id: int,
     data: AgentResumeRequest,
 ) -> AgentResponse:
+    async with _agent_run_guard(data.run_id):
+        return await _resume_agent_run_locked(db, user_id, data)
+
+
+async def _resume_agent_run_locked(
+    db: AsyncSession,
+    user_id: int,
+    data: AgentResumeRequest,
+) -> AgentResponse:
     conversation_id = await _validate_checkpoint_conversation(
         db, user_id, data.run_id
     )
@@ -265,6 +354,15 @@ async def get_agent_run(user_id: int, run_id: str) -> AgentResponse:
 
 
 async def recover_agent_run(
+    db: AsyncSession,
+    user_id: int,
+    run_id: str,
+) -> AgentResponse:
+    async with _agent_run_guard(run_id):
+        return await _recover_agent_run_locked(db, user_id, run_id)
+
+
+async def _recover_agent_run_locked(
     db: AsyncSession,
     user_id: int,
     run_id: str,

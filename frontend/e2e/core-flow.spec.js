@@ -185,4 +185,25 @@ test.describe("核心用户流程", () => {
     expect(api.requests.some((request) => request.path === "/agent/runs/run-after-reload"))
       .toBe(true);
   });
+
+  test("另一个 worker 持有租约时保留 run ID 供稍后恢复", async ({ page }) => {
+    await installApiMocks(page, {
+      agentError: { status: 423, detail: "Agent run 正由另一个 worker 执行，请稍后重试" },
+      // 首个 worker 可能尚未写下第一个 checkpoint，此刻 404 只是暂态。
+      agentRunError: { status: 404, detail: "Agent run 不存在" },
+    });
+    const app = new DocMindPage(page);
+
+    await app.goto();
+    await app.login();
+    await app.openView("技能");
+    await page.locator("#skill-agent-input").fill("执行并发任务");
+    await page.locator("#skill-agent-submit").click();
+
+    await expect(page.locator("#skill-agent-result")).toContainText("另一个 worker");
+    const pendingRunId = await page.evaluate(() =>
+      localStorage.getItem("docmind_pending_agent_run")
+    );
+    expect(pendingRunId).toBeTruthy();
+  });
 });

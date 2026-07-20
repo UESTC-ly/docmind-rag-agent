@@ -8,14 +8,15 @@ Function Calling 自主判断该调用哪些技能（Skills）来完成任务：
 （faithfulness / answer_relevancy）量化问答质量。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、运行时零构建），覆盖
-登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.0.0 在 v2.2 自包含
-Tauri 桌面 App 基础上，把**外层 Agent 编排迁移到 LangGraph**：高风险 Skill 可在副作用
-发生前暂停审批，SQLite checkpoint 支持服务或 App 重启后恢复。桌面版
+登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.1.0 在 v3.0 LangGraph
+外层编排、人工审批和 checkpoint 恢复基础上，增加了**跨 worker 运行租约**与**定期清理**：
+Web 使用 Redis 对同一 `run_id` 互斥，桌面/本地形态使用 SQLite owner-token lease；完成态和
+未完成态 checkpoint 按不同保留期分批清理。桌面版
 保留同一套前端与 FastAPI API，通过 PyInstaller sidecar 内置 Python 后端，使用 SQLite、
 Qdrant local 与本地任务执行器；安装后的终端用户不需要 Docker、PostgreSQL、Redis、
 Qdrant Server、uv 或系统 Python。
 
-**亮点**：LangGraph durable Agent · 人工审批与恢复 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
+**亮点**：LangGraph durable Agent · Redis/SQLite 运行租约 · 人工审批与恢复 · checkpoint 生命周期维护 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
 多路召回（向量 + 数据库关键词 + RRF + reranker）· 异步 RAG 评估 · Alembic ·
 Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 
@@ -25,7 +26,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 - [技术栈](#技术栈)
 - [核心设计](#核心设计)
 - [快速启动](#快速启动)
-- [桌面 App（v3.0）](#桌面-appv30)
+- [桌面 App（v3.1）](#桌面-appv31)
 - [Web 开发启动](#web-开发启动)
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
@@ -50,7 +51,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
            ┌──────────────▼────────┐   ┌──────────▼─────────────┐
            │  LangGraph Outer Agent │   │  RAG 问答 (chat)        │
            │  supervisor / approval │   │  检索→拼Prompt→LLM      │
-           │  checkpoint / resume   │   └──────────┬─────────────┘
+           │ lease/checkpoint/resume│   └──────────┬─────────────┘
            └──────────────┬────────┘              │
                           │ 自主调度               │
            ┌──────────────▼─────────────────────┐ │
@@ -66,7 +67,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
                                   │
               ┌───────────────────┴────────────────────┐
               │ Web：PostgreSQL + Qdrant + Redis/Celery │
-              │      + SQLite Agent checkpoints          │
+              │      + Redis run lease + SQLite checkpoint│
               │ Desktop：SQLite + Qdrant local + local  │
               │          task executor                  │
               └─────────────────────────────────────────┘
@@ -123,6 +124,23 @@ action 的独立审批/checkpoint。Generic Skill 子图和完整 Multi-Agent �
 详细状态、恢复 API 和已知边界见
 [`doc/09-v3.0.0-LangGraph实施与发布.md`](doc/09-v3.0.0-LangGraph实施与发布.md)。
 
+### 跨 worker 运行租约与 checkpoint 清理
+
+所有会改变图状态的入口（首次执行、审批恢复、崩溃恢复）先获取同一 `run_id` 的独占租约。
+Web 默认使用共享 Redis；桌面或 `TASK_EXECUTION_MODE=local` 默认使用 checkpoint SQLite
+文件中的进程共享租约。租约采用随机 owner token、TTL、心跳续租和条件释放：另一个 worker
+持有时 API 返回 `423 Locked`，锁服务故障或执行中丢失所有权时返回 `503`，两者都带
+`Retry-After`。状态查询保持只读，不需要拿锁。
+
+FastAPI lifespan 同时启动有界维护循环。默认每小时最多清理 100 个 run：完成态保留 30 天，
+等待审批、崩溃或其他未完成态保留 90 天；删除前再次获取该 run 的正常租约，正运行的任务会跳过。
+升级时，v3.0 的既有 checkpoint 先建立生命周期索引并从升级时刻开始计时，不会立刻被删除。
+
+这里的 Redis 只解决“谁可以修改同一个 run”。LangGraph saver 仍是 SQLite；跨主机任意节点恢复
+仍需 sticky routing、共享磁盘或未来的生产共享 checkpointer。租约也不能替代外部系统的幂等键/
+fencing token。实现、配置、故障语义与运维边界见
+[`doc/10-v3.1.0-分布式运行锁与生命周期维护.md`](doc/10-v3.1.0-分布式运行锁与生命周期维护.md)。
+
 ### 数据隔离
 
 - 每个 Qdrant point 的 payload 都带 `user_id`，所有向量检索强制按 `user_id` 过滤。
@@ -143,12 +161,13 @@ action 的独立审批/checkpoint。Generic Skill 子图和完整 Multi-Agent �
 安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
 Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
 
-## 桌面 App（v3.0）
+## 桌面 App（v3.1）
 
 桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI。生产安装包携带
 一个由 PyInstaller 冻结的 `docmind-sidecar`，其中包含 Python 解释器、FastAPI 和后端依赖。
 Rust 宿主只启动这个 sidecar；桌面数据层使用 SQLite + Qdrant local，文档解析与评估使用
-本地任务执行器。终端用户无需安装 Docker、PostgreSQL、Redis、Qdrant Server、uv 或 Python。
+本地任务执行器，Agent run lease 也强制写入同一个用户数据目录的 SQLite checkpoint 文件。
+终端用户无需安装 Docker、PostgreSQL、Redis、Qdrant Server、uv 或 Python。
 
 桌面基础运行完全本地，但聊天和 embedding 仍需要可访问的 OpenAI 兼容服务及相应凭据；
 显式启用的 MCP、浏览器或 App bridge 也可能需要各自的服务、浏览器运行时或系统权限。
@@ -190,7 +209,7 @@ npm run build     # 验证 sidecar 后在当前操作系统生成安装包
 环境、冻结并自检 sidecar、运行本地 SQLite/Qdrant/任务 smoke，再把目标三元组命名的
 可执行文件写入 Tauri `externalBin`。PyInstaller 原生扩展不能跨平台冻结，因此 macOS、
 Windows、Linux/不同架构都必须使用对应原生 runner，并配置平台签名/公证凭据。
-v2.2 的自动验收只运行 macOS arm64：默认 ad-hoc 签名通过 bundle 完整性检查，公开分发时
+v3.1 的自动验收只运行 macOS arm64：默认 ad-hoc 签名通过 bundle 完整性检查，公开分发时
 仍须用 Developer ID 覆盖该身份并完成 Apple notarization/stapling。Linux/Windows 不在本次
 验证范围。
 
@@ -417,7 +436,7 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v3.0.0 保持**两条执行路径并存**：
+技能是 Agent 的能力单元。v3.1.0 保持**两条执行路径并存**：
 
 ```text
 Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界
@@ -678,7 +697,7 @@ runtime-error lint、模型/API contract typecheck、pytest 覆盖率门槛、Ja
 以及 Rust fmt/clippy/test。`.github/workflows/frontend-e2e.yml` 在 macOS Chromium 上分别运行
 Page Object 驱动的 mock/视觉回归与真实 FastAPI 全栈路径；失败时上传 HTML report、trace、
 截图、视频和 JUnit 结果。E2E 使用稳定 API fixture 与网络/状态等待，不依赖固定 sleep。
-Linux/Windows 安装包不属于 v3.0 本地验收矩阵。
+Linux/Windows 安装包不属于 v3.1 本地验收矩阵。
 
 ```bash
 uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率
@@ -726,6 +745,15 @@ npm run test:e2e:fullstack                         # 真实 FastAPI + SQLite/Qdr
 | `EVALUATION_TASK_*_TIME_LIMIT_SECONDS` | | `1740/1800` | Celery 评估任务软/硬时限，短于租约 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
 | `AGENT_CHECKPOINT_PATH` | | `./data/agent-checkpoints.sqlite3` | LangGraph SQLite checkpoint；桌面宿主覆盖到用户数据目录 |
+| `AGENT_RUN_LOCK_BACKEND` | | `auto` | Web/celery 自动解析为 `redis`；desktop/local 解析为 `sqlite`；`off` 仅用于显式测试/诊断 |
+| `AGENT_RUN_LOCK_TTL_SECONDS` | | `300` | 运行租约失效时间；必须大于心跳间隔 |
+| `AGENT_RUN_LOCK_HEARTBEAT_SECONDS` | | `60` | 持有者续租间隔 |
+| `AGENT_RUN_LOCK_NAMESPACE` | | `docmind:agent-run` | Redis/SQLite 租约键命名空间，不同环境应隔离 |
+| `AGENT_CHECKPOINT_CLEANUP_ENABLED` | | `true` | 是否启动 checkpoint 生命周期维护循环 |
+| `AGENT_CHECKPOINT_CLEANUP_INTERVAL_SECONDS` | | `3600` | 维护周期；多个 worker 由维护租约去重 |
+| `AGENT_CHECKPOINT_COMPLETED_RETENTION_DAYS` | | `30` | 完成态 checkpoint/回执保留天数 |
+| `AGENT_CHECKPOINT_INCOMPLETE_RETENTION_DAYS` | | `90` | 未完成/待审批 checkpoint 保留天数，不能短于完成态 |
+| `AGENT_CHECKPOINT_CLEANUP_BATCH_SIZE` | | `100` | 每轮最多处理的 run 数，限制 SQLite 写锁时间 |
 | `AGENT_HIGH_RISK_SKILLS` | | 空 | 必须审批的外层 Skill 名称，逗号分隔 |
 | `AGENT_HIGH_RISK_CAPABILITIES` | | `package_scripts,mcp,browser,app,repository` | Generic package 声明这些能力时整次调用需审批 |
 | `SKILL_RUNNER_MAX_STEPS` | | `8` | Codex-style 通用 skill 内部工具循环最大步数 |
@@ -747,10 +775,15 @@ npm run test:e2e:fullstack                         # 真实 FastAPI + SQLite/Qdr
 
 ```
 app/
-├── main.py            FastAPI 入口（注册路由、lifespan 执行 Alembic）
+├── main.py            FastAPI 入口（注册路由、lifespan 执行 Alembic/维护循环）
 ├── config.py          全局配置单例
 ├── database.py        异步 + 同步双引擎，get_db 依赖
 ├── celery_app.py      Celery 实例
+├── agent/
+│   ├── orchestrator.py       LangGraph 外层状态图与 checkpoint 生命周期记录
+│   ├── run_lock.py           Redis/SQLite owner-token 运行租约与心跳
+│   ├── checkpoint_store.py   DocMind 生命周期/回执/维护元数据表
+│   └── checkpoint_cleanup.py 定期保留策略、迁移回填与有界清理
 ├── models/            ORM 模型（user / document / conversation / evaluation）
 ├── schemas/           Pydantic 请求/响应模型
 ├── routers/           路由层（auth / documents / chat / agent / evaluation）

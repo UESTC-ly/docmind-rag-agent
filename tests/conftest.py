@@ -6,6 +6,8 @@
   测试只验证「我们的业务逻辑与 HTTP 契约」，不依赖任何在线服务。
 """
 
+import os
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -14,9 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.database import Base, get_db
-from app.main import app
-from app.utils.security import create_access_token
+# Unit/API tests use explicit in-process fakes and do not depend on a live Redis
+# daemon. Dedicated run-lock tests exercise both Redis and SQLite contracts.
+os.environ.setdefault("AGENT_RUN_LOCK_BACKEND", "off")
+
+from app.database import Base, get_db  # noqa: E402
+from app.main import app  # noqa: E402
+from app.utils.security import create_access_token  # noqa: E402
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 SYNC_TEST_DB_URL = "sqlite:///:memory:"

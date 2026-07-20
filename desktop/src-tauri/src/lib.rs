@@ -254,6 +254,7 @@ fn runtime_environment(env_file: &Path, data_dir: &Path) -> HashMap<String, Stri
         data_dir.join("qdrant").to_string_lossy().into_owned(),
     );
     environment.insert("TASK_EXECUTION_MODE".to_owned(), "local".to_owned());
+    environment.insert("AGENT_RUN_LOCK_BACKEND".to_owned(), "sqlite".to_owned());
     environment.insert(
         "UPLOAD_DIR".to_owned(),
         data_dir.join("uploads").to_string_lossy().into_owned(),
@@ -478,6 +479,10 @@ mod tests {
             Some(&"local".to_owned())
         );
         assert_eq!(environment.get("DOCMIND_DESKTOP"), Some(&"1".to_owned()));
+        assert_eq!(
+            environment.get("AGENT_RUN_LOCK_BACKEND"),
+            Some(&"sqlite".to_owned())
+        );
         assert!(!environment.contains_key("REDIS_URL"));
     }
 

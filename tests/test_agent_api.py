@@ -277,6 +277,53 @@ class TestListSkills:
 
 
 class TestAgentApprovalAndRecovery:
+    async def test_busy_run_returns_423_without_graph_execution(
+        self, client, registered_user, monkeypatch, mock_agent
+    ):
+        class BusyLease:
+            def acquire(self):
+                raise agent_service.AgentRunLeaseBusyError("held")
+
+            def release(self):
+                raise AssertionError("unacquired lease must not be released")
+
+        monkeypatch.setattr(
+            agent_service, "_new_agent_run_lease", lambda run_id: BusyLease()
+        )
+        response = await client.post(
+            "/agent/chat",
+            headers=registered_user["headers"],
+            json={"message": "执行", "run_id": "busy-run"},
+        )
+
+        assert response.status_code == 423
+        assert response.headers["retry-after"] == "2"
+        assert "另一个 worker" in response.json()["detail"]
+        assert mock_agent.get("run_calls", 0) == 0
+
+    async def test_lock_backend_failure_returns_503(
+        self, client, registered_user, monkeypatch, mock_agent
+    ):
+        class FailedLease:
+            def acquire(self):
+                raise agent_service.AgentRunLeaseBackendError("redis down")
+
+            def release(self):
+                raise AssertionError("unacquired lease must not be released")
+
+        monkeypatch.setattr(
+            agent_service, "_new_agent_run_lease", lambda run_id: FailedLease()
+        )
+        response = await client.post(
+            "/agent/chat",
+            headers=registered_user["headers"],
+            json={"message": "执行", "run_id": "backend-down"},
+        )
+
+        assert response.status_code == 503
+        assert response.headers["retry-after"] == "2"
+        assert mock_agent.get("run_calls", 0) == 0
+
     async def test_deleted_conversation_blocks_resume_before_graph_execution(
         self, client, db_session, registered_user, monkeypatch, mock_agent
     ):

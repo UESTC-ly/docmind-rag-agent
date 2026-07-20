@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 import app.skills  # noqa: F401  触发所有技能注册
+from app.agent.checkpoint_cleanup import checkpoint_cleanup_loop
 from app.config import settings
 from app.database import engine, sync_engine
 from app.routers import agent, auth, chat, documents, evaluation as eval_router
@@ -38,9 +39,21 @@ async def lifespan(app: FastAPI):
     # ASGI loop and fail closed before serving if a migration cannot complete.
     await asyncio.to_thread(_upgrade_database)
     await asyncio.to_thread(recover_local_evaluations)
+    cleanup_stop = asyncio.Event()
+    cleanup_task = (
+        asyncio.create_task(
+            checkpoint_cleanup_loop(cleanup_stop),
+            name="agent-checkpoint-cleanup",
+        )
+        if settings.agent_checkpoint_cleanup_enabled
+        else None
+    )
     try:
         yield
     finally:
+        if cleanup_task is not None:
+            cleanup_stop.set()
+            await cleanup_task
         # Embedded Qdrant holds a filesystem lock, and both SQLAlchemy engines
         # own connection pools. Close them explicitly so the desktop sidecar
         # exits cleanly instead of relying on interpreter finalizers.
@@ -51,7 +64,7 @@ async def lifespan(app: FastAPI):
         logger.info("DocMind shutting down")
 
 
-app = FastAPI(title="DocMind", version="3.0.0", lifespan=lifespan)
+app = FastAPI(title="DocMind", version="3.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

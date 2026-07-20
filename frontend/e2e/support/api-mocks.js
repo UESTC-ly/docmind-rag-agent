@@ -109,6 +109,13 @@ export async function installApiMocks(page, options = {}) {
   );
   await page.route("**/agent/chat", (route) => {
     state.requests.push({ path: "/agent/chat", body: route.request().postDataJSON() });
+    if (options.agentError) {
+      return fulfillJson(
+        route,
+        { detail: options.agentError.detail || "Agent request failed" },
+        options.agentError.status,
+      );
+    }
     return fulfillJson(route, options.agentResult || {
       conversation_id: 24,
       run_id: "run-completed",
@@ -136,6 +143,13 @@ export async function installApiMocks(page, options = {}) {
   await page.route(/\/agent\/runs\/[^/]+$/, (route) => {
     const path = new URL(route.request().url()).pathname;
     state.requests.push({ path });
+    if (options.agentRunError) {
+      return fulfillJson(
+        route,
+        { detail: options.agentRunError.detail || "Agent run unavailable" },
+        options.agentRunError.status,
+      );
+    }
     return fulfillJson(route, options.agentRunResult || {
       conversation_id: 24,
       run_id: path.split("/").at(-1),

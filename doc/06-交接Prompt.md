@@ -21,8 +21,10 @@
 3. app/database.py          —— async+sync 双 DB 引擎（理解并发模型的基础）
 4. app/services/rag_service.py       —— RAG 核心链路（检索→Prompt→生成→流式）
 5. app/agent/orchestrator.py         —— LangGraph 外层编排 + interrupt/checkpoint/resume
-6. app/services/retrieval.py         —— 多路召回（RRF 融合 + 关键词检索）
-7. app/services/evaluation/runner.py —— 评估编排（检索指标 + LLM-judge）
+6. app/agent/run_lock.py             —— Redis/SQLite 运行租约 + TTL/heartbeat
+7. app/agent/checkpoint_cleanup.py   —— checkpoint 生命周期与定期有界清理
+8. app/services/retrieval.py         —— 多路召回（RRF 融合 + 关键词检索）
+9. app/services/evaluation/runner.py —— 评估编排（检索指标 + LLM-judge）
 如需更细的模块地图和"每个文件读什么"，见 doc/04-项目学习路线指引.md。
 
 【一句话定位】
@@ -34,7 +36,8 @@ LLM-as-judge faithfulness/relevancy）。在线问答、Skills 与评估共用�
 技术栈：Python 3.12 · FastAPI async · SQLAlchemy 2.0 · PostgreSQL · Qdrant · Celery ·
 Redis · 原生单页前端 + Tauri 自包含桌面运行时。GitHub Actions 覆盖 Python（90% 覆盖率门槛）、
 JavaScript、Rust、Playwright E2E 与视觉回归；测试数量和即时结果以当前分支 CI 为准。
-外层 Agent 已迁移到 LangGraph；Generic Skill 内部 ReAct 子图和完整 Multi-Agent 尚未迁移。
+外层 Agent 已迁移到 LangGraph；v3.1 增加 Web Redis/桌面 SQLite 的跨 worker run lease，
+并定期分批清理 checkpoint。Generic Skill 内部 ReAct 子图和完整 Multi-Agent 尚未迁移。
 
 【必须遵守的关键约定（否则会引入 bug）】
 - 双 DB 引擎：FastAPI 用 AsyncSessionLocal(asyncpg)，Celery 用 SyncSessionLocal(psycopg2)，
@@ -45,6 +48,8 @@ JavaScript、Rust、Playwright E2E 与视觉回归；测试数量和即时结果
 - LLM 统一走 stream=True（中转 gzxsy.vip 强制流式，非流式会返回 str 报错）。
 - 高风险副作用必须发生在 LangGraph `interrupt()` 之后；恢复节点会从头执行，禁止在
   interrupt 前放不可幂等写入。checkpoint 查询/恢复必须校验当前 user_id。
+- 所有会推进 Agent graph 的 chat/resume/recover 必须先获取同一 run_id 的租约；423 是可重试
+  冲突，503 表示锁后端不可用或所有权丢失。状态 GET 保持只读。清理前也必须获取 run lease。
 - 改动后跑 `uv run pytest`（用 uv，不用 pip/conda）；push 前先 source .venv/bin/activate
   （pre-push hook 用 venv 的 pytest）。
 - 数据隔离：所有 id 查询校验 user_id 归属，向量检索强制按 user_id 过滤。
@@ -64,10 +69,10 @@ macOS/Linux：./start.sh；Windows：powershell -ExecutionPolicy Bypass -File .\
 
 【当前已知边界（若要做增强，从这里挑）】
 脑图/关系图谱的超长文档全文 map-reduce；外部 MCP/browser/App bridge/HTTP reranker 的部署与
-凭据轮换；Generic Skill 子图与完整 Multi-Agent 迁移；Web 多副本生产 checkpointer；macOS
-对外安装包的 Developer ID 签名、公证和干净机器验收。Linux/Windows 安装包不在 v3.0
+凭据轮换；Generic Skill 子图与完整 Multi-Agent 迁移；Web 多主机生产共享 checkpointer；macOS
+对外安装包的 Developer ID 签名、公证和干净机器验收。Linux/Windows 安装包不在 v3.1
 本地验收范围。已完成能力与运维责任详见 doc/05 第 7 节、
-doc/08-v2.2.0发布说明.md 和 doc/09-v3.0.0-LangGraph实施与发布.md。
+doc/09-v3.0.0-LangGraph实施与发布.md 和 doc/10-v3.1.0-分布式运行锁与生命周期维护.md。
 
 【本次任务】
 <在这里写清你这次要做什么，例如："带我精读 Agent 编排模块" 或 "给检索加 rerank">

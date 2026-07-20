@@ -465,7 +465,9 @@ async function submitAgentTask() {
     try {
       await renderCheckpoint(runId);
     } catch (checkpointError) {
-      if (checkpointError.status === 404) {
+      const originalFailureIsTransient =
+        e.status === 423 || e.status === 429 || e.status >= 500 || !e.status;
+      if (checkpointError.status === 404 && !originalFailureIsTransient) {
         localStorage.removeItem(PENDING_AGENT_RUN_KEY);
       }
       $("#skill-agent-result").replaceChildren(el("p", { class: "empty", text: e.message }));

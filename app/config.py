@@ -1,6 +1,6 @@
 import os
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -78,6 +78,19 @@ class Settings(BaseSettings):
     # LangGraph SQLite checkpointer。Web 可改为独立持久化路径；桌面 sidecar 会把
     # 它覆盖到用户 data_dir，确保重启应用后仍可恢复等待审批的 Agent。
     agent_checkpoint_path: str = "./data/agent-checkpoints.sqlite3"
+    # Web/celery profile 默认使用共享 Redis lease；桌面/local profile 使用与
+    # checkpoint 同文件的 SQLite lease。off 只用于显式的测试/故障诊断。
+    agent_run_lock_backend: str = "auto"
+    agent_run_lock_ttl_seconds: int = 300
+    agent_run_lock_heartbeat_seconds: int = 60
+    agent_run_lock_namespace: str = "docmind:agent-run"
+    # 完成态更早清理；等待审批和崩溃可恢复状态保留更久。后台任务每次只处理
+    # 一个有界 batch，避免维护工作长时间占用 SQLite 写锁。
+    agent_checkpoint_cleanup_enabled: bool = True
+    agent_checkpoint_cleanup_interval_seconds: int = 3600
+    agent_checkpoint_completed_retention_days: int = 30
+    agent_checkpoint_incomplete_retention_days: int = 90
+    agent_checkpoint_cleanup_batch_size: int = 100
     # 逗号分隔的外层 Skill 名称；用于部署方追加必须人工审批的具体工具。
     agent_high_risk_skills: str = ""
     # Generic Skill 只要声明下列宿主能力，就在进入整个 package 前暂停审批。
@@ -155,6 +168,47 @@ class Settings(BaseSettings):
             raise ValueError("TASK_EXECUTION_MODE must be celery or local")
         return normalized
 
+    @field_validator("agent_run_lock_backend")
+    @classmethod
+    def validate_agent_run_lock_backend(cls, value: str) -> str:
+        normalized = value.lower().strip()
+        if normalized not in {"auto", "redis", "sqlite", "off"}:
+            raise ValueError(
+                "AGENT_RUN_LOCK_BACKEND must be auto, redis, sqlite, or off"
+            )
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_agent_run_coordination(self):
+        if self.agent_run_lock_ttl_seconds <= 0:
+            raise ValueError("AGENT_RUN_LOCK_TTL_SECONDS must be positive")
+        if not 0 < self.agent_run_lock_heartbeat_seconds < self.agent_run_lock_ttl_seconds:
+            raise ValueError(
+                "AGENT_RUN_LOCK_HEARTBEAT_SECONDS must be positive and shorter "
+                "than AGENT_RUN_LOCK_TTL_SECONDS"
+            )
+        if not self.agent_run_lock_namespace.strip():
+            raise ValueError("AGENT_RUN_LOCK_NAMESPACE cannot be empty")
+        if self.agent_checkpoint_cleanup_interval_seconds <= 0:
+            raise ValueError(
+                "AGENT_CHECKPOINT_CLEANUP_INTERVAL_SECONDS must be positive"
+            )
+        if self.agent_checkpoint_completed_retention_days <= 0:
+            raise ValueError(
+                "AGENT_CHECKPOINT_COMPLETED_RETENTION_DAYS must be positive"
+            )
+        if (
+            self.agent_checkpoint_incomplete_retention_days
+            < self.agent_checkpoint_completed_retention_days
+        ):
+            raise ValueError(
+                "Incomplete Agent checkpoints must be retained at least as long "
+                "as completed checkpoints"
+            )
+        if self.agent_checkpoint_cleanup_batch_size <= 0:
+            raise ValueError("AGENT_CHECKPOINT_CLEANUP_BATCH_SIZE must be positive")
+        return self
+
     @property
     def sync_database_url(self) -> str:
         """把 API 的异步 URL 映射为后台任务使用的同步驱动 URL。"""
@@ -220,6 +274,14 @@ class Settings(BaseSettings):
             for item in self.agent_high_risk_capabilities.split(",")
             if item.strip()
         }
+
+    @property
+    def resolved_agent_run_lock_backend(self) -> str:
+        if self.agent_run_lock_backend != "auto":
+            return self.agent_run_lock_backend
+        if self.docmind_desktop or self.task_execution_mode == "local":
+            return "sqlite"
+        return "redis"
 
 
 # 全局单例，其他模块直接 from app.config import settings

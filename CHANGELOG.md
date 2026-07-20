@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.1.0 - 2026-07-20
+
+### Cross-worker Agent run coordination
+
+- Added an exclusive, renewable lease around every mutating Agent run operation. Web/Celery deployments use Redis so separate processes or hosts cannot execute the same `run_id` concurrently; the self-contained desktop/local profile uses an owner-token SQLite lease beside the checkpoint file.
+- Leases are non-blocking, expire after a bounded TTL, renew on a heartbeat, and release only when the owner token still matches. A stale worker therefore cannot delete a newer worker's lease.
+- `POST /agent/chat`, `POST /agent/resume`, and `POST /agent/runs/{run_id}/recover` now return `423 Locked` with `Retry-After` when another worker owns the run, and fail closed with `503 Service Unavailable` when the configured lock backend is unavailable or ownership is lost.
+- Kept `GET /agent/runs/{run_id}` read-only and available during execution. The frontend retains its client-generated run ID after transient `423`, `429`, network, or server failures so it can inspect or recover the original checkpoint instead of creating duplicate work.
+
+### Checkpoint lifecycle maintenance
+
+- Added a DocMind-owned run lifecycle index next to the LangGraph SQLite tables without duplicating graph messages or private state.
+- Added bounded periodic cleanup with separate defaults for completed runs (30 days) and incomplete/waiting/recoverable runs (90 days), an hourly interval, and a 100-run batch limit. Cleanup removes LangGraph checkpoints/writes, tool receipts, run metadata, and expired local lease rows; it does not delete conversations, messages, documents, or generated business data.
+- Added a maintenance lease so multiple API workers do not repeat the same cleanup cycle, and reacquires each run's normal execution lease before deletion. Actively executing runs are skipped rather than interrupted.
+- Added safe v3.0 upgrade backfill: pre-v3.1 checkpoints receive a lifecycle entry whose retention clock starts at first v3.1 maintenance, so an upgrade cannot immediately purge older recoverable state.
+
+### Runtime, desktop, and verification
+
+- Updated FastAPI, frontend, desktop, Tauri, Rust, MCP client, and sidecar version declarations to `3.1.0`.
+- Desktop hosts explicitly force the SQLite lease backend and keep the lease/checkpoint database in the per-user data directory; installed desktop users still do not need Redis.
+- Added unit/API coverage for lease exclusion, expiry takeover, heartbeat ownership, stale-owner release protection, Redis failures, HTTP conflict mapping, retention, maintenance coordination, active-run skipping, and v3.0 backfill. Added a Playwright regression proving a transient cross-worker conflict does not discard the pending run ID.
+
+Redis coordinates mutation but does not turn the SQLite LangGraph saver into a cross-host state store. Multi-host recovery still requires sticky routing/shared storage or a future production shared checkpointer. Generic Skill subgraphs and full Multi-Agent migration remain intentionally deferred. See `doc/10-v3.1.0-分布式运行锁与生命周期维护.md`.
+
 ## v3.0.0 - 2026-07-20
 
 ### Durable LangGraph Agent

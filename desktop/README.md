@@ -1,4 +1,4 @@
-# DocMind Desktop 2.2 release runtime
+# DocMind Desktop 3.1 release runtime
 
 The installed Tauri application is self-contained. It starts one signed
 `docmind-sidecar` executable that embeds Python, FastAPI and the backend Python
@@ -20,6 +20,7 @@ The Tauri host creates this per-user, uninstall-safe layout:
   desktop.env
   data/
     docmind.db
+    agent-checkpoints.sqlite3
     qdrant/
     uploads/
     skill_workspaces/
@@ -83,7 +84,7 @@ still binds only to loopback, and no arbitrary executable path is accepted.
 `.github/workflows/desktop-release.yml` runs the same frozen-binary checks and
 installer build on a native macOS runner. Pull requests that change a desktop
 runtime input exercise that build; manual runs retain the macOS bundle as a CI
-verification artifact. Windows and Linux packages are outside the v2.2 acceptance
+verification artifact. Windows and Linux packages are outside the v3.1 acceptance
 scope. These artifacts are intentionally not called releases: a protected publishing
 job must inject the platform signing/notarization credentials and verify the
 native signature before distributing the same build.
@@ -109,6 +110,12 @@ and preservation of the application-data directory across an upgrade.
   upgrades. It is never printed by sidecar self-checks.
 - Runtime-owned storage/task settings override dotenv values so a stale desktop
   config cannot silently reconnect to network infrastructure.
+- Desktop forces `AGENT_RUN_LOCK_BACKEND=sqlite`, so concurrent mutations of the
+  same Agent `run_id` share a renewable lease in `agent-checkpoints.sqlite3`
+  without requiring Redis. Web/celery deployments use Redis instead.
+- FastAPI lifespan runs the same bounded checkpoint-retention job as Web. A
+  maintenance lease prevents overlapping cleanup passes, and per-run leases
+  prevent deletion while a run is being advanced or resumed.
 - The frontend obtains the loopback API origin from the Tauri host only after
   readiness. The same built-code smoke verifies both REST and authenticated SSE;
   browser deployments keep relative URLs.

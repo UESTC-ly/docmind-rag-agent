@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Protocol, Sequence
 
-SIDECAR_VERSION = "3.0.0"
+SIDECAR_VERSION = "3.1.0"
 
 
 class _Closable(Protocol):
@@ -85,6 +85,7 @@ def configure_runtime(data_dir: Path, config_path: Path) -> dict[str, str]:
         "UPLOAD_DIR": str(data_dir / "uploads"),
         "SKILL_WORKSPACE_DIR": str(data_dir / "skill_workspaces"),
         "AGENT_CHECKPOINT_PATH": str(data_dir / "agent-checkpoints.sqlite3"),
+        "AGENT_RUN_LOCK_BACKEND": "sqlite",
         "SECRET_KEY": _read_or_create_secret(data_dir),
         "PYTHONUTF8": "1",
         "PYTHONUNBUFFERED": "1",
@@ -110,6 +111,7 @@ def runtime_manifest(values: dict[str, str]) -> dict[str, object]:
         "vector_store": "qdrant-local",
         "task_executor": "local",
         "agent_checkpointer": "sqlite",
+        "agent_run_lock": "sqlite-lease",
         "package_script_confinement": "macos-sandbox-exec",
         "external_runtime_required": False,
         "data_dir": values["DOCMIND_DATA_DIR"],
