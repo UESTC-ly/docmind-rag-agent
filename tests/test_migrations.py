@@ -26,6 +26,10 @@ APPLICATION_TABLES = {
     "eval_samples",
     "eval_runs",
     "eval_results",
+    "eval_corpus_documents",
+    "eval_metric_results",
+    "eval_regression_gates",
+    "eval_regression_results",
 }
 
 
@@ -35,10 +39,28 @@ def _config(url: str, *, output_buffer: StringIO | None = None) -> Config:
     return config
 
 
-def test_revision_chain_has_single_v220_head() -> None:
+def test_revision_chain_has_single_current_head() -> None:
     scripts = ScriptDirectory.from_config(_config("sqlite://"))
 
-    assert scripts.get_heads() == ["0004_v220_eval_leases"]
+    assert scripts.get_heads() == ["0010_v320_chunk_source_locations"]
+    assert scripts.get_revision("0010_v320_chunk_source_locations").down_revision == (
+        "0009_v320_eval_subset_reruns"
+    )
+    assert scripts.get_revision("0009_v320_eval_subset_reruns").down_revision == (
+        "0008_v320_eval_source_snapshot"
+    )
+    assert scripts.get_revision("0008_v320_eval_source_snapshot").down_revision == (
+        "0007_v320_document_provenance"
+    )
+    assert scripts.get_revision("0007_v320_document_provenance").down_revision == (
+        "0006_v320_evalops_contracts"
+    )
+    assert scripts.get_revision("0006_v320_evalops_contracts").down_revision == (
+        "0005_v320_rag_experiments"
+    )
+    assert scripts.get_revision("0005_v320_rag_experiments").down_revision == (
+        "0004_v220_eval_leases"
+    )
     assert scripts.get_revision("0004_v220_eval_leases").down_revision == (
         "0003_v220_fts"
     )
@@ -66,6 +88,72 @@ def test_upgrade_and_downgrade_complete_schema_on_sqlite(tmp_path: Path) -> None
     )
     eval_run_columns = {column["name"] for column in inspector.get_columns("eval_runs")}
     assert {"task_id", "lease_token", "heartbeat_at"} <= eval_run_columns
+    assert {
+        "pipeline_id",
+        "pipeline_spec",
+        "pipeline_fingerprint",
+        "citation_precision",
+        "citation_recall",
+        "unsupported_claim_rate",
+        "map_score",
+        "ndcg",
+        "experiment_key",
+        "baseline_run_id",
+        "environment_fingerprint",
+        "evaluation_scope",
+        "sample_filter",
+        "source_run_id",
+    } <= eval_run_columns
+    assert {
+        "citation_precision",
+        "citation_recall",
+        "unsupported_claim_rate",
+        "citation_report",
+        "average_precision_at_k",
+        "ndcg_at_k",
+    } <= eval_result_columns
+    assert {
+        "source_name",
+        "source_version",
+        "corpus_fingerprint",
+        "source_snapshot_fingerprint",
+        "label_source",
+        "release_eligible",
+    } <= {
+        column["name"] for column in inspector.get_columns("eval_datasets")
+    }
+    assert {
+        "external_id",
+        "document_qrels",
+        "answerable",
+        "slice_tags",
+        "temporal_labels",
+        "conflict_labels",
+    } <= {
+        column["name"] for column in inspector.get_columns("eval_samples")
+    }
+    assert {
+        "source_uri",
+        "source_version",
+        "content_fingerprint",
+        "effective_from",
+        "effective_to",
+        "source_status",
+        "supersedes_document_id",
+    } <= {
+        column["name"] for column in inspector.get_columns("documents")
+    }
+    assert {
+        "page_start",
+        "page_end",
+        "paragraph_start",
+        "paragraph_end",
+        "char_start",
+        "char_end",
+        "locator_version",
+    } <= {
+        column["name"] for column in inspector.get_columns("document_chunks")
+    }
     assert "uq_eval_results_run_sample" in {
         constraint["name"]
         for constraint in inspector.get_unique_constraints("eval_results")
@@ -117,6 +205,20 @@ def test_existing_v210_schema_can_be_adopted_without_recreating_tables(
         eval_result_columns
     )
     assert {"task_id", "lease_token", "heartbeat_at"} <= {
+        column["name"] for column in inspector.get_columns("eval_runs")
+    }
+    assert {"pipeline_id", "pipeline_spec", "pipeline_fingerprint"} <= {
+        column["name"] for column in inspector.get_columns("eval_runs")
+    }
+    assert {
+        "map_score",
+        "ndcg",
+        "experiment_key",
+        "baseline_run_id",
+        "evaluation_scope",
+        "sample_filter",
+        "source_run_id",
+    } <= {
         column["name"] for column in inspector.get_columns("eval_runs")
     }
     engine.dispose()

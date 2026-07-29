@@ -58,7 +58,9 @@ def upsert_chunks(
     chunks: list[str],
     vectors: list[list[float]],
 ) -> None:
-    """把一个文档的所有分块向量写入 Qdrant。"""
+    """把一个文档的分块向量有界分批写入 Qdrant。"""
+    if len(chunks) != len(vectors):
+        raise ValueError("chunks and vectors must have the same length")
     ensure_collection()
     points = [
         PointStruct(
@@ -73,7 +75,12 @@ def upsert_chunks(
         )
         for idx, (content, vector) in enumerate(zip(chunks, vectors))
     ]
-    _client.upsert(collection_name=settings.qdrant_collection, points=points)
+    batch_size = settings.qdrant_upsert_batch_size
+    for offset in range(0, len(points), batch_size):
+        _client.upsert(
+            collection_name=settings.qdrant_collection,
+            points=points[offset: offset + batch_size],
+        )
 
 
 def search(

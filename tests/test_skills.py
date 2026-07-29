@@ -12,6 +12,7 @@
 
 import base64
 from io import BytesIO
+from types import SimpleNamespace
 from zipfile import ZipFile
 
 from app.skills import graph, kb_search, mindmap, presentation, report, weekly_report, web_search
@@ -176,8 +177,8 @@ class TestReportSkill:
         # 第一次调用返回大纲，后续返回各节正文
         calls = iter([
             _FakeMsg("小节一\n小节二"),   # outline
-            _FakeMsg("第一节正文"),        # section 1
-            _FakeMsg("第二节正文"),        # section 2
+            _FakeMsg("第一节正文。[D1:C0]"),  # section 1
+            _FakeMsg("第二节正文。[D1:C0]"),  # section 2
         ])
         monkeypatch.setattr(report, "chat_completion", lambda msgs, temperature=0.4: next(calls))
         result = report.ReportSkill().run(CTX, topic="AI 架构")
@@ -189,6 +190,7 @@ class TestReportSkill:
         assert result["artifact_kind"] == "file"
         assert result["download"]["filename"].endswith(".md")
         assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["verification"]["passed"] is True
 
     def test_limits_search_to_context_document_when_available(self, monkeypatch):
         captured = {}
@@ -245,7 +247,9 @@ class TestWeeklyReportSkill:
         monkeypatch.setattr(
             weekly_report,
             "chat_completion",
-            lambda msgs, temperature=0.3: _FakeMsg("# 周报\n\n## 本周完成\n完成 A"),
+            lambda msgs, temperature=0.3: _FakeMsg(
+                "# 周报\n\n## 本周完成\n完成 A。[D10:C1]"
+            ),
         )
 
         result = weekly_report.WeeklyReportSkill().run(
@@ -258,6 +262,7 @@ class TestWeeklyReportSkill:
         assert result["download"]["encoding"] == "text"
         assert "完成 A" in result["download"]["content"]
         assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["verification"]["passed"] is True
 
     def test_no_material_returns_error(self, monkeypatch):
         monkeypatch.setattr(
@@ -286,7 +291,7 @@ class TestPresentationSkill:
             "chat_completion",
             lambda msgs, temperature=0.35: _FakeMsg(
                 '{"slides":[{"title":"封面","bullets":["副标题"]},'
-                '{"title":"进展","bullets":["完成 A","完成 B"]}]}'
+                '{"title":"进展","bullets":["完成 A。[D10:C1]","完成 B。[D10:C1]"]}]}'
             ),
         )
 
@@ -299,6 +304,7 @@ class TestPresentationSkill:
         assert result["download"]["filename"].endswith(".pptx")
         assert result["download"]["encoding"] == "base64"
         assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["verification"]["passed"] is True
 
         pptx = base64.b64decode(result["download"]["content"])
         with ZipFile(BytesIO(pptx)) as zf:
@@ -338,23 +344,38 @@ class TestPresentationSkill:
 # ── kb_search ────────────────────────────────────────────────
 class TestKbSearchSkill:
     def test_returns_mapped_results(self, monkeypatch):
-        monkeypatch.setattr(kb_search, "retrieve_for_skill", lambda *a, **k: [
-            {"content": "命中片段", "document_id": 2, "chunk_index": 3, "score": 0.876},
-        ])
+        monkeypatch.setattr(
+            kb_search,
+            "run_pipeline_for_skill",
+            lambda *a, **k: SimpleNamespace(
+                fingerprint="test-fingerprint",
+                hits=[
+                    {
+                        "content": "命中片段",
+                        "document_id": 2,
+                        "chunk_index": 3,
+                        "citation_id": "D2:C3",
+                        "score": 0.876,
+                    }
+                ],
+            ),
+        )
         result = kb_search.KnowledgeBaseSearchSkill().run(CTX, query="问题")
         assert result["type"] == "kb_search"
         assert result["results"][0]["document_id"] == 2
         assert result["results"][0]["score"] == 0.876
-        assert result["grounding"]["mode"] == "hybrid_rag"
+        assert result["grounding"]["mode"] == "quality_adaptive_rag"
         assert result["grounding"]["sources"][0]["chunk_index"] == 3
+        assert result["workflow"]["status"] == "completed"
 
     def test_uses_context_document_when_arg_absent(self, monkeypatch):
         captured = {}
-        def _fake_search(user_id, query, top_k, document_id):
-            captured["document_id"] = document_id
-            return []
+        def _fake_search(**kwargs):
+            captured["document_id"] = kwargs["document_id"]
+            return SimpleNamespace(fingerprint="test", hits=[])
 
-        monkeypatch.setattr(kb_search, "retrieve_for_skill", _fake_search)
+        monkeypatch.setattr(kb_search, "run_pipeline_for_skill", _fake_search)
+        monkeypatch.setattr(kb_search.settings, "quality_max_interventions", 0)
         kb_search.KnowledgeBaseSearchSkill().run(CTX, query="q")
         # 未传 document_id 参数 → 回退到 context.document_id(=10)
         assert captured["document_id"] == 10

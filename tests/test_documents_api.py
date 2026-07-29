@@ -8,6 +8,7 @@ mock 掉外部边界：
 
 import asyncio
 from io import BytesIO
+from pathlib import Path
 
 import pytest
 from fastapi import UploadFile
@@ -16,10 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base
-from app.models.document import Document, DocumentStatus
+from app.models.document import Document, DocumentChunk, DocumentStatus
 from app.models.user import User
 from app.services import document_service, task_dispatcher
 from app.tasks import document_tasks
+from app.utils.file_parser import extract_text_with_locations
 
 pytestmark = pytest.mark.asyncio
 
@@ -97,12 +99,6 @@ class TestUpload:
         monkeypatch.setattr(document_service.settings, "upload_dir", str(tmp_path / "uploads"))
         monkeypatch.setattr(task_dispatcher.settings, "task_execution_mode", "local")
         monkeypatch.setattr(document_tasks, "SyncSessionLocal", sync_sessions)
-        monkeypatch.setattr(document_tasks, "extract_text", lambda _path: "local task text")
-        monkeypatch.setattr(
-            document_tasks,
-            "split_text",
-            lambda text, **_kwargs: [text],
-        )
         monkeypatch.setattr(
             document_tasks,
             "embed_texts",
@@ -167,6 +163,166 @@ class TestListAndGet:
     async def test_get_missing_doc_404(self, client, registered_user, mock_boundaries):
         resp = await client.get("/documents/9999", headers=registered_user["headers"])
         assert resp.status_code == 404
+
+    async def test_version_metadata_supersedes_old_document(
+        self,
+        client,
+        registered_user,
+        mock_boundaries,
+    ):
+        old_id = await self._upload(
+            client,
+            registered_user["headers"],
+            "policy-v1.txt",
+        )
+        new_id = await self._upload(
+            client,
+            registered_user["headers"],
+            "policy-v2.txt",
+        )
+        response = await client.patch(
+            f"/documents/{new_id}/metadata",
+            headers=registered_user["headers"],
+            json={
+                "source_uri": "https://example.org/policy",
+                "source_version": "2",
+                "authority": "Example Authority",
+                "source_status": "current",
+                "supersedes_document_id": old_id,
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["source_version"] == "2"
+        assert response.json()["supersedes_document_id"] == old_id
+        old = await client.get(
+            f"/documents/{old_id}",
+            headers=registered_user["headers"],
+        )
+        assert old.json()["source_status"] == "superseded"
+
+    async def test_citation_jump_returns_exact_owned_chunk(
+        self,
+        client,
+        registered_user,
+        mock_boundaries,
+        db_session,
+    ):
+        document_id = await self._upload(
+            client,
+            registered_user["headers"],
+            "source.txt",
+        )
+        db_session.add(
+            DocumentChunk(
+                document_id=document_id,
+                chunk_index=3,
+                content="可核验的原文段落。",
+            )
+        )
+        await db_session.flush()
+
+        response = await client.get(
+            f"/documents/{document_id}/chunks/3",
+            headers=registered_user["headers"],
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["citation_id"] == f"D{document_id}:C3"
+        assert body["content"] == "可核验的原文段落。"
+        assert body["source_excerpt"] == "可核验的原文段落。"
+        assert body["highlight_start"] == 0
+        assert body["highlight_end"] == len("可核验的原文段落。")
+        assert body["jump_url"] == f"/documents/{document_id}/chunks/3"
+
+    async def test_citation_jump_returns_source_location_and_highlight_range(
+        self,
+        client,
+        registered_user,
+        mock_boundaries,
+        db_session,
+    ):
+        document_id = await self._upload(
+            client,
+            registered_user["headers"],
+            "located.txt",
+        )
+        document = await db_session.get(Document, document_id)
+        assert document is not None
+        Path(document.file_path).write_text(
+            "前置上下文\n\n可核验的原文段落。\n\n后置上下文",
+            encoding="utf-8",
+        )
+        parsed = extract_text_with_locations(document.file_path)
+        content = "可核验的原文段落。"
+        char_start = parsed.text.index(content)
+        db_session.add(
+            DocumentChunk(
+                document_id=document_id,
+                chunk_index=4,
+                content=content,
+                paragraph_start=2,
+                paragraph_end=2,
+                char_start=char_start,
+                char_end=char_start + len(content),
+                locator_version="extracted_text_v1",
+            )
+        )
+        await db_session.flush()
+
+        response = await client.get(
+            f"/documents/{document_id}/chunks/4",
+            headers=registered_user["headers"],
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["paragraph_start"] == 2
+        assert body["char_start"] == char_start
+        assert body["source_excerpt"] == parsed.text
+        assert body["source_excerpt"][
+            body["highlight_start"] : body["highlight_end"]
+        ] == content
+
+    async def test_metadata_patch_preserves_fields_that_were_not_sent(
+        self,
+        client,
+        registered_user,
+        mock_boundaries,
+    ):
+        document_id = await self._upload(
+            client,
+            registered_user["headers"],
+            "versioned.txt",
+        )
+        first = await client.patch(
+            f"/documents/{document_id}/metadata",
+            headers=registered_user["headers"],
+            json={
+                "source_uri": "https://example.org/source",
+                "source_version": "2026-01",
+                "source_status": "current",
+            },
+        )
+        assert first.status_code == 200
+
+        second = await client.patch(
+            f"/documents/{document_id}/metadata",
+            headers=registered_user["headers"],
+            json={"authority": "Example Authority"},
+        )
+
+        assert second.status_code == 200
+        assert second.json()["authority"] == "Example Authority"
+        assert second.json()["source_uri"] == "https://example.org/source"
+        assert second.json()["source_version"] == "2026-01"
+        assert second.json()["source_status"] == "current"
+
+        empty = await client.patch(
+            f"/documents/{document_id}/metadata",
+            headers=registered_user["headers"],
+            json={},
+        )
+        assert empty.status_code == 422
 
 
 class TestDelete:

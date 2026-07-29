@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -53,10 +54,30 @@ def _stable_order(hits: list[dict], score_field: str) -> list[dict]:
     )
 
 
-def local_rerank(query: str, candidates: list[dict]) -> list[dict]:
+def _resolved_weights(
+    weights: Mapping[str, float] | None,
+) -> tuple[float, float, float, float]:
+    configured = weights or {}
+    return (
+        float(configured.get("rrf", settings.reranker_rrf_weight)),
+        float(configured.get("dense", settings.reranker_dense_weight)),
+        float(configured.get("keyword", settings.reranker_keyword_weight)),
+        float(configured.get("lexical", settings.reranker_lexical_weight)),
+    )
+
+
+def local_rerank(
+    query: str,
+    candidates: list[dict],
+    *,
+    weights: Mapping[str, float] | None = None,
+) -> list[dict]:
     """Score candidates with deterministic local signals and stable tie-breaking."""
     if not candidates:
         return []
+    rrf_weight, dense_weight, keyword_weight, lexical_weight = _resolved_weights(
+        weights
+    )
 
     rrf = _normalize([float(hit.get("rrf_score", 0.0) or 0.0) for hit in candidates])
     dense = _normalize(
@@ -70,10 +91,10 @@ def local_rerank(query: str, candidates: list[dict]) -> list[dict]:
     for index, hit in enumerate(candidates):
         lexical = _lexical_score(query, str(hit.get("content", "")))
         final = (
-            settings.reranker_rrf_weight * rrf[index]
-            + settings.reranker_dense_weight * dense[index]
-            + settings.reranker_keyword_weight * keyword[index]
-            + settings.reranker_lexical_weight * lexical
+            rrf_weight * rrf[index]
+            + dense_weight * dense[index]
+            + keyword_weight * keyword[index]
+            + lexical_weight * lexical
         )
         enriched = dict(hit)
         enriched.update(
@@ -130,9 +151,14 @@ def _http_scores(query: str, candidates: list[dict]) -> dict[int, float]:
     return scores
 
 
-def http_rerank(query: str, candidates: list[dict]) -> list[dict]:
+def http_rerank(
+    query: str,
+    candidates: list[dict],
+    *,
+    weights: Mapping[str, float] | None = None,
+) -> list[dict]:
     """Use a configured cross-encoder API while retaining every original signal."""
-    local = local_rerank(query, candidates)
+    local = local_rerank(query, candidates, weights=weights)
     # The provider indexes the original fused candidate order, not local order.
     local_by_key = {
         (hit["document_id"], hit["chunk_index"]): hit for hit in local
@@ -147,31 +173,42 @@ def http_rerank(query: str, candidates: list[dict]) -> list[dict]:
     return _stable_order(reranked, "rerank_score")
 
 
-def rerank(query: str, candidates: list[dict], top_k: int) -> list[dict]:
+def rerank(
+    query: str,
+    candidates: list[dict],
+    top_k: int,
+    *,
+    mode: str | None = None,
+    candidate_limit: int | None = None,
+    weights: Mapping[str, float] | None = None,
+) -> list[dict]:
     """Rerank a bounded candidate set and annotate the reproducible final order."""
-    bounded = [dict(hit) for hit in candidates[: settings.reranker_candidate_limit]]
-    mode = settings.reranker_mode.lower().strip()
+    effective_limit = candidate_limit or settings.reranker_candidate_limit
+    bounded = [dict(hit) for hit in candidates[:effective_limit]]
+    effective_mode = (mode or settings.reranker_mode).lower().strip()
 
-    if mode == "off":
+    if effective_mode == "off":
         ranked = _stable_order(bounded, "rrf_score")
         for hit in ranked:
             hit["rerank_score"] = float(hit.get("rrf_score", 0.0) or 0.0)
             hit["reranker"] = "off"
-    elif mode == "http":
+    elif effective_mode == "http":
         try:
-            ranked = http_rerank(query, bounded)
+            ranked = http_rerank(query, bounded, weights=weights)
         except (HTTPError, URLError, TimeoutError, ValueError, OSError, json.JSONDecodeError) as exc:
             logger.bind(error=type(exc).__name__).warning(
                 "HTTP reranker unavailable; using deterministic local fallback"
             )
-            ranked = local_rerank(query, bounded)
+            ranked = local_rerank(query, bounded, weights=weights)
             for hit in ranked:
                 hit["reranker"] = "local_fallback"
                 hit["reranker_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
     else:
-        if mode != "local":
-            logger.bind(mode=mode).warning("unknown reranker mode; using local")
-        ranked = local_rerank(query, bounded)
+        if effective_mode != "local":
+            logger.bind(mode=effective_mode).warning(
+                "unknown reranker mode; using local"
+            )
+        ranked = local_rerank(query, bounded, weights=weights)
 
     output = ranked[:top_k]
     for final_rank, hit in enumerate(output, start=1):

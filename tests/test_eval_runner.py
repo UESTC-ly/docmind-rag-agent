@@ -16,6 +16,9 @@ from app.database import Base
 from app.models.document import Document, DocumentStatus
 from app.models.evaluation import (
     EvalDataset,
+    EvalMetricResult,
+    EvalRegressionGate,
+    EvalRegressionResult,
     EvalResult,
     EvalRun,
     EvalSample,
@@ -23,6 +26,8 @@ from app.models.evaluation import (
 )
 from app.models.user import User
 from app.services.evaluation import runner
+from app.services.evaluation.generation_judge import JudgeResult
+from app.services.evidence import validate_citations
 
 
 class _FakeMsg:
@@ -90,8 +95,30 @@ def patch_rag(monkeypatch):
         ],
     )
     monkeypatch.setattr(runner, "chat_completion", lambda messages: _FakeMsg("答案"))
-    monkeypatch.setattr(runner, "judge_faithfulness", lambda ctx, ans: 1.0)
-    monkeypatch.setattr(runner, "judge_answer_relevancy", lambda q, ans: 0.8)
+    monkeypatch.setattr(runner, "evaluate_faithfulness", lambda ctx, ans: 1.0)
+    monkeypatch.setattr(
+        runner,
+        "evaluate_answer_relevancy",
+        lambda q, ans: 0.8,
+    )
+
+    def _grounding(answer, hits):
+        report = validate_citations(answer, hits)
+        groundedness = 1.0 if report["passed"] else 0.0
+        return {
+            **report,
+            "contract": "claim_grounding_v1",
+            "semantic_entailment_checked": True,
+            "judge_status": "completed",
+            "judge_model": "test-judge",
+            "groundedness": groundedness,
+            "faithfulness": groundedness,
+            "citation_correctness": report["citation_precision"],
+            "conflict_count": 0,
+            "refused": False,
+        }
+
+    monkeypatch.setattr(runner, "evaluate_grounding", _grounding)
 
 
 class TestRunEvaluation:
@@ -106,6 +133,11 @@ class TestRunEvaluation:
         assert run.recall == 1.0
         assert run.faithfulness == 1.0
         assert run.answer_relevancy == 0.8
+        assert run.citation_precision == 1.0
+        assert run.citation_recall == 0.0
+        assert run.unsupported_claim_rate == 1.0
+        assert run.pipeline_id == "configured"
+        assert len(run.pipeline_fingerprint) == 64
         assert run.completed_at is not None
 
     def test_writes_per_sample_results(self, sync_db, patch_rag):
@@ -119,6 +151,219 @@ class TestRunEvaluation:
         trace = json.loads(results[0].retrieval_trace)
         assert trace[0]["retrieval_sources"] == ["dense", "keyword"]
         assert "content" not in trace[0]
+        citation = json.loads(results[0].citation_report)
+        assert citation["contract"] == "claim_grounding_v1"
+        assert results[0].unsupported_claim_rate == 1.0
+        metric_rows = (
+            sync_db.query(EvalMetricResult)
+            .filter(EvalMetricResult.run_id == run_id)
+            .all()
+        )
+        assert any(
+            metric.subject_type == "run"
+            and metric.metric_name == "map_at_k"
+            and metric.score == 1.0
+            for metric in metric_rows
+        )
+
+    def test_unavailable_generation_judge_persists_missing_score_and_reason(
+        self,
+        sync_db,
+        monkeypatch,
+        patch_rag,
+    ):
+        unavailable = JudgeResult(
+            score=None,
+            reason="RuntimeError: judge offline",
+            status="unavailable",
+            model="judge-model",
+            rubric_version="faithfulness_v2",
+            input_fingerprint="f" * 64,
+        )
+        monkeypatch.setattr(
+            runner,
+            "evaluate_faithfulness",
+            lambda context, answer: unavailable,
+        )
+        monkeypatch.setattr(
+            runner,
+            "evaluate_answer_relevancy",
+            lambda question, answer: unavailable,
+        )
+        run_id, uid, did = _seed(sync_db, [[0]])
+
+        result = runner.run_evaluation(sync_db, run_id, uid, did)
+
+        assert result["status"] == "completed"
+        completed = sync_db.get(EvalRun, run_id)
+        assert completed.faithfulness is None
+        assert completed.answer_relevancy is None
+        sample_metric = (
+            sync_db.query(EvalMetricResult)
+            .filter_by(
+                run_id=run_id,
+                subject_type="sample",
+                metric_name="faithfulness",
+            )
+            .one()
+        )
+        assert sample_metric.score is None
+        assert sample_metric.reason == "RuntimeError: judge offline"
+        details = json.loads(sample_metric.details)
+        assert details["status"] == "unavailable"
+        assert details["input_fingerprint"] == "f" * 64
+
+    def test_document_retrieval_metrics_are_separate_when_qrels_exist(
+        self,
+        sync_db,
+        patch_rag,
+    ):
+        run_id, uid, did = _seed(sync_db, [[0]])
+        run = sync_db.get(EvalRun, run_id)
+        sample = (
+            sync_db.query(EvalSample)
+            .filter_by(dataset_id=run.dataset_id)
+            .one()
+        )
+        sample.document_qrels = json.dumps({str(did): 2})
+        sync_db.commit()
+
+        runner.run_evaluation(sync_db, run_id, uid, did)
+
+        document_metrics = {
+            metric.metric_name: metric
+            for metric in sync_db.query(EvalMetricResult)
+            .filter_by(run_id=run_id, subject_type="run")
+            .filter(
+                EvalMetricResult.metric_version
+                == "document_retrieval_v1"
+            )
+        }
+        assert document_metrics["document_hit_at_k"].score == 1.0
+        assert document_metrics["document_recall_at_k"].score == 1.0
+        assert document_metrics["document_ndcg_at_k"].score == 1.0
+
+    def test_missing_document_qrels_stays_unavailable_not_zero(
+        self,
+        sync_db,
+        patch_rag,
+    ):
+        run_id, uid, did = _seed(sync_db, [[0]])
+
+        runner.run_evaluation(sync_db, run_id, uid, did)
+
+        metric = (
+            sync_db.query(EvalMetricResult)
+            .filter_by(
+                run_id=run_id,
+                subject_type="run",
+                metric_name="document_ndcg_at_k",
+            )
+            .one()
+        )
+        assert metric.score is None
+        assert metric.reason == "metric unavailable for every evaluated sample"
+
+    def test_subset_rerun_evaluates_only_selected_samples_and_skips_gates(
+        self,
+        sync_db,
+        monkeypatch,
+        patch_rag,
+    ):
+        run_id, uid, did = _seed(sync_db, [[0], [0], [0]])
+        run = sync_db.get(EvalRun, run_id)
+        samples = (
+            sync_db.query(EvalSample)
+            .filter_by(dataset_id=run.dataset_id)
+            .order_by(EvalSample.id)
+            .all()
+        )
+        run.evaluation_scope = "subset"
+        run.sample_filter = json.dumps([samples[1].id])
+        gate = EvalRegressionGate(
+            dataset_id=run.dataset_id,
+            name="full-run-only",
+            metric_name="hit_rate",
+            comparison="absolute_min",
+            threshold=1.0,
+        )
+        sync_db.add(gate)
+        sync_db.commit()
+        questions = []
+        original = runner.retrieve_for_skill
+
+        def _capture(**kwargs):
+            questions.append(kwargs["query"])
+            return original(**kwargs)
+
+        monkeypatch.setattr(runner, "retrieve_for_skill", _capture)
+
+        result = runner.run_evaluation(sync_db, run_id, uid, did)
+
+        assert result["samples"] == 1
+        assert questions == ["q1"]
+        [detail] = (
+            sync_db.query(EvalResult)
+            .filter_by(run_id=run_id)
+            .all()
+        )
+        assert detail.sample_id == samples[1].id
+        assert (
+            sync_db.query(EvalRegressionResult)
+            .filter_by(candidate_run_id=run_id)
+            .count()
+            == 0
+        )
+
+    def test_subset_rerun_rejects_samples_outside_dataset(
+        self,
+        sync_db,
+        patch_rag,
+    ):
+        run_id, uid, did = _seed(sync_db, [[0]])
+        run = sync_db.get(EvalRun, run_id)
+        run.evaluation_scope = "subset"
+        run.sample_filter = "[999999]"
+        sync_db.commit()
+
+        result = runner.run_evaluation(sync_db, run_id, uid, did)
+
+        assert result["status"] == "failed"
+        assert "outside its dataset" in result["error"]
+
+    def test_uses_persisted_pipeline_snapshot_and_scores_valid_citation(
+        self, sync_db, monkeypatch, patch_rag
+    ):
+        from app.services.rag_pipeline import pipeline_presets
+
+        run_id, uid, did = _seed(sync_db, [[0]])
+        spec = pipeline_presets()["dense"]
+        run = sync_db.get(EvalRun, run_id)
+        run.pipeline_id = spec.id
+        run.pipeline_spec = json.dumps(spec.to_dict())
+        run.pipeline_fingerprint = spec.fingerprint
+        sync_db.commit()
+        captured = {}
+        original = runner.retrieve_for_skill
+
+        def _capture(**kwargs):
+            captured["pipeline"] = kwargs["pipeline"]
+            return original(**kwargs)
+
+        monkeypatch.setattr(runner, "retrieve_for_skill", _capture)
+        monkeypatch.setattr(
+            runner,
+            "chat_completion",
+            lambda messages: _FakeMsg(f"答案。[D{did}:C0]"),
+        )
+
+        runner.run_evaluation(sync_db, run_id, uid, did)
+        completed = sync_db.get(EvalRun, run_id)
+        assert captured["pipeline"].id == "dense"
+        assert completed.pipeline_fingerprint == spec.fingerprint
+        assert completed.citation_precision == 1.0
+        assert completed.citation_recall == 1.0
+        assert completed.unsupported_claim_rate == 0.0
 
     def test_miss_gives_zero_hit(self, sync_db, monkeypatch, patch_rag):
         # 相关块是 [2]，但检索只返回 [0] → 未命中
@@ -145,6 +390,39 @@ class TestRunEvaluation:
         run = sync_db.get(EvalRun, run_id)
         assert run.status == RunStatus.FAILED
         assert "Qdrant down" in run.error_message
+
+    def test_retrieval_only_dataset_does_not_fabricate_generation_scores(
+        self,
+        sync_db,
+        monkeypatch,
+        patch_rag,
+    ):
+        run_id, uid, did = _seed(sync_db, [[0]])
+        run = sync_db.get(EvalRun, run_id)
+        dataset = sync_db.get(EvalDataset, run.dataset_id)
+        dataset.task_type = "retrieval"
+        sync_db.commit()
+        monkeypatch.setattr(
+            runner,
+            "chat_completion",
+            lambda messages: (_ for _ in ()).throw(
+                AssertionError("retrieval benchmark must not call generation")
+            ),
+        )
+
+        result = runner.run_evaluation(sync_db, run_id, uid, did)
+
+        assert result["status"] == "completed"
+        completed = sync_db.get(EvalRun, run_id)
+        assert completed.hit_rate == 1.0
+        assert completed.map_score == 1.0
+        assert completed.faithfulness is None
+        assert completed.answer_relevancy is None
+        detail = sync_db.query(EvalResult).filter_by(run_id=run_id).one()
+        assert detail.generated_answer == ""
+        assert detail.citation_precision is None
+        report = json.loads(detail.citation_report)
+        assert report["contract"] == "not_evaluated"
 
     def test_duplicate_delivery_does_not_duplicate_results(self, sync_db, patch_rag):
         run_id, uid, did = _seed(sync_db, [[0], [0]])

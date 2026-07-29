@@ -4,6 +4,9 @@
 任何一步出错都把文档标记为 FAILED 并记录原因，绝不静默吞错。
 """
 
+import hashlib
+import json
+
 from app.celery_app import celery_app
 from app.config import settings
 from app.database import SyncSessionLocal
@@ -14,7 +17,10 @@ from app.models.document import Document, DocumentChunk, DocumentStatus
 from app.models.user import User  # noqa: F401
 from app.services.embedding_service import embed_texts
 from app.services.vector_store import upsert_chunks
-from app.utils.file_parser import extract_text, split_text
+from app.utils.file_parser import (
+    extract_text_with_locations,
+    split_text_with_locations,
+)
 
 
 @celery_app.task(name="process_document")
@@ -29,27 +35,38 @@ def process_document(document_id: int) -> dict:
         doc.status = DocumentStatus.PROCESSING
         db.commit()
 
-        # 1. 提取文本
-        text = extract_text(doc.file_path)
-        if not text.strip():
+        # 1. Extract normalized text plus coordinates. New chunks retain their
+        # exact source span; legacy chunks without coordinates remain readable.
+        parsed = extract_text_with_locations(doc.file_path)
+        if not parsed.text.strip():
             raise ValueError("文档为空或无法提取文本")
 
-        # 2. 分块
-        chunks = split_text(
-            text,
+        # 2. Split without losing page/paragraph/character provenance.
+        located_chunks = split_text_with_locations(
+            parsed,
             chunk_size=settings.chunk_size,
             chunk_overlap=settings.chunk_overlap,
         )
-        if not chunks:
+        if not located_chunks:
             raise ValueError("分块结果为空")
+        chunks = [chunk.content for chunk in located_chunks]
 
         # 3. 存分块到 PG
         db.add_all(
             [
                 DocumentChunk(
-                    document_id=doc.id, chunk_index=idx, content=content
+                    document_id=doc.id,
+                    chunk_index=idx,
+                    content=chunk.content,
+                    page_start=chunk.page_start,
+                    page_end=chunk.page_end,
+                    paragraph_start=chunk.paragraph_start,
+                    paragraph_end=chunk.paragraph_end,
+                    char_start=chunk.char_start,
+                    char_end=chunk.char_end,
+                    locator_version=chunk.locator_version,
                 )
-                for idx, content in enumerate(chunks)
+                for idx, chunk in enumerate(located_chunks)
             ]
         )
 
@@ -65,6 +82,13 @@ def process_document(document_id: int) -> dict:
         # 5. 标记完成
         doc.status = DocumentStatus.COMPLETED
         doc.chunk_count = len(chunks)
+        doc.content_fingerprint = hashlib.sha256(
+            json.dumps(
+                chunks,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
         db.commit()
         return {"status": "ok", "chunks": len(chunks)}
 

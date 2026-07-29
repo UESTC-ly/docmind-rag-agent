@@ -26,8 +26,16 @@ test.describe("核心用户流程", () => {
     await app.ask("DocMind 如何回答文档问题？");
 
     await expect(app.chatStream.getByText("DocMind 如何回答文档问题？")).toBeVisible();
-    await expect(app.chatStream.getByText("DocMind 会结合文档证据回答问题。")).toBeVisible();
-    await expect(app.chatStream.getByText("文档 5 · 片段 2 · 0.927")).toBeVisible();
+    await expect(
+      app.chatStream.locator(".msg__body", {
+        hasText: "DocMind 会结合文档证据回答问题。",
+      })
+    ).toBeVisible();
+    await expect(app.chatStream.getByText("[D5:C2] · 文档 5 · 片段 2 · 0.927")).toBeVisible();
+    await expect(app.chatStream.getByRole("alert")).toContainText("引用结构校验未通过");
+    await app.chatStream.getByRole("button", { name: /D5:C2.*片段 2/ }).click();
+    await expect(app.chatStream.locator(".source__highlight")).toHaveText("公开数据集中的可核验原文。");
+    await expect(app.chatStream.getByRole("button", { name: /D5:C2.*第 3 页.*第 4 段/ })).toBeVisible();
     expect(api.requests.find((request) => request.path === "/chat/stream")?.body.question)
       .toBe("DocMind 如何回答文档问题？");
   });
@@ -38,7 +46,7 @@ test.describe("核心用户流程", () => {
 
     await app.goto();
     await app.login();
-    await app.openView("文档");
+    await app.openView("知识库");
     await expect(page.getByText("还没有文档，上传一个开始。")).toBeVisible();
 
     await app.uploadMarkdown();
@@ -49,7 +57,7 @@ test.describe("核心用户流程", () => {
     await expect(page.locator("#toast")).toContainText("正在后台解析");
   });
 
-  test("Skills 执行后展示 artifact 并触发浏览器下载", async ({ page }) => {
+  test("Agent 工作台展示计划、质量策略和可验证产物", async ({ page }) => {
     const api = await installApiMocks(page, {
       agentResult: {
         conversation_id: 24,
@@ -57,11 +65,63 @@ test.describe("核心用户流程", () => {
         thread_id: "run-weekly",
         status: "completed",
         answer: "周报已生成。",
-        trace: [{ step: 0, skill: "search_knowledge_base", args: { query: "本周进展" } }],
+        plan: {
+          contract: "agent_plan_v1",
+          objective: "生成经过验证的项目周报",
+          status: "completed",
+          steps: [{
+            id: "step-1",
+            title: "生成周报",
+            skill: "generate_weekly_report",
+            success_criteria: "周报通过质量门",
+            status: "completed",
+          }],
+        },
+        trace: [{
+          step: 0,
+          plan_step_id: "step-1",
+          skill: "search_knowledge_base",
+          args: { query: "PRIVATE_QUERY" },
+          grounding: {
+            quality_interventions: [{
+              contract: "quality_adaptive_retrieval_v1",
+              action: "switch_pipeline",
+              reason: "weak_retrieval",
+              status: "applied",
+              attempt: 2,
+              max_interventions: 4,
+              query: "PRIVATE_QUERY",
+              source_text: "PRIVATE_SOURCE_TEXT",
+              model_output: "PRIVATE_MODEL_OUTPUT",
+              quality_before: {
+                status: "weak_retrieval",
+                hit_count: 0,
+              },
+              quality_after: {
+                status: "sufficient",
+                hit_count: 3,
+              },
+            }],
+          },
+        }],
         artifacts: [
           {
             type: "weekly_report",
             content: "# 本周进展\n\n- 完成混合检索联调",
+            verification: {
+              contract: "artifact_quality_v1",
+              passed: true,
+              score: 1,
+              claim_count: 1,
+              supported_claim_count: 1,
+              citation_recall: 1,
+              semantic_entailment_checked: false,
+              checks: [{
+                id: "citation_presence",
+                passed: true,
+                detail: "1/1 条内容有有效引用",
+              }],
+            },
             download: {
               filename: "docmind-weekly.md",
               mime_type: "text/markdown",
@@ -76,14 +136,26 @@ test.describe("核心用户流程", () => {
 
     await app.goto();
     await app.login();
-    await app.openView("技能");
-    await expect(page.locator(".skill-card", { hasText: "search_knowledge_base" })).toBeVisible();
-    await page.getByRole("button", { name: "选择并填入模板" }).click();
+    await app.openView("Agent 工作台");
+    await page.getByText("可用能力", { exact: true }).click();
+    const searchSkill = page.locator(".skill-card", {
+      hasText: "search_knowledge_base",
+    });
+    await expect(searchSkill).toBeVisible();
+    await searchSkill.getByRole("button", { name: "选择并填入模板" }).click();
     await expect(page.locator("#selected-skill-name")).toContainText("search_knowledge_base");
 
     await page.locator("#skill-agent-submit").click();
     await expect(page.locator(".agent-answer")).toContainText("周报已生成");
+    await expect(page.locator(".agent-plan")).toContainText("生成经过验证的项目周报");
+    await expect(page.locator(".trace__quality")).toContainText("切换已评测管线");
+    await expect(page.locator(".trace__quality")).toContainText("弱检索");
+    await expect(page.locator(".trace__quality")).toContainText("结果：sufficient · 3 条证据");
+    await expect(page.locator("body")).not.toContainText("PRIVATE_QUERY");
+    await expect(page.locator("body")).not.toContainText("PRIVATE_SOURCE_TEXT");
+    await expect(page.locator("body")).not.toContainText("PRIVATE_MODEL_OUTPUT");
     await expect(page.locator(".artifact")).toContainText("weekly_report");
+    await expect(page.locator(".artifact-verification")).toContainText("产物质量门通过");
     await expect(page.locator(".artifact-download__name")).toHaveText("docmind-weekly.md");
 
     const downloadEvent = page.waitForEvent("download");
@@ -133,7 +205,7 @@ test.describe("核心用户流程", () => {
 
     await app.goto();
     await app.login();
-    await app.openView("技能");
+    await app.openView("Agent 工作台");
     await page.locator("#skill-agent-input").fill("修改仓库说明");
     await page.locator("#skill-agent-submit").click();
 
@@ -179,7 +251,7 @@ test.describe("核心用户流程", () => {
     });
     await page.reload();
     await expect(app.app).toBeVisible();
-    await app.openView("技能");
+    await app.openView("Agent 工作台");
 
     await expect(page.locator(".approval-card")).toContainText("browser_task");
     expect(api.requests.some((request) => request.path === "/agent/runs/run-after-reload"))
@@ -196,7 +268,7 @@ test.describe("核心用户流程", () => {
 
     await app.goto();
     await app.login();
-    await app.openView("技能");
+    await app.openView("Agent 工作台");
     await page.locator("#skill-agent-input").fill("执行并发任务");
     await page.locator("#skill-agent-submit").click();
 
@@ -205,5 +277,50 @@ test.describe("核心用户流程", () => {
       localStorage.getItem("docmind_pending_agent_run")
     );
     expect(pendingRunId).toBeTruthy();
+  });
+
+  test("模型服务不可用时显示终止失败而非伪造完成", async ({ page }) => {
+    await installApiMocks(page, {
+      agentResult: {
+        conversation_id: 24,
+        run_id: "run-provider-failed",
+        thread_id: "run-provider-failed",
+        status: "failed",
+        answer: "模型服务暂不可用，本次任务未完成。请稍后重试。",
+        plan: {
+          contract: "agent_plan_v1",
+          objective: "生成逐结论有依据的报告",
+          status: "failed",
+          steps: [{
+            id: "step-1",
+            title: "调用模型规划报告",
+            status: "failed",
+          }],
+        },
+        trace: [{
+          step: 0,
+          skill: "model_provider",
+          ok: false,
+          graph_node: "supervisor",
+          failure_code: "provider_unavailable",
+        }],
+        artifacts: [],
+      },
+    });
+    const app = new DocMindPage(page);
+
+    await app.goto();
+    await app.login();
+    await app.openView("Agent 工作台");
+    await page.locator("#skill-agent-input").fill("生成研究报告");
+    await page.locator("#skill-agent-submit").click();
+
+    await expect(page.locator(".agent-answer")).toContainText("模型服务暂不可用");
+    await expect(page.locator(".agent-plan")).toContainText("失败");
+    await expect(page.locator(".trace")).toContainText("model_provider");
+    const pendingRunId = await page.evaluate(() =>
+      localStorage.getItem("docmind_pending_agent_run")
+    );
+    expect(pendingRunId).toBeNull();
   });
 });

@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     openai_api_key: str
     openai_base_url: str | None = None  # 兼容中转，None 用官方地址
     chat_model: str = "gpt-4o-mini"
+    openai_timeout_seconds: int = 60
+    openai_max_retries: int = 1
 
     # Embedding（可用与对话不同的独立服务）
     # 留空则复用上面的对话 API（key / base_url）
@@ -39,6 +41,9 @@ class Settings(BaseSettings):
     # 桌面生产包使用 Qdrant 本地持久化；设置后不连接外部 Qdrant 服务。
     qdrant_path: str | None = None
     qdrant_collection: str = "docmind_chunks"
+    # Qdrant HTTP 默认限制请求体；公开评测语料必须分批写入，避免单次
+    # materialize 数千 passage 时超过服务端 payload 上限。
+    qdrant_upsert_batch_size: int = 128
 
     # 文档处理
     upload_dir: str = "./uploads"
@@ -65,6 +70,21 @@ class Settings(BaseSettings):
     reranker_dense_weight: float = 0.25
     reranker_keyword_weight: float = 0.10
     reranker_lexical_weight: float = 0.20
+    # 逗号分隔的受信任 Python 模块；每个模块必须暴露 register(registry)。
+    # 只允许部署方显式配置，不扫描用户可写目录。
+    rag_plugin_modules: str = ""
+    # Claim-level evidence checking. ``llm`` runs the versioned semantic judge;
+    # ``off`` retains only structural citation diagnostics for constrained
+    # deployments and must not be used for evidence-closed release claims.
+    grounding_verification_mode: str = "llm"
+    grounding_fail_closed: bool = True
+    # Bounded Agentic RAG recovery. The policy may rewrite a query, widen
+    # retrieval, switch only to an evaluated allowlisted pipeline, or retry
+    # after unsupported claims. It never loops beyond this budget.
+    quality_max_interventions: int = 4
+    quality_min_evidence_hits: int = 1
+    quality_min_local_rerank_score: float = 0.15
+    quality_max_retrieval_top_k: int = 20
 
     # 后台任务：Web 默认 Celery；桌面 bundle 使用进程内受控线程执行器。
     task_execution_mode: str = "celery"
@@ -75,6 +95,9 @@ class Settings(BaseSettings):
 
     # Agent
     agent_max_steps: int = 6  # Agent 主循环最大步数，防死循环
+    # explicit：复杂任务先生成持久化计划；off：保留低延迟自适应工具循环。
+    # 用户锁定 Skill 时始终生成确定性单步计划，不额外消耗模型调用。
+    agent_planning_mode: str = "explicit"
     # LangGraph SQLite checkpointer。Web 可改为独立持久化路径；桌面 sidecar 会把
     # 它覆盖到用户 data_dir，确保重启应用后仍可恢复等待审批的 Agent。
     agent_checkpoint_path: str = "./data/agent-checkpoints.sqlite3"
@@ -160,6 +183,57 @@ class Settings(BaseSettings):
             raise ValueError("RERANKER_MODE must be off, local, or http")
         return normalized
 
+    @field_validator("grounding_verification_mode")
+    @classmethod
+    def validate_grounding_verification_mode(cls, value: str) -> str:
+        normalized = value.lower().strip()
+        if normalized not in {"llm", "off"}:
+            raise ValueError("GROUNDING_VERIFICATION_MODE must be llm or off")
+        return normalized
+
+    @field_validator("quality_max_interventions")
+    @classmethod
+    def validate_quality_max_interventions(cls, value: int) -> int:
+        if not 0 <= value <= 8:
+            raise ValueError("QUALITY_MAX_INTERVENTIONS must be between 0 and 8")
+        return value
+
+    @field_validator("quality_min_evidence_hits")
+    @classmethod
+    def validate_quality_min_evidence_hits(cls, value: int) -> int:
+        if not 1 <= value <= 20:
+            raise ValueError(
+                "QUALITY_MIN_EVIDENCE_HITS must be between 1 and 20"
+            )
+        return value
+
+    @field_validator("quality_min_local_rerank_score")
+    @classmethod
+    def validate_quality_min_local_rerank_score(cls, value: float) -> float:
+        if not 0 <= value <= 1:
+            raise ValueError(
+                "QUALITY_MIN_LOCAL_RERANK_SCORE must be between 0 and 1"
+            )
+        return value
+
+    @field_validator("quality_max_retrieval_top_k")
+    @classmethod
+    def validate_quality_max_retrieval_top_k(cls, value: int) -> int:
+        if not 1 <= value <= 100:
+            raise ValueError(
+                "QUALITY_MAX_RETRIEVAL_TOP_K must be between 1 and 100"
+            )
+        return value
+
+    @field_validator("qdrant_upsert_batch_size")
+    @classmethod
+    def validate_qdrant_upsert_batch_size(cls, value: int) -> int:
+        if not 1 <= value <= 1000:
+            raise ValueError(
+                "QDRANT_UPSERT_BATCH_SIZE must be between 1 and 1000"
+            )
+        return value
+
     @field_validator("task_execution_mode")
     @classmethod
     def validate_task_execution_mode(cls, value: str) -> str:
@@ -176,6 +250,14 @@ class Settings(BaseSettings):
             raise ValueError(
                 "AGENT_RUN_LOCK_BACKEND must be auto, redis, sqlite, or off"
             )
+        return normalized
+
+    @field_validator("agent_planning_mode")
+    @classmethod
+    def validate_agent_planning_mode(cls, value: str) -> str:
+        normalized = value.lower().strip()
+        if normalized not in {"explicit", "off"}:
+            raise ValueError("AGENT_PLANNING_MODE must be explicit or off")
         return normalized
 
     @model_validator(mode="after")
@@ -234,6 +316,14 @@ class Settings(BaseSettings):
             for item in self.skill_shell_allowed_commands.split(",")
             if item.strip()
         }
+
+    @property
+    def rag_plugin_module_list(self) -> list[str]:
+        return [
+            item.strip()
+            for item in self.rag_plugin_modules.split(",")
+            if item.strip()
+        ]
 
     @property
     def skill_package_script_interpreter_set(self) -> set[str]:

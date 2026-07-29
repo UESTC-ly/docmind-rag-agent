@@ -19,6 +19,9 @@ from sqlalchemy.orm import sessionmaker
 # Unit/API tests use explicit in-process fakes and do not depend on a live Redis
 # daemon. Dedicated run-lock tests exercise both Redis and SQLite contracts.
 os.environ.setdefault("AGENT_RUN_LOCK_BACKEND", "off")
+# Existing unit tests script the supervisor model turns directly.  Dedicated
+# planning tests opt into explicit mode and verify the extra planner round.
+os.environ.setdefault("AGENT_PLANNING_MODE", "off")
 
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402

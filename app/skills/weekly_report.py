@@ -3,6 +3,11 @@
 import re
 from datetime import date
 
+from app.services.artifact_verification import (
+    sanitize_cited_markdown,
+    verify_cited_markdown,
+)
+from app.services.evidence import attach_citation_ids
 from app.services.llm_service import chat_completion
 from app.skills._helpers import fetch_retrieved_material
 from app.skills.base import BaseSkill, SkillContext
@@ -14,6 +19,8 @@ _FALLBACK_PROMPT = """你是专业项目周报撰写助手。请根据下面材�
 - 输出 Markdown，不要使用 ``` 包裹。
 - 结构必须包含：本周概览、本周完成、关键进展、问题与风险、下周计划。
 - 内容必须基于材料，不要编造材料之外的事实；材料不足时明确写“材料未提及”。
+- 每个事实性句子或要点末尾必须复制材料中的真实证据编号，如 [D12:C3]。
+- 不得创造证据编号；没有证据支持的内容写“材料未提及”。
 - 语气适合给导师/主管/团队同步。
 
 周报主题：{topic}
@@ -22,11 +29,31 @@ _FALLBACK_PROMPT = """你是专业项目周报撰写助手。请根据下面材�
 材料：
 {content}"""
 
+_REQUIRED_HEADINGS = (
+    "本周概览",
+    "本周完成",
+    "关键进展",
+    "问题与风险",
+    "下周计划",
+)
+
 
 def _safe_filename(name: str, suffix: str) -> str:
     base = re.sub(r"[^\w\u4e00-\u9fff-]+", "_", name.strip(), flags=re.UNICODE)
     base = base.strip("_")[:60] or "docmind"
     return f"{base}{suffix}"
+
+
+def _ensure_required_headings(markdown: str) -> str:
+    output = markdown.strip()
+    for heading in _REQUIRED_HEADINGS:
+        if re.search(
+            rf"(?mi)^#{{1,6}}\s+.*{re.escape(heading)}.*$",
+            output,
+        ):
+            continue
+        output += f"\n\n## {heading}\n\n材料未提及。"
+    return output.strip()
 
 
 @register_skill
@@ -90,15 +117,52 @@ class WeeklyReportSkill(BaseSkill):
         ).removesuffix("```").strip()
         if not markdown:
             markdown = f"# {topic}\n\n材料未提及可写入周报的有效信息。"
+        markdown = _ensure_required_headings(markdown)
+
+        hits = attach_citation_ids(
+            [
+                {
+                    "document_id": source["document_id"],
+                    "chunk_index": source.get("chunk_index", 0),
+                    "content": source.get("content", ""),
+                    "score": source.get("score"),
+                }
+                for source in sources
+            ]
+        )
+        verification = verify_cited_markdown(
+            markdown,
+            hits,
+            artifact_type="weekly_report",
+            required_headings=_REQUIRED_HEADINGS,
+        )
+        fail_safe_applied = not verification["passed"]
+        if fail_safe_applied:
+            markdown = _ensure_required_headings(
+                sanitize_cited_markdown(markdown, hits)
+            )
+            markdown += "\n\n> 无有效引用的事实性内容已由质量门自动移除。"
+            verification = verify_cited_markdown(
+                markdown,
+                hits,
+                artifact_type="weekly_report",
+                required_headings=_REQUIRED_HEADINGS,
+            )
+        verification["fail_safe_applied"] = fail_safe_applied
 
         filename = _safe_filename(f"{topic}_{week}_周报", ".md")
+        public_sources = [
+            {key: value for key, value in source.items() if key != "content"}
+            for source in sources
+        ]
         return {
             "type": "weekly_report",
             "artifact_kind": "file",
             "topic": topic,
             "week": week,
             "document_ids": used_doc_ids,
-            "grounding": {"mode": "hybrid_rag", "sources": sources},
+            "grounding": {"mode": "hybrid_rag", "sources": public_sources},
+            "verification": verification,
             "content": markdown,
             "download": {
                 "filename": filename,

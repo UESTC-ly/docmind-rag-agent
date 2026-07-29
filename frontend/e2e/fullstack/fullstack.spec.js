@@ -49,6 +49,6 @@ test("真实 FastAPI 支持健康检查、注册鉴权和登录态重载", async
   await expect(app.authScreen).toBeHidden();
   await expect(page.locator("#user-email")).toHaveText(email);
 
-  await app.openView("文档");
+  await app.openView("知识库");
   await expect(page.getByText("还没有文档，上传一个开始。")).toBeVisible();
 });

@@ -1,12 +1,16 @@
 """检索指标纯函数单元测试。
 
-覆盖 hit@k / MRR / recall@k / precision@k 的正常路径与边界：
+覆盖 hit@k / MRR / recall@k / precision@k / AP@k / nDCG@k 的正常路径与边界：
 命中、未命中、空 relevant、空 retrieved、多命中排序。
 """
 
+import pytest
+
 from app.services.evaluation.retrieval_metrics import (
+    average_precision_at_k,
     compute_retrieval_metrics,
     hit_at_k,
+    ndcg_at_k,
     precision_at_k,
     reciprocal_rank,
     recall_at_k,
@@ -71,8 +75,47 @@ class TestPrecisionAtK:
         assert precision_at_k({1}, []) == 0.0
 
 
+class TestAveragePrecisionAtK:
+    def test_perfect_ranking_gives_one(self):
+        assert average_precision_at_k({1, 2}, [1, 2, 9]) == 1.0
+
+    def test_late_hits_are_discounted_and_missing_hits_count_zero(self):
+        # Relevant 1 is found at rank 2; relevant 2 is not retrieved.
+        assert average_precision_at_k({1, 2}, [9, 1, 8]) == pytest.approx(0.25)
+
+    def test_empty_relevance_returns_zero(self):
+        assert average_precision_at_k(set(), [1, 2]) == 0.0
+
+
+class TestNdcgAtK:
+    def test_perfect_ranking_gives_one(self):
+        assert ndcg_at_k({1, 2}, [1, 2, 9]) == 1.0
+
+    def test_relevant_item_ranked_later_reduces_score(self):
+        high = ndcg_at_k({1}, [1, 9, 8])
+        low = ndcg_at_k({1}, [9, 8, 1])
+        assert high == 1.0
+        assert 0.0 < low < high
+
+    def test_empty_input_returns_zero(self):
+        assert ndcg_at_k({1}, []) == 0.0
+        assert ndcg_at_k(set(), [1]) == 0.0
+
+    def test_graded_qrels_reward_putting_highest_grade_first(self):
+        qrels = {1: 2, 2: 1}
+        assert ndcg_at_k(qrels, [1, 2]) == 1.0
+        assert ndcg_at_k(qrels, [2, 1]) < 1.0
+
+
+def test_duplicate_retrieval_does_not_inflate_metrics():
+    metrics = compute_retrieval_metrics({1, 2}, [1, 1, 9])
+    assert metrics["recall_at_k"] == 0.5
+    assert metrics["precision_at_k"] == 0.5
+    assert metrics["average_precision_at_k"] == 0.5
+
+
 class TestComputeRetrievalMetrics:
-    def test_returns_all_four_metrics(self):
+    def test_returns_all_six_metrics(self):
         # Arrange
         relevant = {1, 2}
         retrieved = [1, 5, 2, 9]
@@ -83,6 +126,8 @@ class TestComputeRetrievalMetrics:
         assert m["reciprocal_rank"] == 1.0  # 位置 1 命中
         assert m["recall_at_k"] == 1.0      # 2/2 命中
         assert m["precision_at_k"] == 0.5   # 2/4 命中
+        assert m["average_precision_at_k"] == pytest.approx(5 / 6)
+        assert m["ndcg_at_k"] == pytest.approx(0.9197207891)
 
     def test_complete_miss_all_zero(self):
         m = compute_retrieval_metrics({100}, [1, 2, 3])
@@ -91,4 +136,6 @@ class TestComputeRetrievalMetrics:
             "reciprocal_rank": 0.0,
             "recall_at_k": 0.0,
             "precision_at_k": 0.0,
+            "average_precision_at_k": 0.0,
+            "ndcg_at_k": 0.0,
         }

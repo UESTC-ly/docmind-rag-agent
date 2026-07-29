@@ -62,3 +62,9 @@ def test_checkpoint_retention_requires_incomplete_runs_to_live_longer():
             agent_checkpoint_completed_retention_days=30,
             agent_checkpoint_incomplete_retention_days=7,
         )
+
+
+@pytest.mark.parametrize("value", [0, 1001])
+def test_qdrant_upsert_batch_size_is_bounded(value):
+    with pytest.raises(ValidationError):
+        _settings(qdrant_upsert_batch_size=value)

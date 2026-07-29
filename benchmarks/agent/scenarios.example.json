@@ -1,0 +1,68 @@
+{
+  "contract": "public_agent_scenarios_v2",
+  "provenance": {
+    "source_name": "SciFact",
+    "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+    "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+    "license_name": "CC BY-SA 4.0",
+    "split": "test",
+    "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+    "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d",
+    "transform_spec": {
+      "contract": "beir_standard_v1",
+      "corpus_items": 5183,
+      "sample_count": 100,
+      "note": "公开 SciFact 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "document_selector": {
+    "source_name": "SciFact",
+    "split": "test",
+    "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+    "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d"
+  },
+  "cases": [
+    {
+      "id": "scifact-claim-5-verified-report",
+      "source_sample_id": "scifact:test:query-5",
+      "request": {
+        "message": "基于当前 SciFact 公开语料，围绕异常 PrP 阳性率生成逐结论有依据的研究报告。自主选择经过公开回归评测的 RAG 管线，不足时明确拒绝。"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": ["verified_research_report"],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "max_interventions": 0
+      }
+    },
+    {
+      "id": "scifact-claim-49-verified-report",
+      "source_sample_id": "scifact:test:query-49",
+      "request": {
+        "message": "基于当前 SciFact 公开语料，核验 ADAR1 与 Dicer、pre-miRNA 切割之间的关系，并生成逐结论有依据的研究报告。自主选择经过公开回归评测的 RAG 管线，不足时明确拒绝。"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": ["verified_research_report"],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "max_interventions": 0
+      }
+    }
+  ]
+}

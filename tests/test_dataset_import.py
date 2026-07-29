@@ -1,12 +1,15 @@
 """数据集导入器的纯解析逻辑测试。
 
-只测 parse_*_rows（无 DB / embedding），用合成行验证：
+只测 parse_*_rows（无 DB / embedding），用公开数据集格式的最小夹具验证：
 语料池构建、relevant_chunk_ids 映射、去重、过滤无效样本、limit 截断。
 """
 
 from app.services.evaluation.dataset_import import (
+    corpus_fingerprint,
+    parse_beir_rows,
     parse_cmrc_rows,
     parse_ms_marco_rows,
+    source_snapshot_fingerprint,
 )
 
 
@@ -105,3 +108,52 @@ class TestParseCmrc:
         rows = [_cmrc_row(f"q{i}", f"ctx{i}", ["a"]) for i in range(5)]
         _, pending = parse_cmrc_rows(rows, limit=3)
         assert len(pending) == 3
+
+
+class TestParseBeir:
+    def test_preserves_full_corpus_and_graded_qrels(self):
+        corpus, pending = parse_beir_rows(
+            [
+                {"_id": "d1", "title": "Doc 1", "text": "alpha"},
+                {"_id": "d2", "title": "", "text": "beta"},
+                {"_id": "d3", "title": "Distractor", "text": "gamma"},
+            ],
+            [
+                {"_id": "q1", "text": "alpha question"},
+                {"_id": "q2", "text": "beta question"},
+            ],
+            [
+                {"query-id": "q1", "corpus-id": "d1", "score": "2"},
+                {"query-id": "q1", "corpus-id": "d2", "score": "1"},
+                {"query-id": "q2", "corpus-id": "missing", "score": "1"},
+            ],
+            limit=10,
+        )
+
+        assert corpus == ["Doc 1\nalpha", "beta", "Distractor\ngamma"]
+        assert len(pending) == 1
+        assert pending[0]["external_id"] == "q1"
+        assert pending[0]["relevant"] == [0, 1]
+        assert pending[0]["chunk_qrels"] == {"0": 2, "1": 1}
+        assert pending[0]["metadata"]["public_qrels"] == {"d1": 2, "d2": 1}
+
+    def test_corpus_fingerprint_is_order_and_boundary_sensitive(self):
+        first = corpus_fingerprint(["ab", "c"])
+        assert first == corpus_fingerprint(["ab", "c"])
+        assert first != corpus_fingerprint(["a", "bc"])
+        assert first != corpus_fingerprint(["c", "ab"])
+
+    def test_raw_source_snapshot_fingerprint_is_order_sensitive(
+        self,
+        tmp_path,
+    ):
+        first = tmp_path / "corpus.jsonl"
+        second = tmp_path / "queries.jsonl"
+        first.write_text("corpus", encoding="utf-8")
+        second.write_text("queries", encoding="utf-8")
+
+        fingerprint = source_snapshot_fingerprint([first, second])
+
+        assert len(fingerprint) == 64
+        assert fingerprint == source_snapshot_fingerprint([first, second])
+        assert fingerprint != source_snapshot_fingerprint([second, first])

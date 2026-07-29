@@ -46,6 +46,7 @@ export async function installApiMocks(page, options = {}) {
           {
             document_id: 5,
             chunk_index: 2,
+            citation_id: "D5:C2",
             score: 0.927,
             content: "DocMind 使用混合检索与可插拔技能回答文档问题。",
           },
@@ -54,6 +55,29 @@ export async function installApiMocks(page, options = {}) {
       "",
       "event: token",
       `data: ${JSON.stringify({ text: "DocMind 会结合文档证据回答问题。" })}`,
+      "",
+      "event: verification",
+      `data: ${JSON.stringify({
+        contract: "citation_presence_v1",
+        semantic_entailment_checked: false,
+        claim_count: 1,
+        supported_claim_count: 0,
+        unsupported_claim_count: 1,
+        citation_count: 0,
+        valid_citation_count: 0,
+        citation_precision: 1,
+        citation_recall: 0,
+        unsupported_claim_rate: 1,
+        passed: false,
+        claims: [{
+          text: "DocMind 会结合文档证据回答问题。",
+          citations: [],
+          valid_citations: [],
+          invalid_citations: [],
+          supported: false,
+          lexical_overlap: 0,
+        }],
+      })}`,
       "",
       "",
     ].join("\n");
@@ -179,6 +203,102 @@ export async function installApiMocks(page, options = {}) {
 
   await page.route("**/eval/datasets", (route) =>
     fulfillJson(route, evaluation.datasets || [])
+  );
+  await page.route("**/eval/pipelines", (route) =>
+    fulfillJson(route, evaluation.pipelines || [
+      {
+        id: "configured",
+        label: "当前配置",
+        description: "当前配置",
+        retriever: "hybrid",
+        fusion: "rrf",
+        reranker: "local",
+        context_builder: "evidence",
+        top_k: 5,
+        fingerprint: "configured-fingerprint",
+        spec: {},
+      },
+      {
+        id: "dense",
+        label: "Dense 基线",
+        description: "Dense",
+        retriever: "dense",
+        fusion: "dense",
+        reranker: "off",
+        context_builder: "evidence",
+        top_k: 5,
+        fingerprint: "dense-fingerprint",
+        spec: {},
+      },
+    ])
+  );
+  await page.route("**/eval/experiments", async (route) => {
+    const body = route.request().postDataJSON();
+    state.requests.push({ path: "/eval/experiments", body });
+    await fulfillJson(route, evaluation.createdRuns || []);
+  });
+  await page.route(/\/eval\/runs\/\d+\/metrics$/, (route) =>
+    fulfillJson(route, evaluation.metricRows || [])
+  );
+  await page.route(/\/eval\/runs\/\d+\/badcases(?:\?.*)?$/, (route) => {
+    const runId = Number(new URL(route.request().url()).pathname.split("/").at(-2));
+    return fulfillJson(
+      route,
+      runId === evaluation.createdRerun?.id
+        ? evaluation.rerunBadcases || []
+        : evaluation.badcases || [],
+    );
+  });
+  await page.route(/\/eval\/runs\/\d+\/badcase-diff$/, (route) =>
+    fulfillJson(route, evaluation.badcaseDiff || {
+      baseline_run_id: 0,
+      candidate_run_id: 0,
+      newly_introduced: [],
+      fixed: [],
+      persistent: [],
+      unchanged_passed_count: 0,
+    })
+  );
+  await page.route(/\/eval\/runs\/\d+\/regression$/, (route) =>
+    fulfillJson(route, evaluation.regressions || [])
+  );
+  await page.route(/\/eval\/runs\/\d+\/rerun$/, async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const body = route.request().postDataJSON();
+    state.requests.push({ path, method: route.request().method(), body });
+    await fulfillJson(route, evaluation.createdRerun || {
+      id: 91,
+      dataset_id: 31,
+      status: "pending",
+      evaluation_scope: "subset",
+      sample_filter: JSON.stringify(body.sample_ids),
+      source_run_id: Number(path.split("/").at(-2)),
+      comparison_role: "diagnostic",
+      created_at: timestamp,
+      completed_at: null,
+    }, 202);
+  });
+  await page.route(/\/documents\/\d+\/chunks\/\d+$/, (route) =>
+    fulfillJson(route, evaluation.sourceChunk || {
+      document_id: 5,
+      document_name: "public-source.md",
+      chunk_index: 2,
+      citation_id: "D5:C2",
+      content: "公开数据集中的可核验原文。",
+      page_start: 3,
+      page_end: 3,
+      paragraph_start: 4,
+      paragraph_end: 4,
+      char_start: 42,
+      char_end: 55,
+      locator_version: "extracted_text_v1",
+      source_excerpt: "前置上下文。公开数据集中的可核验原文。后置上下文。",
+      highlight_start: 6,
+      highlight_end: 19,
+      source_version: "2026-07",
+      source_status: "current",
+      jump_url: "/documents/5/chunks/2",
+    })
   );
   await page.route(/\/eval\/runs(?:\/\d+)?$/, async (route) => {
     const request = route.request();

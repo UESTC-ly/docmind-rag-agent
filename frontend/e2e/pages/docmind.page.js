@@ -51,6 +51,9 @@ export class DocMindPage {
   }
 
   async ask(question) {
+    if (!(await this.composer.isVisible())) {
+      await this.openView("证据问答");
+    }
     await this.composer.fill(question);
     const response = this.page.waitForResponse(
       (candidate) => candidate.url().endsWith("/chat/stream") && candidate.status() === 200

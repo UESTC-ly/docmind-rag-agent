@@ -1,15 +1,22 @@
-"""LLM-as-judge：评估 RAG 生成答案的质量。
+"""Versioned LLM judges for generation quality.
 
-两个指标：
-  faithfulness     — 忠实度：答案里的每个陈述是否都能从检索片段中找到依据（0.0~1.0）
-  answer_relevancy — 答案相关性：答案是否真正回答了问题（0.0~1.0）
+An unavailable or malformed judge result is represented as ``score=None``.
+Infrastructure failures must never be converted into a fabricated quality
+score of zero, because that makes regression diagnosis impossible.
 """
 
-import json
+from __future__ import annotations
 
+import hashlib
+import json
+from dataclasses import asdict, dataclass
+from typing import Literal
+
+from app.config import settings
 from app.services.llm_service import chat_completion
 
-# ── Faithfulness（忠实度）────────────────────────────────────────────────────
+FAITHFULNESS_RUBRIC_VERSION = "faithfulness_v2"
+ANSWER_RELEVANCE_RUBRIC_VERSION = "answer_relevance_v2"
 
 FAITHFULNESS_PROMPT = """你是 RAG 质量评估专家。评估以下答案对检索到的文档片段的忠实程度。
 
@@ -21,16 +28,15 @@ FAITHFULNESS_PROMPT = """你是 RAG 质量评估专家。评估以下答案对�
 
 评估标准：
 - 答案中每个事实性陈述，是否都能在检索片段中找到依据？
+- 不能歪曲、扩大或缩小原文含义
 - 不能出现超出检索片段范围的编造内容
 - 忽略语气词、连接词等非事实内容
 
-请输出 JSON：
+请输出严格 JSON：
 {{
-  "score": 0到1之间的小数（1=完全忠实，0=全是幻觉）,
-  "reason": "一句话说明扣分原因，如没扣分写OK"
+  "score": 0到1之间的小数（1=完全忠实，0=完全歪曲或编造）,
+  "reason": "一句话说明依据"
 }}"""
-
-# ── Answer Relevancy（答案相关性）────────────────────────────────────────────
 
 RELEVANCY_PROMPT = """你是 RAG 质量评估专家。评估以下答案对用户问题的相关性。
 
@@ -42,46 +48,137 @@ RELEVANCY_PROMPT = """你是 RAG 质量评估专家。评估以下答案对用�
 
 评估标准：
 - 答案是否直接回答了问题？
-- 答案是否完整（没有遗漏关键信息）？
-- 答案是否简洁，没有大量无关内容？
+- 答案是否覆盖问题要求的关键点？
+- 答案是否避免大量无关内容？
 
-请输出 JSON：
+请输出严格 JSON：
 {{
-  "score": 0到1之间的小数（1=完美作答，0=完全跑题）,
-  "reason": "一句话说明扣分原因，如没扣分写OK"
+  "score": 0到1之间的小数（1=完整且直接，0=完全跑题）,
+  "reason": "一句话说明依据"
 }}"""
 
+JudgeStatus = Literal["completed", "unavailable", "invalid"]
 
-def _call_judge(prompt: str) -> float:
-    """调用 LLM 打分，解析 JSON，返回 score（失败返回 0.0）。"""
+
+@dataclass(frozen=True)
+class JudgeResult:
+    score: float | None
+    reason: str
+    status: JudgeStatus
+    model: str
+    rubric_version: str
+    input_fingerprint: str
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+def _strip_json_fence(content: str) -> str:
+    value = content.strip()
+    if not value.startswith("```"):
+        return value
+    lines = value.splitlines()
+    if len(lines) >= 3 and lines[-1].strip() == "```":
+        return "\n".join(lines[1:-1])
+    return value
+
+
+def _fingerprint(prompt: str, rubric_version: str) -> str:
+    payload = json.dumps(
+        {
+            "prompt": prompt,
+            "rubric_version": rubric_version,
+            "model": settings.chat_model,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _call_judge(prompt: str, rubric_version: str) -> JudgeResult:
+    fingerprint = _fingerprint(prompt, rubric_version)
     try:
         response = chat_completion(
             [{"role": "user", "content": prompt}],
-            temperature=0.0,  # 打分用 0 温度，结果更稳定
+            temperature=0.0,
         )
-        content = (response.content or "").strip()
+    except Exception as exc:
+        return JudgeResult(
+            score=None,
+            reason=f"{type(exc).__name__}: {str(exc)[:500]}",
+            status="unavailable",
+            model=settings.chat_model,
+            rubric_version=rubric_version,
+            input_fingerprint=fingerprint,
+        )
 
-        if content.startswith("```"):
-            lines = content.split("\n")
-            content = "\n".join(lines[1:-1]) if len(lines) > 2 else content
+    try:
+        data = json.loads(_strip_json_fence(response.content or ""))
+        if not isinstance(data, dict) or "score" not in data:
+            raise ValueError("judge response requires a score")
+        score = float(data["score"])
+        if not 0.0 <= score <= 1.0:
+            raise ValueError("judge score must be between 0 and 1")
+        reason = str(data.get("reason") or "未提供理由").strip()[:1000]
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        return JudgeResult(
+            score=None,
+            reason=f"{type(exc).__name__}: {str(exc)[:500]}",
+            status="invalid",
+            model=settings.chat_model,
+            rubric_version=rubric_version,
+            input_fingerprint=fingerprint,
+        )
+    return JudgeResult(
+        score=score,
+        reason=reason,
+        status="completed",
+        model=settings.chat_model,
+        rubric_version=rubric_version,
+        input_fingerprint=fingerprint,
+    )
 
-        data = json.loads(content)
-        score = float(data.get("score", 0.0))
-        return max(0.0, min(1.0, score))  # 保险 clamp 到 [0, 1]
-    except Exception:
-        return 0.0
 
-
-def judge_faithfulness(context_chunks: list[str], answer: str) -> float:
-    """评估答案忠实度。context_chunks 是检索到的片段列表。"""
+def evaluate_faithfulness(
+    context_chunks: list[str],
+    answer: str,
+) -> JudgeResult:
     context = "\n\n".join(
-        f"[片段{i+1}] {c}" for i, c in enumerate(context_chunks)
+        f"[片段{i + 1}] {content}"
+        for i, content in enumerate(context_chunks)
     )
     prompt = FAITHFULNESS_PROMPT.format(context=context, answer=answer)
-    return _call_judge(prompt)
+    return _call_judge(prompt, FAITHFULNESS_RUBRIC_VERSION)
 
 
-def judge_answer_relevancy(question: str, answer: str) -> float:
-    """评估答案与问题的相关性。"""
+def evaluate_answer_relevancy(question: str, answer: str) -> JudgeResult:
     prompt = RELEVANCY_PROMPT.format(question=question, answer=answer)
-    return _call_judge(prompt)
+    return _call_judge(prompt, ANSWER_RELEVANCE_RUBRIC_VERSION)
+
+
+def judge_faithfulness(
+    context_chunks: list[str],
+    answer: str,
+) -> float | None:
+    """Compatibility score-only API. Prefer ``evaluate_faithfulness``."""
+
+    return evaluate_faithfulness(context_chunks, answer).score
+
+
+def judge_answer_relevancy(question: str, answer: str) -> float | None:
+    """Compatibility score-only API. Prefer ``evaluate_answer_relevancy``."""
+
+    return evaluate_answer_relevancy(question, answer).score
+
+
+__all__ = [
+    "ANSWER_RELEVANCE_RUBRIC_VERSION",
+    "FAITHFULNESS_RUBRIC_VERSION",
+    "JudgeResult",
+    "evaluate_answer_relevancy",
+    "evaluate_faithfulness",
+    "judge_answer_relevancy",
+    "judge_faithfulness",
+]

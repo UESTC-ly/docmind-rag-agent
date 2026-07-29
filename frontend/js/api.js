@@ -93,6 +93,8 @@ export const api = {
 
   listDocuments: () => request("/documents/"),
   getDocument: (id) => request(`/documents/${id}`),
+  getDocumentChunk: (documentId, chunkIndex) =>
+    request(`/documents/${documentId}/chunks/${chunkIndex}`),
   deleteDocument: (id) => request(`/documents/${id}`, { method: "DELETE" }),
   uploadDocument(file) {
     const fd = new FormData();
@@ -130,10 +132,32 @@ export const api = {
     request(`/agent/runs/${encodeURIComponent(runId)}/recover`, { method: "POST" }),
 
   listDatasets: () => request("/eval/datasets"),
-  createRun: (datasetId) =>
-    request("/eval/runs", { method: "POST", body: { dataset_id: datasetId } }),
+  listPipelines: () => request("/eval/pipelines"),
+  createRun: (datasetId, pipelineId = "configured") =>
+    request("/eval/runs", {
+      method: "POST",
+      body: { dataset_id: datasetId, pipeline_id: pipelineId },
+    }),
+  createExperiment: (datasetId, pipelineIds) =>
+    request("/eval/experiments", {
+      method: "POST",
+      body: { dataset_id: datasetId, pipeline_ids: pipelineIds },
+    }),
   getRun: (runId) => request(`/eval/runs/${runId}`),
   getRunDetails: (runId) => request(`/eval/runs/${runId}/details`),
+  getRunMetrics: (runId) => request(`/eval/runs/${runId}/metrics`),
+  getRunBadcases: (runId, includePassed = false) =>
+    request(`/eval/runs/${runId}/badcases?include_passed=${includePassed}`),
+  getRunBadcaseDiff: (runId) => request(`/eval/runs/${runId}/badcase-diff`),
+  getRunRegression: (runId) => request(`/eval/runs/${runId}/regression`),
+  rerunBadcases: (runId, sampleIds, pipelineId = null) =>
+    request(`/eval/runs/${runId}/rerun`, {
+      method: "POST",
+      body: {
+        sample_ids: sampleIds,
+        pipeline_id: pipelineId,
+      },
+    }),
 
   // SSE 流式问答：用 fetch + ReadableStream（EventSource 不能带 Authorization）。
   // 回调 onEvent(eventName, data) 逐事件触发。

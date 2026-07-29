@@ -4,6 +4,7 @@
 """
 
 from app.services.llm_service import chat_completion
+from app.services.artifact_verification import verify_mermaid_artifact
 from app.skills._helpers import fetch_document_text
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
@@ -71,12 +72,17 @@ class MindmapSkill(BaseSkill):
             temperature=0.2,
         )
         mermaid = _strip_mermaid_fence(msg.content or "")
+        verification = verify_mermaid_artifact(
+            mermaid,
+            artifact_type="mindmap",
+        )
         return {
             "type": "mindmap",
             "artifact_kind": "file",
             "format": "mermaid",
             "document_id": document_id,
             "content": mermaid,
+            "verification": verification,
             "grounding": {
                 "mode": "document_prefix",
                 "document_ids": [document_id],

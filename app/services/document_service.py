@@ -1,4 +1,4 @@
-"""文档业务逻辑：保存文件、建记录、派发解析任务、查询、删除。"""
+"""Document persistence, source navigation, and background parsing dispatch."""
 
 import uuid
 from pathlib import Path
@@ -8,9 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.document import Document, DocumentStatus
+from app.models.document import Document, DocumentChunk, DocumentStatus
+from app.schemas.document import DocumentMetadataUpdate
+from app.services.document_policy import freshness_status
+from app.services.evidence import citation_id
 from app.services import vector_store
 from app.services.task_dispatcher import dispatch_document
+from app.utils.file_parser import extract_text_with_locations
 
 ALLOWED_SUFFIXES = {".pdf", ".docx", ".doc", ".txt", ".md"}
 
@@ -102,3 +106,123 @@ async def delete_document(
     doc = await get_document(db, user_id, document_id)
     vector_store.delete_document(document_id)  # 先删向量
     await db.delete(doc)  # 再删 PG（chunks 级联删除）
+
+
+async def update_document_metadata(
+    db: AsyncSession,
+    user_id: int,
+    document_id: int,
+    metadata: DocumentMetadataUpdate,
+) -> Document:
+    """Update source/version metadata and atomically supersede an older copy."""
+
+    document = await get_document(db, user_id, document_id)
+    previous = None
+    if metadata.supersedes_document_id is not None:
+        if metadata.supersedes_document_id == document.id:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="文档不能替代自身",
+            )
+        previous = await get_document(
+            db,
+            user_id,
+            metadata.supersedes_document_id,
+        )
+        if previous.supersedes_document_id == document.id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="文档版本关系不能形成环",
+            )
+
+    for field, value in metadata.model_dump(exclude_unset=True).items():
+        setattr(document, field, value)
+    if previous is not None:
+        previous.source_status = "superseded"
+    await db.flush()
+    await db.refresh(document)
+    return document
+
+
+async def get_document_chunk(
+    db: AsyncSession,
+    user_id: int,
+    document_id: int,
+    chunk_index: int,
+) -> dict:
+    """Resolve one stable citation ID to its exact stored source chunk."""
+
+    document = await get_document(db, user_id, document_id)
+    result = await db.execute(
+        select(DocumentChunk).where(
+            DocumentChunk.document_id == document.id,
+            DocumentChunk.chunk_index == chunk_index,
+        )
+    )
+    chunk = result.scalar_one_or_none()
+    if chunk is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="文档片段不存在",
+        )
+    source_excerpt, highlight_start, highlight_end = _source_excerpt(document, chunk)
+    return {
+        "document_id": document.id,
+        "document_name": document.filename,
+        "chunk_index": chunk.chunk_index,
+        "citation_id": citation_id(document.id, chunk.chunk_index),
+        "content": chunk.content,
+        "page_start": chunk.page_start,
+        "page_end": chunk.page_end,
+        "paragraph_start": chunk.paragraph_start,
+        "paragraph_end": chunk.paragraph_end,
+        "char_start": chunk.char_start,
+        "char_end": chunk.char_end,
+        "locator_version": chunk.locator_version,
+        "source_excerpt": source_excerpt,
+        "highlight_start": highlight_start,
+        "highlight_end": highlight_end,
+        "source_uri": document.source_uri,
+        "source_version": document.source_version,
+        "authority": document.authority,
+        "source_status": freshness_status(document),
+        "effective_from": document.effective_from,
+        "effective_to": document.effective_to,
+        "jump_url": f"/documents/{document.id}/chunks/{chunk.chunk_index}",
+    }
+
+
+def _source_excerpt(document: Document, chunk: DocumentChunk) -> tuple[str, int, int]:
+    """Return an excerpt whose offsets safely identify this chunk's text.
+
+    The canonical extractor is deliberately rerun only when a source span is
+    available.  It lets the browser place a marked range inside surrounding
+    original text.  Old chunks, moved files, and extraction failures fall back
+    to the stored chunk itself rather than presenting invented coordinates.
+    """
+
+    if chunk.char_start is None or chunk.char_end is None:
+        return chunk.content, 0, len(chunk.content)
+    try:
+        parsed = extract_text_with_locations(document.file_path)
+    except (OSError, ValueError, RuntimeError):
+        return chunk.content, 0, len(chunk.content)
+
+    start = max(0, min(chunk.char_start, len(parsed.text)))
+    end = max(start, min(chunk.char_end, len(parsed.text)))
+    if not parsed.text or start == end:
+        return chunk.content, 0, len(chunk.content)
+    if parsed.text[start:end] != chunk.content:
+        # A parser upgrade or a modified source file must not make us highlight
+        # a different span while claiming it is the persisted evidence chunk.
+        return chunk.content, 0, len(chunk.content)
+
+    # Keep enough surrounding text to make the highlighted span meaningful,
+    # but do not return the entire original document through a chunk endpoint.
+    padding = 360
+    excerpt_start = max(0, start - padding)
+    excerpt_end = min(len(parsed.text), end + padding)
+    excerpt = parsed.text[excerpt_start:excerpt_end]
+    highlight_start = start - excerpt_start
+    highlight_end = end - excerpt_start
+    return excerpt, highlight_start, highlight_end

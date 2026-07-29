@@ -4,6 +4,11 @@
 """
 
 from app.config import settings
+from app.services.artifact_verification import (
+    sanitize_cited_markdown,
+    verify_cited_markdown,
+)
+from app.services.evidence import attach_citation_ids, build_evidence_context
 from app.services.llm_service import chat_completion
 from app.services.skill_retrieval import retrieve_for_skill
 from app.skills.base import BaseSkill, SkillContext
@@ -16,9 +21,11 @@ _OUTLINE_PROMPT = """根据主题「{topic}」和下面的资料，列出报告�
 {context}"""
 
 _SECTION_PROMPT = """你在写一份关于「{topic}」的报告。现在写「{section}」这一节。
-只用下面资料里的信息，200-400 字，用中文，不要写标题。
+只用下面证据里的信息，200-400 字，用中文，不要写标题。
+每个事实性句子末尾必须复制一个或多个真实证据编号，例如 [D12:C3]。
+不得创造证据编号；没有证据支持的内容不要写。
 
-资料：
+证据：
 {context}"""
 
 
@@ -57,7 +64,8 @@ class ReportSkill(BaseSkill):
                 "topic": topic,
                 "document_id": document_id,
             }
-        context_text = "\n\n".join(h["content"] for h in hits)
+        hits = attach_citation_ids(hits)
+        context_text = build_evidence_context(hits)
 
         # 2. 生成大纲
         outline_msg = chat_completion(
@@ -96,8 +104,28 @@ class ReportSkill(BaseSkill):
             parts.append(f"## {section}\n\n{(sec_msg.content or '').strip()}")
 
         report = f"# {topic}\n\n" + "\n\n".join(parts)
+        verification = verify_cited_markdown(
+            report,
+            hits,
+            artifact_type="report",
+            required_headings=tuple(sections),
+        )
+        fail_safe_applied = not verification["passed"]
+        if fail_safe_applied:
+            report = sanitize_cited_markdown(report, hits)
+            report = (
+                f"{report}\n\n> 证据不足或引用无效的句子已由质量门自动移除。"
+            ).strip()
+            verification = verify_cited_markdown(
+                report,
+                hits,
+                artifact_type="report",
+                required_headings=tuple(sections),
+            )
+        verification["fail_safe_applied"] = fail_safe_applied
         source_items = [
             {
+                "citation_id": h["citation_id"],
                 "document_id": h["document_id"],
                 "chunk_index": h.get("chunk_index"),
                 "score": h.get("score"),
@@ -111,6 +139,7 @@ class ReportSkill(BaseSkill):
             "document_id": document_id,
             "outline": sections,
             "content": report,
+            "verification": verification,
             "grounding": {"mode": "hybrid_rag", "sources": source_items},
             "download": {
                 "filename": "report.md",

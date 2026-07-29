@@ -5,10 +5,12 @@ Agent 启动时 import app.skills，所有技能就自动进入 Registry。
 """
 
 from app.skills import (  # noqa: F401
+    evaluation_advisor,
     graph,
     kb_search,
     mindmap,
     presentation,
+    research_report,
     report,
     weekly_report,
     web_search,

@@ -7,6 +7,7 @@ mock 检索与流式生成，验证 SSE 事件序列 meta → token* → done，
 import pytest
 
 from app.services import rag_service
+from app.services.evidence import validate_citations
 
 pytestmark = pytest.mark.asyncio
 
@@ -14,20 +15,55 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def mock_stream(monkeypatch):
     """打桩检索（返回一个来源）与流式生成（逐 token）。"""
+    hits = [
+        {
+            "content": "存储层用 Qdrant",
+            "document_id": 1,
+            "chunk_index": 0,
+            "score": 0.9,
+            "source_status": "current",
+        }
+    ]
+
+    async def _retrieval(*args, **kwargs):
+        return type(
+            "Execution",
+            (),
+            {
+                "fingerprint": "streaming-test-fingerprint",
+                "hits": hits,
+            },
+        )()
+
     monkeypatch.setattr(
-        rag_service, "retrieve",
-        lambda db, uid, q, did: _async_return([
-            {"content": "存储层用 Qdrant", "document_id": 1, "chunk_index": 0, "score": 0.9}
-        ]),
+        rag_service,
+        "run_retrieval_pipeline",
+        _retrieval,
     )
+    monkeypatch.setattr(rag_service, "_evaluated_pipeline_ids", lambda user_id: ())
     monkeypatch.setattr(
         rag_service, "chat_completion_stream",
-        lambda messages, temperature=0.3: iter(["存储", "层用", "Qdrant"]),
+        lambda messages, temperature=0.3: iter(
+            ["存储层用", "Qdrant。", "[D1:C0]"]
+        ),
     )
 
+    def _grounding(answer, hits):
+        report = validate_citations(answer, hits)
+        groundedness = 1.0 if report["passed"] else 0.0
+        return {
+            **report,
+            "contract": "claim_grounding_v1",
+            "semantic_entailment_checked": True,
+            "judge_status": "completed",
+            "groundedness": groundedness,
+            "faithfulness": groundedness,
+            "citation_correctness": report["citation_precision"],
+            "conflict_count": 0,
+            "refused": False,
+        }
 
-async def _async_return(value):
-    return value
+    monkeypatch.setattr(rag_service, "evaluate_grounding", _grounding)
 
 
 def _parse_sse(text):
@@ -57,10 +93,12 @@ class TestChatStream:
 
         events = _parse_sse(resp.text)
         names = [e[0] for e in events]
-        # meta 开头，done 结尾，中间是 token
+        # meta 开头，done 结尾；token 后必须给出引用校验。
         assert names[0] == "meta"
         assert names[-1] == "done"
-        assert names.count("token") == 3
+        assert names[-2] == "verification"
+        # Candidate chunks are buffered; only verified output is emitted.
+        assert names.count("token") == 1
 
     async def test_meta_carries_conversation_and_sources(self, client, registered_user, mock_stream):
         resp = await client.post(
@@ -81,7 +119,25 @@ class TestChatStream:
         import json
         events = _parse_sse(resp.text)
         tokens = [json.loads(d)["text"] for e, d in events if e == "token"]
-        assert "".join(tokens) == "存储层用Qdrant"
+        assert "".join(tokens) == "存储层用Qdrant。[D1:C0]"
+
+    async def test_verification_event_reports_grounded_claim(
+        self, client, registered_user, mock_stream
+    ):
+        resp = await client.post(
+            "/chat/stream",
+            headers=registered_user["headers"],
+            json={"question": "q"},
+        )
+        import json
+
+        events = _parse_sse(resp.text)
+        report = json.loads(
+            next(data for event, data in events if event == "verification")
+        )
+        assert report["passed"] is True
+        assert report["groundedness"] == 1.0
+        assert report["delivery_action"] == "accepted"
 
     async def test_answer_persisted_after_stream(self, client, registered_user, mock_stream):
         stream_resp = await client.post(
@@ -96,7 +152,7 @@ class TestChatStream:
         )
         msgs = hist.json()
         assert len(msgs) == 2
-        assert msgs[1]["content"] == "存储层用Qdrant"
+        assert msgs[1]["content"] == "存储层用Qdrant。[D1:C0]"
 
     async def test_stream_requires_auth(self, client, mock_stream):
         resp = await client.post("/chat/stream", json={"question": "q"})

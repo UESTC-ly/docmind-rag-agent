@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, TypedDict
@@ -30,6 +31,14 @@ from app.agent.checkpoint_store import (
     record_agent_run,
     unindexed_checkpoint_ids,
 )
+from app.agent.planning import (
+    claim_plan_step,
+    create_task_plan,
+    fail_plan,
+    finalize_plan,
+    finish_plan_step,
+    plan_context,
+)
 from app.config import settings
 from app.services.llm_service import chat_completion
 from app.skills.base import BaseSkill, SkillContext
@@ -40,6 +49,8 @@ SYSTEM_PROMPT = """你是 DocMind 的智能文档助手。你可以调用工具�
 - 生成思维导图：用 generate_mindmap
 - 生成关系图谱：用 generate_relation_graph
 - 写报告：用 generate_report
+- 生成经过逐句引用校验的多文档研究报告：用 generate_verified_research_report
+- 在证据型交付前依据公开回归评测选择 RAG 管线：用 select_evaluated_rag_pipeline
 - 写周报/进度周总结：用 generate_weekly_report
 - 制作 PPT/演示文稿/答辩材料：用 generate_presentation
 - 知识库答不了或需要外部信息：用 web_search
@@ -50,7 +61,10 @@ SYSTEM_PROMPT = """你是 DocMind 的智能文档助手。你可以调用工具�
 2. 拿到工具结果后，用中文给用户清晰的最终回复。
 3. 如果生成了思维导图/图谱/报告/周报/PPT/通用技能文件，在回复里说明已生成，正文或下载文件在产出物里。
 4. 不要编造工具没返回的信息。
-5. 高风险能力由宿主在执行前暂停并请求用户审批；不要声称绕过或代替用户审批。"""
+5. 生成逐句证据校验报告前优先调用 select_evaluated_rag_pipeline；若它返回
+   selected，把 selected.pipeline_id 原样传给 generate_verified_research_report。
+   若没有合格管线，可以使用 configured，但必须如实说明没有评测背书。
+6. 高风险能力由宿主在执行前暂停并请求用户审批；不要声称绕过或代替用户审批。"""
 
 ARTIFACT_TYPES = {
     "mindmap",
@@ -69,7 +83,9 @@ class AgentState(TypedDict, total=False):
     conversation_id: int | None
     document_id: int | None
     requested_skill: str | None
+    question: str
     checkpoint_path: str | None
+    plan: dict[str, Any] | None
     messages: list[dict[str, Any]]
     artifacts: list[dict[str, Any]]
     trace: list[dict[str, Any]]
@@ -112,6 +128,265 @@ def _tool_message_content(result: dict) -> str:
     return json.dumps(compact, ensure_ascii=False)[:4000]
 
 
+def _audit_scalar(value: Any, *, max_chars: int = 240) -> Any:
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, str):
+        return value[:max_chars]
+    return f"<{type(value).__name__}>"
+
+
+def compact_quality_interventions(value: Any) -> list[dict[str, Any]]:
+    """Keep bounded quality-policy actions while excluding query and source text."""
+
+    rows: list[dict[str, Any]] = []
+    for raw in value[:20] if isinstance(value, list) else []:
+        if not isinstance(raw, Mapping):
+            continue
+        row = {
+            key: _audit_scalar(raw.get(key), max_chars=120)
+            for key in (
+                "contract",
+                "action",
+                "reason",
+                "status",
+                "attempt",
+                "max_interventions",
+                "before_hit_count",
+                "after_hit_count",
+                "from_pipeline_id",
+                "to_pipeline_id",
+            )
+            if key in raw
+        }
+        for source_key, target_key in (
+            ("quality_before", "quality_before"),
+            ("quality_after", "quality_after"),
+        ):
+            quality_detail = raw.get(source_key)
+            if not isinstance(quality_detail, Mapping):
+                continue
+            row[target_key] = {
+                key: _audit_scalar(quality_detail.get(key), max_chars=80)
+                for key in (
+                    "status",
+                    "hit_count",
+                    "unique_chunk_count",
+                    "stale_hit_count",
+                    "best_local_rerank_score",
+                )
+                if key in quality_detail
+            }
+        if row:
+            rows.append(row)
+    return rows
+
+
+def compact_verification_for_audit(
+    value: Any,
+) -> dict[str, Any] | None:
+    """Keep quality counts and decisions, never claim/artifact prose."""
+
+    if not isinstance(value, Mapping):
+        return None
+    keys = (
+        "contract",
+        "artifact_type",
+        "passed",
+        "score",
+        "claim_count",
+        "supported_claim_count",
+        "unsupported_claim_count",
+        "citation_count",
+        "valid_citation_count",
+        "citation_precision",
+        "citation_recall",
+        "unsupported_claim_rate",
+        "semantic_entailment_checked",
+        "groundedness",
+        "faithfulness",
+        "citation_correctness",
+        "conflict_count",
+        "judge_status",
+        "judge_model",
+        "judge_rubric_version",
+        "judge_input_fingerprint",
+        "repair_attempted",
+        "fail_safe_applied",
+    )
+    compact = {
+        key: _audit_scalar(value.get(key))
+        for key in keys
+        if key in value
+    }
+    checks: list[dict[str, Any]] = []
+    raw_checks = value.get("checks")
+    for raw in raw_checks[:50] if isinstance(raw_checks, list) else []:
+        if not isinstance(raw, Mapping):
+            continue
+        checks.append(
+            {
+                "id": _audit_scalar(raw.get("id"), max_chars=120),
+                "passed": bool(raw.get("passed")),
+            }
+        )
+    if checks:
+        compact["checks"] = checks
+    state_counts = value.get("claim_state_counts")
+    if isinstance(state_counts, Mapping):
+        compact["claim_state_counts"] = {
+            str(key)[:40]: int(count)
+            for key, count in state_counts.items()
+            if isinstance(count, int)
+        }
+    return compact or None
+
+
+def compact_grounding_for_audit(value: Any) -> dict[str, Any] | None:
+    """Retain evidence coordinates while dropping retrieved source text."""
+
+    if not isinstance(value, Mapping):
+        return None
+    compact: dict[str, Any] = {}
+    for key in (
+        "mode",
+        "pipeline_id",
+        "pipeline_fingerprint",
+        "max_chars",
+    ):
+        if key in value:
+            compact[key] = _audit_scalar(value.get(key))
+    if isinstance(value.get("document_ids"), list):
+        compact["document_ids"] = [
+            _audit_scalar(item, max_chars=80)
+            for item in value["document_ids"][:100]
+        ]
+    sources: list[dict[str, Any]] = []
+    raw_sources = value.get("sources")
+    for raw in raw_sources[:100] if isinstance(raw_sources, list) else []:
+        if not isinstance(raw, Mapping):
+            continue
+        source = {
+            key: _audit_scalar(raw.get(key), max_chars=120)
+            for key in ("citation_id", "document_id", "chunk_index", "score")
+            if key in raw
+        }
+        if source:
+            sources.append(source)
+    if sources:
+        compact["sources"] = sources
+    interventions = compact_quality_interventions(
+        value.get("quality_interventions")
+    )
+    if interventions:
+        compact["quality_interventions"] = interventions
+    return compact or None
+
+
+def compact_artifact_for_audit(artifact: Any) -> dict[str, Any] | None:
+    """Return bounded artifact metadata suitable for Message.sources."""
+
+    if not isinstance(artifact, Mapping):
+        return None
+    compact: dict[str, Any] = {}
+    if "type" in artifact:
+        compact["type"] = _audit_scalar(artifact.get("type"), max_chars=120)
+    download = artifact.get("download")
+    if isinstance(download, Mapping):
+        for source_key, target_key in (
+            ("filename", "filename"),
+            ("mime_type", "mime_type"),
+            ("encoding", "encoding"),
+        ):
+            if source_key in download:
+                compact[target_key] = _audit_scalar(
+                    download.get(source_key),
+                    max_chars=255,
+                )
+    grounding = compact_grounding_for_audit(artifact.get("grounding"))
+    if grounding:
+        compact["grounding"] = grounding
+    verification = compact_verification_for_audit(
+        artifact.get("verification")
+    )
+    if verification:
+        compact["verification"] = verification
+    workflow = artifact.get("workflow")
+    if isinstance(workflow, Mapping):
+        compact["workflow"] = {
+            key: _audit_scalar(workflow.get(key))
+            for key in (
+                "contract",
+                "status",
+                "repair_attempted",
+                "fail_safe_applied",
+            )
+            if key in workflow
+        }
+    return compact or None
+
+
+def compact_agent_trace_for_audit(value: Any) -> list[dict[str, Any]]:
+    """Drop arguments and free-form observations from persisted trace rows."""
+
+    rows: list[dict[str, Any]] = []
+    for raw in value if isinstance(value, list) else []:
+        if not isinstance(raw, Mapping):
+            continue
+        row = {
+            key: _audit_scalar(raw.get(key))
+            for key in (
+                "step",
+                "skill",
+                "ok",
+                "graph_node",
+                "plan_step_id",
+                "receipt_reused",
+                "grounding_mode",
+            )
+            if key in raw
+        }
+        args = raw.get("args")
+        if isinstance(args, Mapping):
+            row["arg_keys"] = sorted(
+                str(key)[:120] for key in list(args)[:100]
+            )
+        approval = raw.get("approval")
+        if isinstance(approval, Mapping):
+            row["approval"] = {
+                key: bool(approval.get(key))
+                for key in ("required", "approved")
+                if key in approval
+            }
+        recovery = raw.get("recovery")
+        if isinstance(recovery, Mapping):
+            row["recovery"] = {
+                key: bool(recovery.get(key))
+                for key in ("required", "retried")
+                if key in recovery
+            }
+        grounding = compact_grounding_for_audit(raw.get("grounding"))
+        if grounding:
+            row["grounding"] = grounding
+        verification = compact_verification_for_audit(raw.get("verification"))
+        if verification:
+            row["verification"] = verification
+        workflow = raw.get("workflow")
+        if isinstance(workflow, Mapping):
+            row["workflow"] = {
+                key: _audit_scalar(workflow.get(key))
+                for key in (
+                    "contract",
+                    "status",
+                    "repair_attempted",
+                    "fail_safe_applied",
+                )
+                if key in workflow
+            }
+        rows.append(row)
+    return rows
+
+
 def _system_prompt(document_id: int | None, requested_skill: str | None) -> str:
     prompt = SYSTEM_PROMPT
     if document_id is not None:
@@ -141,9 +416,77 @@ def _assistant_tool_calls(llm_message: Any) -> list[dict[str, Any]]:
     ]
 
 
+def _planner(state: AgentState) -> dict[str, Any]:
+    """Create one inspectable plan before any tool side effect can run."""
+
+    if state.get("status") in {"completed", "failed"} or state.get("plan") is not None:
+        return {}
+    if settings.agent_planning_mode == "off":
+        return {"plan": None}
+
+    tools = all_tools()
+    available_skills = [
+        {
+            "name": item["function"]["name"],
+            "description": item["function"].get("description", ""),
+        }
+        for item in tools
+    ]
+    try:
+        plan = create_task_plan(
+            question=str(state.get("question") or ""),
+            available_skills=available_skills,
+            llm=chat_completion,
+            max_steps=settings.agent_max_steps,
+            document_id=state.get("document_id"),
+            requested_skill=state.get("requested_skill"),
+        )
+    except Exception:  # noqa: BLE001 - provider boundary must fail closed
+        return _model_provider_failure(state, stage="planner")
+    return {"plan": plan}
+
+
+def _model_provider_failure(
+    state: AgentState,
+    *,
+    stage: str,
+) -> dict[str, Any]:
+    """End a run safely when the model provider cannot make a decision."""
+
+    summary = "模型服务暂不可用，未执行或伪造后续 Agent 操作。"
+    trace = list(state.get("trace", []))
+    trace.append(
+        {
+            "step": int(state.get("step", 0)),
+            "skill": "model_provider",
+            "ok": False,
+            "graph_node": stage,
+            "failure_code": "provider_unavailable",
+        }
+    )
+    return {
+        "answer": "模型服务暂不可用，本次任务未完成。请稍后重试。",
+        "status": "failed",
+        "plan": fail_plan(state.get("plan"), summary=summary),
+        "trace": trace,
+        "pending_tool_calls": [],
+        "current_tool": None,
+    }
+
+
+def _next_planned_skill(plan: Mapping[str, Any] | None) -> str | None:
+    for step in (plan or {}).get("steps") or []:
+        if step.get("status") != "pending" or not step.get("skill"):
+            continue
+        skill = get_skill(str(step["skill"]))
+        if skill is not None and skill.available:
+            return skill.name
+    return None
+
+
 def _supervisor(state: AgentState) -> dict[str, Any]:
     """执行一轮 LLM 决策；不在该节点内执行任何工具副作用。"""
-    if state.get("status") == "completed":
+    if state.get("status") in {"completed", "failed"}:
         return {}
 
     step = int(state.get("step", 0))
@@ -171,13 +514,29 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
             "type": "function",
             "function": {"name": forced_skill_name},
         }
+    else:
+        forced_skill_name = _next_planned_skill(state.get("plan"))
+        if forced_skill_name is not None:
+            tool_choice = {
+                "type": "function",
+                "function": {"name": forced_skill_name},
+            }
 
-    messages = list(state.get("messages", []))
-    llm_message = chat_completion(
-        messages,
-        tools=all_tools(),
-        tool_choice=tool_choice,
-    )
+    messages = [dict(message) for message in state.get("messages", [])]
+    progress = plan_context(state.get("plan"))
+    if progress and messages and messages[0].get("role") == "system":
+        messages[0]["content"] = (
+            f"{messages[0].get('content')}\n\n当前任务计划与进度：\n{progress}\n"
+            "优先完成 pending 步骤；工具失败时可以调整后续行动，但不得伪造完成状态。"
+        )
+    try:
+        llm_message = chat_completion(
+            messages,
+            tools=all_tools(),
+            tool_choice=tool_choice,
+        )
+    except Exception:  # noqa: BLE001 - provider boundary must fail closed
+        return _model_provider_failure(state, stage="supervisor")
     tool_calls = _assistant_tool_calls(llm_message)
     if not tool_calls:
         if forced_skill_name is not None:
@@ -191,6 +550,7 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
             "answer": answer,
             "status": "completed",
             "step": step + 1,
+            "plan": finalize_plan(state.get("plan")),
             "pending_tool_calls": [],
             "current_tool": None,
         }
@@ -213,7 +573,7 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
 
 
 def _route_after_supervisor(state: AgentState) -> str:
-    if state.get("status") == "completed":
+    if state.get("status") in {"completed", "failed"}:
         return "end"
     return "select_tool"
 
@@ -274,6 +634,11 @@ def _select_tool(state: AgentState) -> dict[str, Any]:
     name = str(function.get("name") or "")
     skill = get_skill(name)
     approval_required, risk_capabilities, risk_reason = _risk_metadata(skill)
+    updated_plan, plan_step_id = claim_plan_step(
+        state.get("plan"),
+        skill=name,
+        waiting_approval=approval_required,
+    )
     call_id = str(raw_call.get("id") or uuid.uuid4().hex)
     step = max(0, int(state.get("step", 1)) - 1)
     current = {
@@ -288,8 +653,13 @@ def _select_tool(state: AgentState) -> dict[str, Any]:
         "approval_required": approval_required,
         "risk_capabilities": risk_capabilities,
         "risk_reason": risk_reason,
+        "plan_step_id": plan_step_id,
     }
-    return {"pending_tool_calls": pending, "current_tool": current}
+    return {
+        "pending_tool_calls": pending,
+        "current_tool": current,
+        "plan": updated_plan,
+    }
 
 
 def _route_selected_tool(state: AgentState) -> str:
@@ -303,13 +673,31 @@ def _record_tool_result(
     result: dict[str, Any],
 ) -> dict[str, Any]:
     trace = list(state.get("trace", []))
+    verification = result.get("verification")
+    workflow = result.get("workflow")
+    succeeded = (
+        "error" not in result
+        and result.get("ok") is not False
+        and not (
+            isinstance(verification, Mapping)
+            and verification.get("passed") is False
+        )
+        and not (
+            isinstance(workflow, Mapping)
+            and workflow.get("status") == "failed"
+        )
+    )
     trace_item: dict[str, Any] = {
         "step": int(current.get("step", 0)),
         "skill": str(current.get("name") or ""),
         "args": dict(current.get("args") or {}),
-        "ok": "error" not in result,
+        "ok": succeeded,
         "graph_node": "execute_tool",
     }
+    if current.get("plan_step_id"):
+        trace_item["plan_step_id"] = current["plan_step_id"]
+    if current.get("receipt_reused"):
+        trace_item["receipt_reused"] = True
     skill = get_skill(trace_item["skill"])
     if skill is not None:
         trace_item["grounding_mode"] = skill.grounding_mode
@@ -317,9 +705,23 @@ def _record_tool_result(
         trace_item["approval"] = current["approval"]
     if current.get("recovery") is not None:
         trace_item["recovery"] = current["recovery"]
-    grounding = result.get("grounding")
+    grounding = compact_grounding_for_audit(result.get("grounding"))
     if grounding:
         trace_item["grounding"] = grounding
+    if isinstance(workflow, dict):
+        trace_item["workflow"] = {
+            key: workflow.get(key)
+            for key in (
+                "contract",
+                "status",
+                "repair_attempted",
+                "fail_safe_applied",
+            )
+            if key in workflow
+        }
+    compact_verification = compact_verification_for_audit(verification)
+    if compact_verification:
+        trace_item["verification"] = compact_verification
     trace.append(trace_item)
 
     artifacts = list(state.get("artifacts", []))
@@ -334,10 +736,23 @@ def _record_tool_result(
             "content": _tool_message_content(result),
         }
     )
+    summary = (
+        result.get("summary")
+        or result.get("error")
+        or result.get("type")
+        or ("成功" if succeeded else "失败")
+    )
+    plan = finish_plan_step(
+        state.get("plan"),
+        step_id=current.get("plan_step_id"),
+        succeeded=succeeded,
+        summary=str(summary),
+    )
     return {
         "messages": messages,
         "artifacts": artifacts,
         "trace": trace,
+        "plan": plan,
         "current_tool": None,
         "status": "running",
     }
@@ -393,6 +808,7 @@ def _execute_tool(state: AgentState) -> dict[str, Any]:
     result: dict[str, Any]
     receipt_state, cached_result = _claim_tool_receipt(state, current)
     if receipt_state == "completed" and cached_result is not None:
+        current["receipt_reused"] = True
         return _record_tool_result(state, current, cached_result)
     if receipt_state == "uncertain":
         decision = interrupt(
@@ -533,12 +949,14 @@ def _complete_tool_receipt(
 def build_agent_graph(checkpointer: Any = None):
     """构建 v3 外层状态图；传入 saver 后启用 durable execution。"""
     builder = StateGraph(AgentState)
+    builder.add_node("planner", _planner)
     builder.add_node("supervisor", _supervisor)
     builder.add_node("select_tool", _select_tool)
     builder.add_node("approval_gate", _approval_gate)
     builder.add_node("execute_tool", _execute_tool)
 
-    builder.add_edge(START, "supervisor")
+    builder.add_edge(START, "planner")
+    builder.add_edge("planner", "supervisor")
     builder.add_conditional_edges(
         "supervisor",
         _route_after_supervisor,
@@ -629,6 +1047,7 @@ def _public_result(
         "answer": answer,
         "artifacts": list(state.get("artifacts", [])),
         "trace": list(state.get("trace", [])),
+        "plan": state.get("plan"),
         "approval": approval,
     }
 
@@ -645,7 +1064,7 @@ def _checkpoint_state(graph: Any, run_id: str, expected_user_id: int | None):
 
 def _record_persistent_run(
     checkpoint_path: str | Path | None,
-    state: dict[str, Any],
+    state: Mapping[str, Any],
     run_id: str,
     status: str,
     *,
@@ -748,12 +1167,14 @@ def run_agent(
         "conversation_id": conversation_id,
         "document_id": document_id,
         "requested_skill": requested_skill,
+        "question": question,
         "checkpoint_path": (
             str(Path(checkpoint_path).expanduser().resolve())
             if checkpoint_path is not None
             else None
         ),
         "messages": messages,
+        "plan": None,
         "artifacts": [],
         "trace": [],
         "pending_tool_calls": [],

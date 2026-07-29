@@ -41,10 +41,10 @@
       <aside class="sidebar">
         <div class="brand"><span class="brand__mark"></span> DocMind</div>
         <nav class="nav" aria-label="主导航">
-          <button class="nav__item" data-view="chat" aria-current="page">对话</button>
-          <button class="nav__item" data-view="skills">技能</button>
-          <button class="nav__item" data-view="docs">文档</button>
-          <button class="nav__item" data-view="eval">评估</button>
+          <button class="nav__item" data-view="skills" aria-current="page">Agent 工作台</button>
+          <button class="nav__item" data-view="chat">证据问答</button>
+          <button class="nav__item" data-view="docs">知识库</button>
+          <button class="nav__item" data-view="eval">EvalOps 实验室</button>
         </nav>
         <div>
           <p class="sidebar__section-title">会话</p>
@@ -58,12 +58,12 @@
 
       <div class="main">
         <header class="topbar">
-          <h1 class="topbar__title" id="view-title">对话</h1>
+          <h1 class="topbar__title" id="view-title">Agent 工作台</h1>
           <span class="topbar__sub" id="view-sub"></span>
         </header>
 
         <!-- 对话视图 -->
-        <section class="view" id="view-chat" data-view-panel="chat">
+        <section class="view" id="view-chat" data-view-panel="chat" hidden>
           <div class="chat">
             <div class="chat__stream" id="chat-stream"></div>
             <form class="composer" id="composer">
@@ -78,28 +78,17 @@
           </div>
         </section>
 
-        <!-- 技能视图 -->
+        <!-- Agent 工作台 -->
         <section class="view" id="view-skills" data-view-panel="skills" hidden>
           <div class="skills-shell">
-            <div>
-              <div class="section-head">
-                <div>
-                  <p class="section-kicker">Agent Skills</p>
-                  <h2>调用可插拔技能</h2>
-                </div>
-                <button class="btn btn--ghost" type="button" id="refresh-skills-btn">刷新技能</button>
-              </div>
-              <div class="skill-grid" id="skill-list"></div>
-            </div>
-
             <form class="agent-console" id="skill-agent-form">
               <div class="agent-console__head">
                 <div>
-                  <p class="section-kicker">Function Calling</p>
-                  <h2>让 Agent 选择并调用技能</h2>
+                  <p class="section-kicker">Document Agent</p>
+                  <h2>任务目标</h2>
                 </div>
                 <div class="field field--inline">
-                  <label for="skill-document-id">文档 ID（可选）</label>
+                  <label for="skill-document-id">证据范围（文档 ID，可选）</label>
                   <input class="input" id="skill-document-id" type="number" min="1" placeholder="如 1" />
                 </div>
               </div>
@@ -107,7 +96,7 @@
                 class="composer__input agent-console__input"
                 id="skill-agent-input"
                 rows="4"
-                placeholder="例如：把文档 1 生成思维导图；或：查一下最新的 RAG rerank 方法并总结。"
+                placeholder="例如：基于当前公开文档生成一份逐结论有依据的研究报告。"
               ></textarea>
               <div class="agent-console__actions">
                 <span class="agent-console__hint" id="selected-skill-name">未锁定技能：Agent 自动选择</span>
@@ -116,6 +105,15 @@
             </form>
 
             <div class="agent-result" id="skill-agent-result"></div>
+
+            <details class="workbench-capabilities">
+              <summary>可用能力</summary>
+              <div class="section-head">
+                <p class="section-kicker">Agent Skills</p>
+                <button class="btn btn--ghost" type="button" id="refresh-skills-btn">刷新技能</button>
+              </div>
+              <div class="skill-grid" id="skill-list"></div>
+            </details>
           </div>
         </section>
 

@@ -178,15 +178,18 @@ def fuse_dense_and_keyword(
     dense_hits: list[dict],
     keyword_hits: list[dict],
     top_k: int,
+    *,
+    rrf_k: int | None = None,
 ) -> list[dict]:
     """Fuse candidates while preserving raw ranks/scores and recall provenance."""
+    effective_rrf_k = settings.rrf_k if rrf_k is None else rrf_k
     dense_keys = [_key(hit) for hit in dense_hits]
     keyword_keys = [_key(hit) for hit in keyword_hits]
     scores = reciprocal_rank_fusion_scores(
-        [dense_keys, keyword_keys], k=settings.rrf_k
+        [dense_keys, keyword_keys], k=effective_rrf_k
     )
     fused_keys = reciprocal_rank_fusion(
-        [dense_keys, keyword_keys], k=settings.rrf_k, top_k=top_k
+        [dense_keys, keyword_keys], k=effective_rrf_k, top_k=top_k
     )
 
     by_key: dict[ChunkKey, dict] = {}
@@ -225,14 +228,36 @@ def finalize_retrieval(
     dense_hits: list[dict],
     keyword_hits: list[dict],
     top_k: int,
+    *,
+    rrf_k: int | None = None,
+    reranker_mode: str | None = None,
+    reranker_candidate_limit: int | None = None,
+    reranker_weights: dict[str, float] | None = None,
 ) -> list[dict]:
     """Shared candidate fusion + bounded reranking stage for every caller."""
+    candidate_bound = (
+        settings.reranker_candidate_limit
+        if reranker_candidate_limit is None
+        else reranker_candidate_limit
+    )
     candidate_limit = max(
         top_k,
         min(
-            settings.reranker_candidate_limit,
+            candidate_bound,
             max(len(dense_hits) + len(keyword_hits), top_k),
         ),
     )
-    fused = fuse_dense_and_keyword(dense_hits, keyword_hits, candidate_limit)
-    return rerank(query, fused, top_k)
+    fused = fuse_dense_and_keyword(
+        dense_hits,
+        keyword_hits,
+        candidate_limit,
+        rrf_k=rrf_k,
+    )
+    return rerank(
+        query,
+        fused,
+        top_k,
+        mode=reranker_mode,
+        candidate_limit=candidate_bound,
+        weights=reranker_weights,
+    )

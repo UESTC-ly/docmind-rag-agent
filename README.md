@@ -1,11 +1,13 @@
-# DocMind — Agentic 文档智能助手
+# DocMind — 评测驱动、证据闭环的文档任务 Agent
 
-一个基于 **RAG + Agent 编排**的文档智能系统。用户上传文档后，Agent 通过 OpenAI
-Function Calling 自主判断该调用哪些技能（Skills）来完成任务：知识库问答、思维导图、
-关系图谱、报告生成、周报/PPT 文件产出、联网搜索，以及
-**Codex-style 通用 Skills 包**。系统还内置一套 **RAG 评估模块**，用检索指标
-（hit_rate / MRR / recall / precision）和 LLM-as-judge 生成指标
-（faithfulness / answer_relevancy）量化问答质量。
+DocMind 是面向文档与知识工作的 **Agent 系统**；RAG 是 Agent 可选择、替换和回归验证的
+知识能力，而不是产品本身。用户给出目标后，Agent 形成显式计划，选择工具与经公开基准
+评测的 `PipelineSpec`，在弱证据时改写查询或切换管线，并对最终回答/报告执行逐结论
+依据检查、修复或拒答。
+
+产品由三个相互连接的界面组成：**Agent 工作台**（计划、执行、审批、恢复、交付）、
+**RAG Evaluation & Badcase Lab**（公开数据集、基线/候选、回归门禁、失败归因与选择性
+重跑）和 **Evidence Navigator**（逐结论引用、原文跳转、版本/时效、冲突与推测标签）。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、运行时零构建），覆盖
 登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.1.0 在 v3.0 LangGraph
@@ -16,9 +18,14 @@ Web 使用 Redis 对同一 `run_id` 互斥，桌面/本地形态使用 SQLite ow
 Qdrant local 与本地任务执行器；安装后的终端用户不需要 Docker、PostgreSQL、Redis、
 Qdrant Server、uv 或系统 Python。
 
-**亮点**：LangGraph durable Agent · Redis/SQLite 运行租约 · 人工审批与恢复 · checkpoint 生命周期维护 · 生产 MCP/Browser/App adapters · 动态能力审计 ·
-多路召回（向量 + 数据库关键词 + RRF + reranker）· 异步 RAG 评估 · Alembic ·
-Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
+**差异化主线**：
+
+1. **Task-driven Agentic RAG**：`agent_plan_v1`、计划步与工具 trace 关联、弱证据自适应、
+   人工审批、checkpoint 恢复、执行回执和质量门组成同一任务生命周期。
+2. **Evaluation-driven RAG EvalOps**：RAG 组件可插拔，但只有在同一公开语料快照上完成
+   可复现对比、Badcase 回归与门禁后才参与自动选择。
+3. **Claim-level Evidence Closure**：事实/推测逐结论检查，引用可跳到原文块；过期来源被
+   阻断，冲突必须披露，语义检查不可用或证据不足时 fail closed。
 
 ## 目录
 
@@ -33,7 +40,7 @@ Playwright E2E/视觉回归 · 自包含桌面运行时 · 结构化日志。
 - [Skills 技能系统](#skills-技能系统)
 - [多路召回](#多路召回)
 - [流式输出](#流式输出)
-- [RAG 评估模块](#rag-评估模块)
+- [RAG Evaluation & Badcase Lab](#rag-evaluation--badcase-lab)
 - [前端界面](#前端界面)
 - [测试与 CI](#测试与-ci)
 - [配置项](#配置项)
@@ -415,6 +422,8 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 | 文档 | `POST /documents/upload` | 上传文档，异步解析 |
 | 文档 | `GET /documents/` | 我的文档列表 |
 | 文档 | `GET /documents/{id}` | 查询单个文档解析状态 |
+| 文档 | `PATCH /documents/{id}/metadata` | 更新来源版本、生效期、权威性与 supersession |
+| 文档 | `GET /documents/{id}/chunks/{chunk_index}` | 打开引用对应的精确原文块 |
 | 文档 | `DELETE /documents/{id}` | 删除文档（连带删 Qdrant 向量 + 级联删分块） |
 | 问答 | `POST /chat/` | 纯 RAG 问答（无 Agent） |
 | 问答 | `POST /chat/stream` | RAG 流式问答（SSE，逐 token） |
@@ -427,9 +436,18 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 | Agent | `GET /agent/skills` | 列出技能及 available / grounding / download 元数据 |
 | 评估 | `POST /eval/datasets` | 从文档 LLM 反向出题生成数据集 |
 | 评估 | `GET /eval/datasets` | 我的评估数据集列表 |
+| 评估 | `GET /eval/pipelines` | 管线目录与不可变 fingerprint |
+| 评估 | `POST /eval/pipelines/validate` | 校验内置/插件管线及索引兼容性 |
 | 评估 | `POST /eval/runs` | 创建 pending run，派发后台任务并返回 `202 Accepted` |
+| 评估 | `POST /eval/experiments` | 同一快照上的多管线基线/候选实验 |
 | 评估 | `GET /eval/runs/{id}` | 轮询 pending/running/completed/failed 与聚合指标 |
 | 评估 | `GET /eval/runs/{id}/details` | 逐条样本明细分数 |
+| 评估 | `GET /eval/runs/{id}/metrics` | 版本化的 run/sample 指标与 judge 理由 |
+| 评估 | `POST /eval/regression-gates` | 配置绝对或相对回归门禁 |
+| 评估 | `GET /eval/runs/{id}/regression` | 查看候选运行的持久化门禁结论 |
+| 评估 | `GET /eval/runs/{id}/badcases` | 根因分类、检索轨迹与原文跳转 |
+| 评估 | `GET /eval/runs/{id}/badcase-diff` | 新增、修复和持续 Badcase |
+| 评估 | `POST /eval/runs/{id}/rerun` | 只重跑所选样本；诊断运行不参与发布选择 |
 | 健康 | `GET /health` | 健康检查 |
 
 除 `register` / `login` / `health` 外，所有端点都需 `Authorization: Bearer <token>`。
@@ -584,20 +602,25 @@ interrupt 请求“是否重试”，不会静默执行第二次。
 
 对话历史由 `app/agent/memory.py` 管理，只带入最近 `WINDOW_SIZE`（10）条消息控制 token。
 
-## RAG 评估模块
+## RAG Evaluation & Badcase Lab
 
-量化"检索准不准、答得好不好"，是本项目的一大特色。
+这里不是偶尔调 Prompt 的打分页，而是可重复运行的 EvalOps 闭环。发布指标只允许来自
+保留 URL、版本、许可证、split、原始快照 SHA-256、转换契约和语料 fingerprint 的公开
+数据集；LLM 反向出题只能做补充诊断，不能替代公开 qrels/人工标签。
 
 ### 两类数据集来源
 
-- **LLM 反向出题**（`dataset_gen.py`）：随机抽文档分块，让 LLM 就该块内容生成
-  `(question, answer, relevant_chunk_ids)` 三元组。走 `POST /eval/datasets`。
+- **LLM 反向出题**（`dataset_gen.py`）：可生成诊断样本，但标记为 synthetic，
+  `release_eligible=false`。
 - **公开基准导入**（`dataset_import.py`）：导入业界标准数据集的 ground truth。
   关键在于评估检索指标依赖 Qdrant 里真实存在的向量，所以导入会走完整链路：
   `passages → Document + DocumentChunk(PG) → embed → upsert Qdrant → EvalDataset + EvalSample`。
-  - **MS MARCO v2.1**：每题 passages 带 `is_selected` 标记，汇成语料池做检索评估
+  - **MS MARCO v2.1**：validation 前缀中每题 passages 的 `is_selected` 标注
   - **CMRC 2018**：中文阅读理解，去重 context 建段落池，每题指向自己的段落
-  - **RAGTruth**：幻觉标注数据集，用于单独验证 faithfulness judge，**不走检索流程**
+  - **BEIR 标准目录**：`corpus.jsonl + queries.jsonl + qrels/<split>.tsv`，支持 graded qrels；
+    上游来源和许可证必须显式提供，不能套用 BEIR 的代码许可证
+  - **RAGTruth**：官方 `source_info.jsonl + response.jsonl` 不进入检索索引，而是校准
+    faithfulness judge；`implicit_true` 会保留为“可能真实但没有上下文依据”
 
 ### 指标
 
@@ -610,31 +633,63 @@ running。数据库唯一约束保证同一 `(run_id, sample_id)` 不会重复�
 评估运行（`runner.py`）遍历样本，对每条复用线上 dense + keyword + RRF + reranker 检索，
 再计算：
 
-| 类别 | 指标 | 含义 |
+| 层级 | 指标/检查 | 语义 |
 |---|---|---|
-| 检索 | `hit_rate` | top-k 内是否命中至少一个相关块 |
-| 检索 | `mrr` | 第一个命中位置倒数的均值 |
-| 检索 | `recall` | 命中相关块数 / 全部相关块数 |
-| 检索 | `precision` | 命中相关块数 / 返回块数 |
-| 生成 | `faithfulness` | LLM-as-judge：答案是否忠于检索片段（不编造） |
-| 生成 | `answer_relevancy` | LLM-as-judge：答案是否切题、完整 |
+| Document Retrieval | Hit@K、MRR、Recall@K、Precision@K、MAP@K、nDCG@K | 仅在真实 document qrels 存在时计算；缺失保持 unavailable |
+| Passage/Chunk Retrieval | Hit@K、MRR、Recall@K、Precision@K、MAP@K、nDCG@K | 使用公开 chunk qrels/graded relevance |
+| Generation | Faithfulness、Answer Relevance | 版本化 LLM judge；异常返回 `score=null`，不伪造 0 分 |
+| Evidence | Groundedness、Citation Correctness、Citation Completeness | 原子 claim 到具体证据的语义与结构检查 |
+| Policy | Refusal Accuracy、Conflict Awareness、Freshness Compliance | 可答/不可答、冲突披露、文档版本时效 |
+| Agent | Verified Task Completion Rate | 任务、轨迹、产物和证据门同时通过 |
 
-检索指标是纯函数（`retrieval_metrics.py`，无 I/O，易单测）；生成指标用 LLM 打分
-（`generation_judge.py`，温度 0 求稳定）。逐条明细存 `EvalResult`，包括检索模式、实际
-reranker、候选来源/原始排名/分数与最终顺序；聚合均值存 `EvalRun`。
+每个 run 固化 `PipelineSpec`、pipeline/index fingerprint、模型、prompt/rubric 版本、
+代码 revision、环境 fingerprint、延迟、逐样本排名与 judge 理由。`EvalMetricResult`
+保存版本化指标；聚合值可从逐样本结果独立重算。候选与命名基线之间会生成门禁结论，以及
+`newly introduced / fixed / persistent` Badcase。Badcase 按 document miss、chunk boundary、
+reranking、noise、stale source、unsupported claim、错误引用、错误拒答、冲突遗漏、
+推测未标记和 evaluator disagreement 等层级归因。
+
+诊断型 subset rerun 会复用来源 run 的不可变管线，只跑所选样本，并显式标记
+`evaluation_scope=subset`；它不会进入发布回归或 Agent 的自动管线选择。
 
 ### 导入公开数据集（CLI）
 
 ```bash
-# 1. 下载 parquet（需先装 datasets pandas pyarrow）
-uv run python data/download_datasets.py --ms-marco-limit 3000
+# 1. 数据准备依赖是可选项，不进入应用运行时依赖
+uv pip install datasets pandas pyarrow
+uv run python data/download_datasets.py --only ms_marco --ms-marco-limit 3000
+uv run python data/download_datasets.py --only cmrc2018
+
+# RAGTruth 直接下载官方 JSONL，不依赖 HuggingFace datasets
+uv run python data/download_datasets.py --only ragtruth
 
 # 2. 导入为某用户的评估数据集（需 PG / Qdrant / embedding 服务在线）
 uv run python data/import_datasets.py --user-id 1
 uv run python data/import_datasets.py --user-id 1 --only ms_marco --limit 50
+
+# 3. BEIR 标准目录导入；许可证必须按具体上游数据集填写
+uv run python data/import_datasets.py --user-id 1 --only beir \
+  --beir-dir data/beir/<dataset> --beir-name <name> \
+  --source-name <upstream-name> --source-uri <public-url> \
+  --source-version <snapshot> --license-name <verified-license>
+
+# 4. 用 RAGTruth test split 校准 faithfulness judge
+uv run python scripts/calibrate_ragtruth.py \
+  --source-info data/ragtruth/source_info.jsonl \
+  --responses data/ragtruth/response.jsonl \
+  --output /tmp/ragtruth-calibration.json \
+  --markdown /tmp/ragtruth-calibration.md
+
+# 5. 对同一已导入快照运行可独立重算的检索对比
+uv run python scripts/benchmark_retrieval.py \
+  --dataset-id <id> --pipelines dense,hybrid,hybrid-rerank \
+  --output /tmp/retrieval-evidence.json
 ```
 
-导入完成后，用返回的 `dataset_id` 调 `POST /eval/runs` 入队，再轮询返回的 run id。
+RAGTruth 校准当前只证明 generation-level faithfulness judge；claim/citation 和
+answer-relevance judge 的完整公共校准尚未完成前，`grounded_generation` 自动发布选择会
+fail closed。脚本生成文件本身也不是通过证据，必须读取其中的 coverage、混淆矩阵、
+balanced accuracy 与 `release_gate_eligible`。
 
 ## 多路召回
 
@@ -739,11 +794,15 @@ npm run test:e2e:fullstack                         # 真实 FastAPI + SQLite/Qdr
 | `RERANKER_MODE` | | `local` | `local` / `http`（失败回退 local）/ `off` |
 | `RERANKER_CANDIDATE_LIMIT` | | `40` | 二阶段重排最大候选数 |
 | `RERANKER_HTTP_*` | | — | 可选 cross-encoder URL、key、model、timeout |
+| `RAG_PLUGIN_MODULES` | | 空 | 部署方信任的管线插件模块列表；不扫描用户可写目录 |
+| `GROUNDING_VERIFICATION_MODE` | | `llm` | `llm`=逐结论语义检查；`off` 只能做结构诊断 |
+| `GROUNDING_FAIL_CLOSED` | | `true` | 语义检查失败时拒答/阻断证据型交付 |
 | `TASK_EXECUTION_MODE` | | `celery` | Web 用 `celery`；桌面宿主强制使用 `local` |
 | `LOCAL_TASK_WORKERS` | | `2` | 本地任务执行器线程数 |
 | `EVALUATION_LEASE_SECONDS` | | `2100` | 评估 worker 租约过期/崩溃接管窗口 |
 | `EVALUATION_TASK_*_TIME_LIMIT_SECONDS` | | `1740/1800` | Celery 评估任务软/硬时限，短于租约 |
 | `AGENT_MAX_STEPS` | | `6` | Agent 主循环最大步数 |
+| `AGENT_PLANNING_MODE` | | `explicit` | 复杂任务先形成持久化 `agent_plan_v1` |
 | `AGENT_CHECKPOINT_PATH` | | `./data/agent-checkpoints.sqlite3` | LangGraph SQLite checkpoint；桌面宿主覆盖到用户数据目录 |
 | `AGENT_RUN_LOCK_BACKEND` | | `auto` | Web/celery 自动解析为 `redis`；desktop/local 解析为 `sqlite`；`off` 仅用于显式测试/诊断 |
 | `AGENT_RUN_LOCK_TTL_SECONDS` | | `300` | 运行租约失效时间；必须大于心跳间隔 |
@@ -781,6 +840,7 @@ app/
 ├── celery_app.py      Celery 实例
 ├── agent/
 │   ├── orchestrator.py       LangGraph 外层状态图与 checkpoint 生命周期记录
+│   ├── planning.py           agent_plan_v1、计划归一化与评测选择步骤
 │   ├── run_lock.py           Redis/SQLite owner-token 运行租约与心跳
 │   ├── checkpoint_store.py   DocMind 生命周期/回执/维护元数据表
 │   └── checkpoint_cleanup.py 定期保留策略、迁移回填与有界清理
@@ -793,8 +853,8 @@ app/
 │   ├── reranker.py    本地二阶段排序 + HTTP provider 回退
 │   ├── task_dispatcher.py  Celery / desktop local task 路由
 │   ├── skill_retrieval.py  同步 Skills 复用 Hybrid RAG 的入口
-│   └── evaluation/    评估子模块（dataset_gen / dataset_import / runner /
-│                      retrieval_metrics / generation_judge）
+│   └── evaluation/    dataset import / runner / metrics / regression /
+│                      badcases / grounding / judge calibration / pipeline selection
 ├── agent/             LangGraph 外层编排、interrupt/checkpoint/resume、memory 对话记忆
 ├── skills/            Python Skills + generic runner + capability gate + adapters
 │   ├── adapters/      MCP / Playwright / loopback App bridge
@@ -802,7 +862,7 @@ app/
 ├── tasks/             文档解析与评估 Celery tasks
 └── utils/             工具（security JWT / deps / file_parser / logging / middleware）
 
-alembic/               v2.1 baseline + v2.2 schema/FTS migration（v3 无新业务表）
+alembic/               baseline + 检索 trace、EvalOps、来源版本和 subset rerun migrations
 frontend/              原生单页前端 + Playwright E2E/视觉基线
 ├── index.html
 ├── styles/            tokens / base / layout / components（按 surface 分文件）

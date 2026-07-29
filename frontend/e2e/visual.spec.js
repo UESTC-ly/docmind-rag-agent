@@ -14,7 +14,7 @@ test.describe("视觉回归", () => {
     await expect(page.locator(".auth__card")).toHaveScreenshot("auth-card.png");
   });
 
-  test("登录后的对话工作台保持视觉基线", async ({ page }, testInfo) => {
+  test("登录后的 Agent 工作台保持视觉基线", async ({ page }, testInfo) => {
     materializeVisualBaseline(testInfo, "chat-shell.png");
     await installApiMocks(page);
     const app = new DocMindPage(page);

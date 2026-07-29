@@ -1,7 +1,7 @@
 """LLM-as-judge 测试。
 
-打桩 chat_completion，验证 JSON 解析、markdown 代码块剥离、score clamp、
-异常兜底为 0.0，以及 prompt 拼装。
+打桩 chat_completion，验证 JSON 解析、markdown 代码块剥离、严格分数范围、
+以及 judge 不可用时返回缺失值而不是伪造 0 分。
 """
 
 from app.services.evaluation import generation_judge
@@ -30,21 +30,31 @@ class TestCallJudge:
 
     def test_score_clamped_above_1(self, monkeypatch):
         _patch_llm(monkeypatch, '{"score": 1.5}')
-        assert generation_judge.judge_answer_relevancy("q", "a") == 1.0
+        result = generation_judge.evaluate_answer_relevancy("q", "a")
+        assert result.score is None
+        assert result.status == "invalid"
 
     def test_score_clamped_below_0(self, monkeypatch):
         _patch_llm(monkeypatch, '{"score": -0.3}')
-        assert generation_judge.judge_answer_relevancy("q", "a") == 0.0
+        result = generation_judge.evaluate_answer_relevancy("q", "a")
+        assert result.score is None
+        assert result.status == "invalid"
 
     def test_invalid_json_returns_zero(self, monkeypatch):
         _patch_llm(monkeypatch, "这不是JSON")
-        assert generation_judge.judge_faithfulness(["c"], "a") == 0.0
+        result = generation_judge.evaluate_faithfulness(["c"], "a")
+        assert result.score is None
+        assert result.status == "invalid"
+        assert len(result.input_fingerprint) == 64
 
     def test_llm_exception_returns_zero(self, monkeypatch):
         def _boom(messages, temperature=0.0):
             raise RuntimeError("LLM down")
         monkeypatch.setattr(generation_judge, "chat_completion", _boom)
-        assert generation_judge.judge_answer_relevancy("q", "a") == 0.0
+        result = generation_judge.evaluate_answer_relevancy("q", "a")
+        assert result.score is None
+        assert result.status == "unavailable"
+        assert "LLM down" in result.reason
 
 
 class TestPromptAssembly:

@@ -10,6 +10,11 @@ import pytest
 from app.models.document import Document, DocumentStatus
 from app.models.user import User
 from app.tasks import document_tasks
+from app.utils.file_parser import (
+    LocatedChunk,
+    ParsedDocument,
+    ParsedParagraph,
+)
 
 
 @pytest.fixture
@@ -36,11 +41,48 @@ def _seed_doc(sync_db, path="f.txt"):
     return doc.id
 
 
+def _parsed_document(text="一些文本内容"):
+    return ParsedDocument(
+        text=text,
+        paragraphs=(
+            ParsedParagraph(
+                content=text,
+                paragraph_index=1,
+                char_start=0,
+                char_end=len(text),
+            ),
+        ),
+    )
+
+
+def _located_chunk(content, *, page=2, paragraph=1, start=0):
+    return LocatedChunk(
+        content=content,
+        page_start=page,
+        page_end=page,
+        paragraph_start=paragraph,
+        paragraph_end=paragraph,
+        char_start=start,
+        char_end=start + len(content),
+    )
+
+
 class TestProcessDocument:
     def test_success_marks_completed(self, bind_sync_db, monkeypatch):
         doc_id = _seed_doc(bind_sync_db)
-        monkeypatch.setattr(document_tasks, "extract_text", lambda p: "一些文本内容")
-        monkeypatch.setattr(document_tasks, "split_text", lambda t, **k: ["块1", "块2"])
+        monkeypatch.setattr(
+            document_tasks,
+            "extract_text_with_locations",
+            lambda _path: _parsed_document("块1\n块2"),
+        )
+        monkeypatch.setattr(
+            document_tasks,
+            "split_text_with_locations",
+            lambda _document, **_kwargs: [
+                _located_chunk("块1", page=2, paragraph=3, start=0),
+                _located_chunk("块2", page=3, paragraph=4, start=3),
+            ],
+        )
         monkeypatch.setattr(document_tasks, "embed_texts", lambda chunks: [[0.1], [0.2]])
         monkeypatch.setattr(document_tasks, "upsert_chunks", lambda **k: None)
 
@@ -49,6 +91,10 @@ class TestProcessDocument:
         doc = bind_sync_db.get(Document, doc_id)
         assert doc.status == DocumentStatus.COMPLETED
         assert doc.chunk_count == 2
+        assert [(chunk.page_start, chunk.paragraph_start, chunk.char_end) for chunk in doc.chunks] == [
+            (2, 3, 2),
+            (3, 4, 5),
+        ]
 
     def test_missing_document(self, bind_sync_db):
         result = document_tasks.process_document(99999)
@@ -57,7 +103,11 @@ class TestProcessDocument:
 
     def test_empty_text_marks_failed(self, bind_sync_db, monkeypatch):
         doc_id = _seed_doc(bind_sync_db)
-        monkeypatch.setattr(document_tasks, "extract_text", lambda p: "   ")
+        monkeypatch.setattr(
+            document_tasks,
+            "extract_text_with_locations",
+            lambda _path: ParsedDocument(text="   ", paragraphs=()),
+        )
         result = document_tasks.process_document(doc_id)
         assert result["status"] == "error"
         doc = bind_sync_db.get(Document, doc_id)
@@ -66,8 +116,16 @@ class TestProcessDocument:
 
     def test_embedding_failure_marks_failed(self, bind_sync_db, monkeypatch):
         doc_id = _seed_doc(bind_sync_db)
-        monkeypatch.setattr(document_tasks, "extract_text", lambda p: "文本")
-        monkeypatch.setattr(document_tasks, "split_text", lambda t, **k: ["块"])
+        monkeypatch.setattr(
+            document_tasks,
+            "extract_text_with_locations",
+            lambda _path: _parsed_document("文本"),
+        )
+        monkeypatch.setattr(
+            document_tasks,
+            "split_text_with_locations",
+            lambda _document, **_kwargs: [_located_chunk("块")],
+        )
         monkeypatch.setattr(
             document_tasks, "embed_texts",
             lambda chunks: (_ for _ in ()).throw(RuntimeError("embed 欠费")),

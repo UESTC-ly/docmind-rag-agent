@@ -6,6 +6,10 @@ LLM 输出结构化的 nodes + edges，前端可用图库渲染，也提供 Merm
 
 import json
 
+from app.services.artifact_verification import (
+    verify_mermaid_artifact,
+    verify_relation_graph_artifact,
+)
 from app.services.llm_service import chat_completion
 from app.skills._helpers import fetch_document_text
 from app.skills.base import BaseSkill, SkillContext
@@ -97,13 +101,29 @@ class GraphSkill(BaseSkill):
             return {"error": "图谱抽取结果解析失败", "raw": raw[:500]}
 
         graph_data = {"nodes": nodes, "edges": edges}
+        mermaid = _to_mermaid(nodes, edges)
+        structural = verify_relation_graph_artifact(nodes, edges)
+        mermaid_report = verify_mermaid_artifact(
+            mermaid,
+            artifact_type="relation_graph",
+        )
+        structural["checks"].extend(mermaid_report["checks"])
+        structural["passed"] = all(
+            check["passed"] for check in structural["checks"]
+        )
+        structural["score"] = round(
+            sum(1 for check in structural["checks"] if check["passed"])
+            / len(structural["checks"]),
+            6,
+        )
         return {
             "type": "relation_graph",
             "artifact_kind": "file",
             "document_id": document_id,
             "nodes": nodes,
             "edges": edges,
-            "mermaid": _to_mermaid(nodes, edges),
+            "mermaid": mermaid,
+            "verification": structural,
             "grounding": {
                 "mode": "document_prefix",
                 "document_ids": [document_id],

@@ -4,6 +4,8 @@
 （user_id 必带、document_id 可选）与返回映射、delete 过滤。
 """
 
+import pytest
+
 from app.services import vector_store
 
 
@@ -54,22 +56,37 @@ class TestPointId:
 
 class TestUpsert:
     def test_builds_points_with_payload(self, monkeypatch):
-        captured = {}
+        captured = []
         monkeypatch.setattr(vector_store, "ensure_collection", lambda: None)
         monkeypatch.setattr(
+            vector_store.settings,
+            "qdrant_upsert_batch_size",
+            1,
+        )
+        monkeypatch.setattr(
             vector_store._client, "upsert",
-            lambda collection_name, points: captured.update(points=points),
+            lambda collection_name, points: captured.append(points),
         )
         vector_store.upsert_chunks(
             document_id=1, user_id=9,
             chunks=["c0", "c1"], vectors=[[0.1], [0.2]],
         )
-        pts = captured["points"]
+        assert [len(batch) for batch in captured] == [1, 1]
+        pts = [point for batch in captured for point in batch]
         assert len(pts) == 2
         assert pts[0].payload == {
             "document_id": 1, "user_id": 9, "chunk_index": 0, "content": "c0",
         }
         assert pts[1].payload["chunk_index"] == 1
+
+    def test_rejects_chunk_vector_length_mismatch(self):
+        with pytest.raises(ValueError, match="same length"):
+            vector_store.upsert_chunks(
+                document_id=1,
+                user_id=9,
+                chunks=["c0"],
+                vectors=[],
+            )
 
 
 class TestSearch:

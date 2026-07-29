@@ -4,6 +4,8 @@ mock run_agent（其循环逻辑已在 test_agent_orchestrator 单独覆盖）�
 这里验证 agent_service 的会话管理、历史落库、HTTP 契约。
 """
 
+import json
+
 import pytest
 from sqlalchemy import delete, func, select
 
@@ -38,6 +40,12 @@ def mock_agent(monkeypatch):
             "answer": "Agent 的回答",
             "artifacts": [{"type": "mindmap", "nodes": ["a"]}],
             "trace": [{"step": 0, "skill": "search_knowledge_base", "args": {}}],
+            "plan": {
+                "contract": "agent_plan_v1",
+                "objective": "完成测试任务",
+                "status": "completed",
+                "steps": [{"id": "step-1", "status": "completed"}],
+            },
             "approval": None,
         }
 
@@ -101,7 +109,7 @@ def mock_agent(monkeypatch):
 
 class TestAgentChat:
     async def test_chat_returns_answer_artifacts_trace(
-        self, client, registered_user, mock_agent
+        self, client, db_session, registered_user, mock_agent
     ):
         resp = await client.post(
             "/agent/chat",
@@ -116,6 +124,191 @@ class TestAgentChat:
         assert body["conversation_id"] > 0
         assert body["status"] == "completed"
         assert body["run_id"]
+        assert body["plan"]["status"] == "completed"
+        assistant = (
+            await db_session.execute(
+                select(Message).where(
+                    Message.conversation_id == body["conversation_id"],
+                    Message.role == MessageRole.ASSISTANT,
+                )
+            )
+        ).scalar_one()
+        audit = assistant.sources or ""
+        assert "agent_plan_v1" in audit
+        assert "mindmap" in audit
+
+    async def test_provider_failure_is_a_terminal_agent_result(
+        self, client, db_session, registered_user, monkeypatch, mock_agent
+    ):
+        def _failed_agent(
+            user_id,
+            message,
+            history,
+            document_id,
+            requested_skill=None,
+            **kwargs,
+        ):
+            return {
+                "run_id": kwargs["thread_id"],
+                "thread_id": kwargs["thread_id"],
+                "conversation_id": kwargs["conversation_id"],
+                "status": "failed",
+                "answer": "模型服务暂不可用，本次任务未完成。请稍后重试。",
+                "artifacts": [],
+                "trace": [
+                    {
+                        "step": 0,
+                        "skill": "model_provider",
+                        "ok": False,
+                        "graph_node": "supervisor",
+                        "failure_code": "provider_unavailable",
+                    }
+                ],
+                "plan": {
+                    "contract": "agent_plan_v1",
+                    "objective": "生成报告",
+                    "status": "failed",
+                    "steps": [{"id": "step-1", "status": "failed"}],
+                },
+                "approval": None,
+            }
+
+        monkeypatch.setattr(agent_service, "run_agent", _failed_agent)
+        response = await client.post(
+            "/agent/chat",
+            headers=registered_user["headers"],
+            json={"message": "生成报告"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "failed"
+        assert "模型服务暂不可用" in response.json()["answer"]
+        assistant = (
+            await db_session.execute(
+                select(Message).where(
+                    Message.conversation_id == response.json()["conversation_id"],
+                    Message.role == MessageRole.ASSISTANT,
+                )
+            )
+        ).scalar_one()
+        assert assistant.content == response.json()["answer"]
+
+    async def test_assistant_audit_omits_payloads_and_private_prose(
+        self,
+        client,
+        db_session,
+        registered_user,
+        monkeypatch,
+        mock_agent,
+    ):
+        private_markers = {
+            "PRIVATE_DOWNLOAD_PAYLOAD",
+            "PRIVATE_SOURCE_TEXT",
+            "PRIVATE_CLAIM_TEXT",
+            "PRIVATE_CHECK_DETAIL",
+            "PRIVATE_TOOL_ARGUMENT",
+        }
+
+        def _private_result(
+            user_id,
+            message,
+            history,
+            document_id,
+            requested_skill=None,
+            **kwargs,
+        ):
+            grounding = {
+                "mode": "pipeline_rag_verified",
+                "pipeline_id": "hybrid",
+                "sources": [
+                    {
+                        "citation_id": "D7:C2",
+                        "document_id": 7,
+                        "chunk_index": 2,
+                        "content": "PRIVATE_SOURCE_TEXT",
+                    }
+                ],
+            }
+            verification = {
+                "contract": "artifact_quality_v1",
+                "artifact_type": "report",
+                "passed": True,
+                "claim_count": 1,
+                "supported_claim_count": 1,
+                "claims": [{"text": "PRIVATE_CLAIM_TEXT"}],
+                "checks": [
+                    {
+                        "id": "citation_presence",
+                        "passed": True,
+                        "detail": "PRIVATE_CHECK_DETAIL",
+                    }
+                ],
+            }
+            return {
+                "run_id": kwargs["thread_id"],
+                "thread_id": kwargs["thread_id"],
+                "conversation_id": kwargs["conversation_id"],
+                "status": "completed",
+                "answer": "已完成",
+                "artifacts": [
+                    {
+                        "type": "report",
+                        "grounding": grounding,
+                        "verification": verification,
+                        "download": {
+                            "filename": "private.md",
+                            "mime_type": "text/markdown",
+                            "encoding": "text",
+                            "content": "PRIVATE_DOWNLOAD_PAYLOAD",
+                        },
+                    }
+                ],
+                "trace": [
+                    {
+                        "step": 0,
+                        "skill": "generate_report",
+                        "ok": True,
+                        "args": {"topic": "PRIVATE_TOOL_ARGUMENT"},
+                        "grounding": grounding,
+                        "verification": verification,
+                    }
+                ],
+                "plan": None,
+                "approval": None,
+            }
+
+        monkeypatch.setattr(agent_service, "run_agent", _private_result)
+        response = await client.post(
+            "/agent/chat",
+            headers=registered_user["headers"],
+            json={"message": "生成私有报告"},
+        )
+        assert response.status_code == 200
+        conversation_id = response.json()["conversation_id"]
+        assistant = (
+            await db_session.execute(
+                select(Message).where(
+                    Message.conversation_id == conversation_id,
+                    Message.role == MessageRole.ASSISTANT,
+                )
+            )
+        ).scalar_one()
+        audit = json.loads(assistant.sources)
+        serialized = json.dumps(audit, ensure_ascii=False)
+
+        assert all(marker not in serialized for marker in private_markers)
+        assert audit["trace"][0]["arg_keys"] == ["topic"]
+        assert audit["artifacts"][0]["filename"] == "private.md"
+        assert audit["artifacts"][0]["grounding"]["sources"] == [
+            {
+                "citation_id": "D7:C2",
+                "document_id": 7,
+                "chunk_index": 2,
+            }
+        ]
+        assert audit["artifacts"][0]["verification"]["checks"] == [
+            {"id": "citation_presence", "passed": True}
+        ]
 
     async def test_selected_skill_is_forwarded_to_orchestrator(
         self, client, registered_user, mock_agent

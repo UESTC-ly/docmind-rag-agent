@@ -14,6 +14,8 @@ from app.agent.orchestrator import (
     AgentRunNotFoundError,
     AgentRunOwnershipError,
     AgentRunStateError,
+    compact_agent_trace_for_audit,
+    compact_artifact_for_audit,
     inspect_agent_run,
     recover_agent,
     resume_agent,
@@ -161,7 +163,7 @@ async def _chat_with_agent_locked(
                 detail="Agent checkpoint 缺少 conversation_id",
             )
         await _get_or_create_conversation(db, user_id, existing_conversation_id, "")
-        if existing["status"] == "completed":
+        if existing["status"] in {"completed", "failed"}:
             await _persist_assistant_message(db, existing_conversation_id, existing)
         return _agent_response(existing, existing_conversation_id)
 
@@ -201,7 +203,7 @@ async def _chat_with_agent_locked(
     except AgentRunStateError as exc:
         raise _checkpoint_http_error(exc) from exc
 
-    if result["status"] == "completed":
+    if result["status"] in {"completed", "failed"}:
         await _persist_assistant_message(db, conv.id, result)
 
     return _agent_response(result, conv.id)
@@ -216,7 +218,13 @@ async def _persist_assistant_message(
     sources = json.dumps(
         {
             "agent_run_id": str(result["run_id"]),
-            "trace": result.get("trace", []),
+            "plan": result.get("plan"),
+            "trace": compact_agent_trace_for_audit(result.get("trace", [])),
+            "artifacts": [
+                compact
+                for artifact in result.get("artifacts", [])
+                if (compact := compact_artifact_for_audit(artifact)) is not None
+            ],
         },
         ensure_ascii=False,
         sort_keys=True,
@@ -251,6 +259,7 @@ def _agent_response(result: dict, conversation_id: int) -> AgentResponse:
         answer=result.get("answer", ""),
         artifacts=result.get("artifacts", []),
         trace=result.get("trace", []),
+        plan=result.get("plan"),
         approval=result.get("approval"),
     )
 
@@ -328,7 +337,7 @@ async def _resume_agent_run_locked(
             status_code=status.HTTP_409_CONFLICT,
             detail="Agent checkpoint conversation_id 在恢复期间发生变化",
         )
-    if result["status"] == "completed":
+    if result["status"] in {"completed", "failed"}:
         await _persist_assistant_message(db, conversation_id, result)
     return _agent_response(result, conversation_id)
 
@@ -387,6 +396,6 @@ async def _recover_agent_run_locked(
             status_code=status.HTTP_409_CONFLICT,
             detail="Agent checkpoint conversation_id 在恢复期间发生变化",
         )
-    if result["status"] == "completed":
+    if result["status"] in {"completed", "failed"}:
         await _persist_assistant_message(db, conversation_id, result)
     return _agent_response(result, conversation_id)

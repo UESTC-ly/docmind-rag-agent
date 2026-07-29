@@ -28,11 +28,14 @@ class AgentResponse(BaseModel):
     conversation_id: int
     run_id: str
     thread_id: str
-    status: Literal["running", "waiting_approval", "completed"] = "completed"
+    status: Literal["running", "waiting_approval", "completed", "failed"] = (
+        "completed"
+    )
     recoverable: bool = False
     answer: str
     artifacts: list[dict] = Field(default_factory=list)
     trace: list[dict] = Field(default_factory=list)
+    plan: dict[str, Any] | None = None
     approval: dict[str, Any] | None = None
 
 

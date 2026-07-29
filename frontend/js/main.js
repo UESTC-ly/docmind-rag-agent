@@ -9,10 +9,10 @@ import { initSkills, refreshSkills } from "./skills.js";
 import { isDesktopApp, retryDesktopBackend, waitForDesktopBackend } from "./desktop.js";
 
 const VIEW_META = {
-  chat: { title: "对话", sub: "流式 RAG 问答 · 多路召回" },
-  skills: { title: "技能", sub: "Agent Function Calling · 可插拔工具" },
-  docs: { title: "文档", sub: "上传解析 · 异步向量化" },
-  eval: { title: "评估", sub: "检索指标 + LLM-as-judge" },
+  chat: { title: "证据问答", sub: "带引用、质量门与拒答的文档回答" },
+  skills: { title: "Agent 工作台", sub: "计划 · 工具 · 自适应检索 · 证据门" },
+  docs: { title: "知识库", sub: "文档、来源版本与可定位证据" },
+  eval: { title: "EvalOps 实验室", sub: "公开基准 · 回归门禁 · Badcase" },
 };
 
 let registerMode = false;
@@ -77,7 +77,7 @@ async function enterApp() {
     return showAuth();
   }
   refreshConversations();
-  switchView("chat");
+  switchView("skills");
 }
 
 function initAuthScreen() {

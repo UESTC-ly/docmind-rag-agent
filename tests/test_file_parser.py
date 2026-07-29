@@ -7,7 +7,12 @@ txt 用真实临时文件；pdf/docx 的第三方库调用打桩；重点覆盖 
 import pytest
 
 from app.utils import file_parser
-from app.utils.file_parser import extract_text, split_text
+from app.utils.file_parser import (
+    extract_text,
+    extract_text_with_locations,
+    split_text,
+    split_text_with_locations,
+)
 
 
 class TestSplitText:
@@ -63,3 +68,48 @@ class TestExtractText:
     def test_docx_dispatch(self, monkeypatch):
         monkeypatch.setattr(file_parser, "_extract_docx", lambda p: "DOCX内容")
         assert extract_text("doc.docx") == "DOCX内容"
+
+
+class TestSourceLocations:
+    def test_text_locations_keep_paragraphs_and_character_spans(self, tmp_path):
+        path = tmp_path / "source.md"
+        path.write_text(
+            "第一段第一行\n第一段第二行\n\n第二段",
+            encoding="utf-8",
+        )
+
+        parsed = extract_text_with_locations(str(path))
+        chunks = split_text_with_locations(parsed, chunk_size=20)
+
+        assert parsed.text == "第一段第一行\n第一段第二行\n第二段"
+        assert [(p.paragraph_index, p.char_start, p.char_end) for p in parsed.paragraphs] == [
+            (1, 0, 13),
+            (2, 14, 17),
+        ]
+        assert len(chunks) == 1
+        assert chunks[0].paragraph_start == 1
+        assert chunks[0].paragraph_end == 2
+        assert parsed.text[chunks[0].char_start : chunks[0].char_end] == chunks[0].content
+
+    def test_pdf_locations_report_real_one_based_pages(self, tmp_path):
+        path = tmp_path / "source.pdf"
+        document = file_parser.fitz.open()
+        first = document.new_page()
+        first.insert_text((72, 72), "first source")
+        second = document.new_page()
+        second.insert_text((72, 72), "second source")
+        document.save(path)
+        document.close()
+
+        parsed = extract_text_with_locations(str(path))
+        chunks = split_text_with_locations(parsed, chunk_size=20, chunk_overlap=0)
+
+        assert [paragraph.page_number for paragraph in parsed.paragraphs] == [1, 2]
+        assert [(chunk.page_start, chunk.page_end) for chunk in chunks] == [
+            (1, 1),
+            (2, 2),
+        ]
+        assert all(
+            parsed.text[chunk.char_start : chunk.char_end] == chunk.content
+            for chunk in chunks
+        )

@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.database import SyncSessionLocal
 from app.models.document import Document, DocumentChunk, DocumentStatus
+from app.services.evidence import citation_id
 from app.services.skill_retrieval import retrieve_for_skill
 
 
@@ -92,9 +93,12 @@ def fetch_retrieved_material(
             continue
         doc_id = int(hit["document_id"])
         chunk_index = int(hit.get("chunk_index", 0))
+        evidence_id = str(
+            hit.get("citation_id") or citation_id(doc_id, chunk_index)
+        )
         remaining = max_chars - used_chars
         excerpt = content[:remaining]
-        parts.append(f"【文档 {doc_id} · 片段 {chunk_index}】\n{excerpt}")
+        parts.append(f"[{evidence_id}] {excerpt}")
         used_chars += len(excerpt)
         if doc_id not in used_ids:
             used_ids.append(doc_id)
@@ -102,6 +106,8 @@ def fetch_retrieved_material(
             {
                 "document_id": doc_id,
                 "chunk_index": chunk_index,
+                "citation_id": evidence_id,
+                "content": excerpt,
                 "score": hit.get("score"),
             }
         )

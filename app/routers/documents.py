@@ -3,7 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.document import DocumentResponse, UploadResponse
+from app.schemas.document import (
+    DocumentChunkResponse,
+    DocumentMetadataUpdate,
+    DocumentResponse,
+    UploadResponse,
+)
 from app.services import document_service
 from app.utils.deps import get_current_user
 
@@ -44,6 +49,44 @@ async def get_doc(
     db: AsyncSession = Depends(get_db),
 ):
     return await document_service.get_document(db, current_user.id, document_id)
+
+
+@router.patch(
+    "/{document_id}/metadata",
+    response_model=DocumentResponse,
+    summary="更新文档来源、版本和有效期",
+)
+async def update_metadata(
+    document_id: int,
+    metadata: DocumentMetadataUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await document_service.update_document_metadata(
+        db,
+        current_user.id,
+        document_id,
+        metadata,
+    )
+
+
+@router.get(
+    "/{document_id}/chunks/{chunk_index}",
+    response_model=DocumentChunkResponse,
+    summary="跳转到引用对应的原文片段",
+)
+async def get_chunk(
+    document_id: int,
+    chunk_index: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await document_service.get_document_chunk(
+        db,
+        current_user.id,
+        document_id,
+        chunk_index,
+    )
 
 
 @router.delete(

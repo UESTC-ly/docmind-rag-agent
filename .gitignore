@@ -23,6 +23,13 @@ htmlcov/
 data/*.parquet
 data/**/*.parquet
 data/manifest.json
+# 公开基准的原始快照同样只保留在本地；仓库只跟踪下载/导入脚本。
+data/ms_marco/
+data/cmrc2018/
+data/ragtruth/
+data/beir/
+data/alce/
+data/ares/
 data/agent-checkpoints.sqlite3*
 uploads/
 skill_workspaces/

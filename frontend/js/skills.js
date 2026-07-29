@@ -129,24 +129,185 @@ async function renderCheckpoint(runId) {
   return result;
 }
 
+const QUALITY_ACTION_LABELS = {
+  rewrite_query: "改写检索问题",
+  expand_retrieval: "扩大召回范围",
+  switch_pipeline: "切换已评测管线",
+  re_retrieve_after_unsupported_claims: "无依据后再次检索",
+  remove_unsupported_or_refuse: "删除无依据结论或拒答",
+  refuse_insufficient_evidence: "证据不足拒答",
+  refuse_stale_evidence: "当前有效证据不足",
+  refuse_conflicting_evidence: "冲突证据拒答",
+  refuse_judge_unavailable: "质量 Judge 不可用，拒绝交付",
+};
+
+const QUALITY_REASON_LABELS = {
+  weak_retrieval: "弱检索",
+  no_evidence: "没有可用证据",
+  stale_or_no_current_evidence: "仅命中过期或失效来源",
+  unsupported_claims: "存在无依据结论",
+  unsupported_claims_budget_exhausted: "无依据结论且策略预算耗尽",
+  conflicting_evidence: "来源冲突",
+  judge_unavailable: "质量 Judge 不可用",
+  quality_gate_passed: "质量门通过",
+};
+
+const QUALITY_STATUS_LABELS = {
+  applied: "已执行",
+  skipped: "未执行",
+  terminal: "终止",
+};
+
+function compactArgKeys(step) {
+  const args = step?.args;
+  if (!args || typeof args !== "object" || Array.isArray(args)) return [];
+  return Object.keys(args).slice(0, 8).filter((key) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key));
+}
+
+function qualityObservation(observation) {
+  if (!observation || typeof observation !== "object") return "";
+  const parts = [];
+  const status = QUALITY_REASON_LABELS[observation.status] || observation.status;
+  if (status) parts.push(status);
+  if (Number.isFinite(observation.hit_count)) parts.push(`${observation.hit_count} 条证据`);
+  if (Number.isFinite(observation.stale_hit_count) && observation.stale_hit_count > 0) {
+    parts.push(`${observation.stale_hit_count} 条失效来源`);
+  }
+  return parts.join(" · ");
+}
+
+function renderQualityInterventions(step) {
+  const interventions = step?.grounding?.quality_interventions;
+  if (!Array.isArray(interventions) || !interventions.length) return null;
+  return el("div", { class: "trace__quality", "aria-label": "Agent 质量策略轨迹" }, [
+    el("span", { class: "trace__quality-title", text: "质量策略" }),
+    ...interventions.slice(0, 8).map((intervention) => {
+      const action = QUALITY_ACTION_LABELS[intervention?.action] || "受控质量策略";
+      const reason = QUALITY_REASON_LABELS[intervention?.reason] || "质量观察";
+      const status = QUALITY_STATUS_LABELS[intervention?.status] || "已记录";
+      const before = qualityObservation(intervention?.quality_before);
+      const after = qualityObservation(intervention?.quality_after);
+      const observation = [before, after && `结果：${after}`].filter(Boolean).join(" -> ");
+      return el("div", {
+        class: `trace__quality-event trace__quality-event--${intervention?.status || "recorded"}`,
+      }, [
+        el("strong", { text: action }),
+        el("span", { text: reason }),
+        observation ? el("small", { text: observation }) : null,
+        el("span", { class: "status", text: status }),
+      ].filter(Boolean));
+    }),
+  ]);
+}
+
+function renderTraceVerification(verification) {
+  if (!verification || typeof verification !== "object") return null;
+  const passed = verification.passed === true;
+  const claimCount = Number(verification.claim_count);
+  const supportedCount = Number(verification.supported_claim_count);
+  const summary = Number.isFinite(claimCount) && Number.isFinite(supportedCount)
+    ? `证据门 ${supportedCount}/${claimCount}`
+    : (passed ? "证据门通过" : "证据门未通过");
+  return el("span", {
+    class: passed ? "trace__verification trace__verification--passed" : "trace__verification trace__verification--failed",
+    text: summary,
+  });
+}
+
 function renderTrace(trace) {
   if (!trace?.length) return null;
-  return el("div", { class: "trace" }, [
-    el("div", { class: "section-kicker", text: "调用轨迹" }),
-    ...trace.map((step) =>
-      el("div", { class: "trace__item" }, [
-        el("span", { text: `#${step.step + 1}` }),
-        el("strong", { text: step.skill }),
-        el("code", { text: JSON.stringify(step.args ?? {}) }),
-        step.approval
-          ? el("span", {
-              class: "status",
-              text: step.approval.approved ? "已审批" : "已拒绝",
-            })
+  return el("section", { class: "trace" }, [
+    el("div", { class: "section-kicker", text: "Agent 执行轨迹" }),
+    ...trace.map((step, index) => {
+      const argKeys = compactArgKeys(step);
+      return el("div", { class: "trace__item" }, [
+        el("div", { class: "trace__item-head" }, [
+          el("span", {
+            class: "trace__sequence",
+            text: `#${Number.isInteger(step?.step) ? step.step + 1 : index + 1}${step?.plan_step_id ? ` · ${step.plan_step_id}` : ""}`,
+          }),
+          el("strong", { text: step?.skill || "未命名能力" }),
+          step?.ok === false
+            ? el("span", { class: "status", text: "未完成" })
+            : el("span", { class: "status", text: "已完成" }),
+          step?.approval
+            ? el("span", {
+                class: "status",
+                text: step.approval.approved ? "已审批" : "已拒绝",
+              })
+            : null,
+          renderTraceVerification(step?.verification),
+        ].filter(Boolean)),
+        argKeys.length
+          ? el("div", { class: "trace__meta", text: `输入字段：${argKeys.join("、")}` })
           : null,
-      ].filter(Boolean))
-    ),
+        renderQualityInterventions(step),
+      ].filter(Boolean));
+    }),
   ]);
+}
+
+function renderPlan(plan) {
+  if (!plan) return null;
+  const labels = {
+    pending: "待执行",
+    running: "执行中",
+    waiting_approval: "待审批",
+    completed: "已完成",
+    failed: "失败",
+    skipped: "已跳过",
+    partial: "部分完成",
+  };
+  return el("section", { class: "agent-plan" }, [
+    el("div", { class: "section-kicker", text: "Agent 任务计划" }),
+    el("div", { class: "agent-plan__header" }, [
+      el("strong", { text: plan.objective || "完成用户任务" }),
+      el("span", {
+        class: `status agent-plan__status agent-plan__status--${plan.status || "pending"}`,
+        text: labels[plan.status] || plan.status || "待执行",
+      }),
+    ]),
+    el("ol", { class: "agent-plan__steps" }, (plan.steps || []).map((step) =>
+      el("li", { class: `agent-plan__step agent-plan__step--${step.status || "pending"}` }, [
+        el("div", {}, [
+          el("strong", { text: step.title || step.id || "未命名步骤" }),
+          step.skill ? el("code", { text: step.skill }) : null,
+        ].filter(Boolean)),
+        el("p", { text: step.success_criteria || "该步骤返回可观察结果" }),
+        el("span", {
+          class: "status",
+          text: labels[step.status] || step.status || "待执行",
+        }),
+      ])
+    )),
+  ]);
+}
+
+function renderArtifactVerification(verification) {
+  if (!verification) return null;
+  const passed = Boolean(verification.passed);
+  const summary = verification.claim_count == null
+    ? `质量得分 ${Number(verification.score ?? 0).toFixed(3)}`
+    : `证据覆盖 ${verification.supported_claim_count}/${verification.claim_count} · 引用召回率 ${Number(verification.citation_recall ?? 0).toFixed(3)}`;
+  return el("section", {
+    class: passed
+      ? "artifact-verification artifact-verification--passed"
+      : "artifact-verification artifact-verification--failed",
+    role: "status",
+  }, [
+    el("strong", { text: passed ? "产物质量门通过" : "产物质量门未通过" }),
+    el("span", { text: summary }),
+    ...(verification.checks || []).map((check) =>
+      el("div", { class: "artifact-verification__check" }, [
+        el("span", { text: check.passed ? "✓" : "!" }),
+        el("strong", { text: check.id }),
+        el("span", { text: check.detail || "" }),
+      ])
+    ),
+    verification.semantic_entailment_checked === false
+      ? el("small", { text: "当前验证结构、格式和证据编号；不等同于语义蕴含证明。" })
+      : null,
+  ].filter(Boolean));
 }
 
 function stripMermaidFence(code) {
@@ -255,11 +416,13 @@ async function renderMermaid(container, code) {
 
 function renderArtifactBody(artifact) {
   const download = renderDownload(artifact.download);
+  const verification = renderArtifactVerification(artifact.verification);
   const mermaidCode = mermaidCodeFor(artifact);
   if (mermaidCode) {
     const preview = el("div", { class: "mermaid-preview" });
     queueMicrotask(() => renderMermaid(preview, mermaidCode));
     return el("div", { class: "artifact__body" }, [
+      verification,
       download,
       preview,
       el("details", { class: "artifact-source" }, [
@@ -271,6 +434,7 @@ function renderArtifactBody(artifact) {
 
   if (artifact.type === "weekly_report") {
     return el("div", { class: "artifact__body" }, [
+      verification,
       download,
       el("pre", { text: artifact.content || "周报内容为空。" }),
     ].filter(Boolean));
@@ -278,6 +442,7 @@ function renderArtifactBody(artifact) {
 
   if (artifact.type === "presentation") {
     return el("div", { class: "artifact__body" }, [
+      verification,
       download,
       el("div", { class: "slide-preview-list" }, [
         ...(artifact.slides || []).map((slide, index) =>
@@ -292,6 +457,7 @@ function renderArtifactBody(artifact) {
   }
 
   return el("div", { class: "artifact__body" }, [
+    verification,
     download,
     el("pre", { text: JSON.stringify(artifact, null, 2) }),
   ].filter(Boolean));
@@ -408,10 +574,9 @@ function renderAgentResult(result) {
     result.run_id
   ) {
     localStorage.setItem(PENDING_AGENT_RUN_KEY, result.run_id);
-  } else if (
-    result.run_id &&
-    localStorage.getItem(PENDING_AGENT_RUN_KEY) === result.run_id
-  ) {
+  } else {
+    // A terminal response is authoritative even if the server assigned a
+    // different run ID than the optimistic client-side placeholder.
     localStorage.removeItem(PENDING_AGENT_RUN_KEY);
   }
   const root = $("#skill-agent-result");
@@ -422,11 +587,13 @@ function renderAgentResult(result) {
     ]),
   ];
   const trace = renderTrace(result.trace);
+  const plan = renderPlan(result.plan);
   const artifacts = renderArtifacts(result.artifacts);
   const approval = approvalCard(result);
   const recovery = recoveryCard(result);
   if (approval) children.push(approval);
   if (recovery) children.push(recovery);
+  if (plan) children.push(plan);
   if (trace) children.push(trace);
   if (artifacts) children.push(artifacts);
   root.replaceChildren(...children);

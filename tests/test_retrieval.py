@@ -92,6 +92,11 @@ class TestSkillRetrieval:
         monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
         monkeypatch.setattr(
             skill_retrieval,
+            "apply_document_policy_sync",
+            lambda hits, **kwargs: hits,
+        )
+        monkeypatch.setattr(
+            skill_retrieval,
             "search",
             lambda vector, user_id, top_k, document_id: dense,
         )
@@ -120,6 +125,11 @@ class TestSkillRetrieval:
     def test_dense_mode_skips_keyword_path(self, monkeypatch):
         monkeypatch.setattr(skill_retrieval.settings, "retrieval_mode", "dense")
         monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
+        monkeypatch.setattr(
+            skill_retrieval,
+            "apply_document_policy_sync",
+            lambda hits, **kwargs: hits,
+        )
         monkeypatch.setattr(
             skill_retrieval,
             "search",
@@ -241,6 +251,11 @@ async def test_online_and_sync_paths_produce_same_final_order(db_session, monkey
     monkeypatch.setattr(skill_retrieval.settings, "retrieval_mode", "hybrid")
     monkeypatch.setattr(skill_retrieval.settings, "reranker_mode", "local")
     monkeypatch.setattr(skill_retrieval, "embed_query", lambda query: [0.1])
+    monkeypatch.setattr(
+        skill_retrieval,
+        "apply_document_policy_sync",
+        lambda hits, **kwargs: hits,
+    )
     monkeypatch.setattr(skill_retrieval, "search", lambda *args: dense)
     monkeypatch.setattr(
         skill_retrieval,
@@ -248,6 +263,10 @@ async def test_online_and_sync_paths_produce_same_final_order(db_session, monkey
         lambda *args, **kwargs: keyword,
     )
     monkeypatch.setattr(rag_service, "embed_query", lambda query: [0.1])
+    async def _policy(hits, **kwargs):
+        return hits
+
+    monkeypatch.setattr(rag_service, "apply_document_policy_async", _policy)
     monkeypatch.setattr(rag_service, "search", lambda *args: dense)
 
     async def _keyword(*args, **kwargs):

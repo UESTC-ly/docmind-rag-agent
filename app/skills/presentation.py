@@ -4,6 +4,11 @@ import base64
 import json
 import re
 
+from app.services.artifact_verification import (
+    sanitize_presentation_slides,
+    verify_presentation_artifact,
+)
+from app.services.evidence import attach_citation_ids
 from app.services.llm_service import chat_completion
 from app.skills._helpers import fetch_retrieved_material
 from app.skills.base import BaseSkill, SkillContext
@@ -24,6 +29,8 @@ _FALLBACK_PROMPT = """你是 PPT 内容策划助手。请根据材料生成演�
 - 总页数控制在 {slide_count} 页。
 - 每页标题简短，每页 2-5 个要点。
 - 内容必须基于材料；材料不足时用“材料未提及”说明，不要编造。
+- 每个事实性要点末尾必须复制材料中的真实证据编号，如 [D12:C3]。
+- 不得创造证据编号；没有证据支持的要点写“材料未提及”。
 - 用中文。
 
 主题：{topic}
@@ -122,16 +129,52 @@ class PresentationSkill(BaseSkill):
             ],
             temperature=0.35,
         )
-        slides = _parse_slides(msg.content or "", topic, slide_count)
+        parsed_slides = _parse_slides(msg.content or "", topic, slide_count)
+        hits = attach_citation_ids(
+            [
+                {
+                    "document_id": source["document_id"],
+                    "chunk_index": source.get("chunk_index", 0),
+                    "content": source.get("content", ""),
+                    "score": source.get("score"),
+                }
+                for source in sources
+            ]
+        )
+        sanitized_rows = sanitize_presentation_slides(
+            [
+                {"title": slide.title, "bullets": slide.bullets}
+                for slide in parsed_slides
+            ],
+            hits,
+        )
+        slides = [
+            Slide(title=row["title"], bullets=row["bullets"])
+            for row in sanitized_rows
+        ]
         pptx = build_pptx(slides)
+        verification = verify_presentation_artifact(
+            sanitized_rows,
+            hits,
+            pptx,
+        )
+        verification["fail_safe_applied"] = sanitized_rows != [
+            {"title": slide.title, "bullets": slide.bullets}
+            for slide in parsed_slides
+        ]
         filename = _safe_filename(f"{topic}_PPT", ".pptx")
+        public_sources = [
+            {key: value for key, value in source.items() if key != "content"}
+            for source in sources
+        ]
 
         return {
             "type": "presentation",
             "artifact_kind": "file",
             "topic": topic,
             "document_ids": used_doc_ids,
-            "grounding": {"mode": "hybrid_rag", "sources": sources},
+            "grounding": {"mode": "hybrid_rag", "sources": public_sources},
+            "verification": verification,
             "slides": [
                 {"title": slide.title, "bullets": slide.bullets}
                 for slide in slides
