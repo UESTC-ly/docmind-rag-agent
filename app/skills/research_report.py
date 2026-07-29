@@ -50,6 +50,7 @@ _DRAFT_PROMPT = """请根据给定证据撰写中文 Markdown 研究报告。
 5. 多个证据冲突时明确写出冲突并分别引用，不得擅自选边。
 6. 原文没有直接陈述的推断必须以「推测：」开头。
 7. 保留 # 报告标题和 ## 小节标题。
+8. 只保留最关键的 4 到 8 条结论；正文不超过 1200 个中文字符。
 只输出报告正文。"""
 
 _REPAIR_PROMPT = """下面的研究报告没有完全通过句子级引用校验。请只使用给定证据修订。
@@ -80,6 +81,9 @@ _REWRITE_QUERY_PROMPT = """知识库检索没有返回证据。请把下面的�
 原查询：{query}"""
 
 _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
+DEFAULT_REPORT_SECTION_COUNT = 2
+MAX_REPORT_SECTION_COUNT = 3
+MAX_REPORT_EVIDENCE_CHARS = 8000
 
 
 def _default_sections(topic: str, count: int) -> list[dict[str, str]]:
@@ -186,6 +190,72 @@ def _fail_safe_report(text: str, report: dict[str, Any]) -> str:
     return f"{sanitized}\n\n{note}".strip()
 
 
+def _prune_irrelevant_citations(
+    text: str,
+    report: dict[str, Any],
+) -> tuple[str, int]:
+    """Remove irrelevant links only when a claim retains supporting evidence."""
+
+    sanitized = text
+    removed_count = 0
+    for claim in report.get("claims") or []:
+        citation_verdicts = claim.get("citation_verdicts") or []
+        supported_ids = {
+            str(row.get("citation_id") or "")
+            for row in citation_verdicts
+            if row.get("verdict") == "supports"
+        }
+        irrelevant_ids = {
+            str(row.get("citation_id") or "")
+            for row in citation_verdicts
+            if row.get("verdict") == "irrelevant"
+        }
+        if not supported_ids or not irrelevant_ids:
+            continue
+        original = str(claim.get("text") or "")
+        if not original:
+            continue
+        corrected = original
+        for citation_id in irrelevant_ids:
+            marker = f"[{citation_id}]"
+            if marker in corrected:
+                corrected = corrected.replace(marker, "")
+                removed_count += 1
+        if corrected != original:
+            sanitized = sanitized.replace(original, corrected, 1)
+    return sanitized, removed_count
+
+
+def _mark_supported_inferences(
+    text: str,
+    report: dict[str, Any],
+) -> tuple[str, int]:
+    """Label judge-approved inferences so they cannot masquerade as facts."""
+
+    sanitized = text
+    marked_count = 0
+    for claim in report.get("claims") or []:
+        if (
+            claim.get("verdict") != "reasonable_inference"
+            or claim.get("claim_type") != "inference"
+            or claim.get("explicit_inference")
+        ):
+            continue
+        citation_verdicts = claim.get("citation_verdicts") or []
+        if not any(row.get("verdict") == "supports" for row in citation_verdicts):
+            continue
+        if any(row.get("verdict") == "contradicts" for row in citation_verdicts):
+            continue
+        original = str(claim.get("text") or "")
+        if not original:
+            continue
+        corrected = f"推测：{original}"
+        if corrected != original:
+            sanitized = sanitized.replace(original, corrected, 1)
+            marked_count += 1
+    return sanitized, marked_count
+
+
 def _automatic_pipeline_decision(user_id: int) -> dict[str, Any]:
     """Use public regression evidence when available; fail visibly to configured."""
 
@@ -255,8 +325,8 @@ class VerifiedResearchReportSkill(BaseSkill):
             "section_count": {
                 "type": "integer",
                 "minimum": 2,
-                "maximum": 5,
-                "description": "报告小节数，默认 3。",
+                "maximum": MAX_REPORT_SECTION_COUNT,
+                "description": "报告小节数，默认 2，最多 3。",
             },
         },
         "required": ["topic"],
@@ -288,7 +358,13 @@ class VerifiedResearchReportSkill(BaseSkill):
             if candidate.get("pipeline_id")
             and str(candidate["pipeline_id"]) != pipeline_id
         ]
-        section_count = max(2, min(5, int(kwargs.get("section_count") or 3)))
+        section_count = max(
+            2,
+            min(
+                MAX_REPORT_SECTION_COUNT,
+                int(kwargs.get("section_count") or DEFAULT_REPORT_SECTION_COUNT),
+            ),
+        )
         workflow_steps: list[dict[str, Any]] = [
             {
                 "step": "select_pipeline",
@@ -409,7 +485,10 @@ class VerifiedResearchReportSkill(BaseSkill):
                 },
             }
 
-        evidence = build_evidence_context(hits, max_chars=16000)
+        evidence = build_evidence_context(
+            hits,
+            max_chars=MAX_REPORT_EVIDENCE_CHARS,
+        )
         outline = "\n".join(
             f"- {section['title']}："
             f"{effective_queries.get(section['title'], section['query'])}"
@@ -482,6 +561,40 @@ class VerifiedResearchReportSkill(BaseSkill):
                     ],
                 }
             )
+
+        if not verification["passed"]:
+            report_text, marked_inference_count = _mark_supported_inferences(
+                report_text,
+                verification,
+            )
+            if marked_inference_count:
+                verification = evaluate_grounding(report_text, hits)
+                workflow_steps.append(
+                    {
+                        "step": "mark_supported_inferences",
+                        "status": (
+                            "passed" if verification["passed"] else "failed"
+                        ),
+                        "marked_inference_count": marked_inference_count,
+                    }
+                )
+
+        if not verification["passed"]:
+            report_text, pruned_link_count = _prune_irrelevant_citations(
+                report_text,
+                verification,
+            )
+            if pruned_link_count:
+                verification = evaluate_grounding(report_text, hits)
+                workflow_steps.append(
+                    {
+                        "step": "prune_irrelevant_citations",
+                        "status": (
+                            "passed" if verification["passed"] else "failed"
+                        ),
+                        "removed_link_count": pruned_link_count,
+                    }
+                )
 
         if not verification["passed"]:
             fail_safe_applied = True

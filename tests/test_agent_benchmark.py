@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from threading import Barrier
 
+import argparse
 import httpx
 import pytest
 
@@ -81,6 +82,17 @@ def test_harness_executes_case_and_omits_download_payload():
     assert download["content_sha256"] == hashlib.sha256(
         b"large-payload"
     ).hexdigest()
+
+
+def test_agent_request_timeout_is_positive_and_long_task_safe():
+    benchmark = _module()
+
+    assert benchmark.DEFAULT_AGENT_REQUEST_TIMEOUT_SECONDS == 600.0
+    assert benchmark._positive_timeout_seconds("720") == 720.0
+    with pytest.raises(argparse.ArgumentTypeError):
+        benchmark._positive_timeout_seconds("0")
+    with pytest.raises(argparse.ArgumentTypeError):
+        benchmark._positive_timeout_seconds("not-a-number")
 
 
 def test_public_scenario_suite_requires_auditable_provenance(tmp_path):

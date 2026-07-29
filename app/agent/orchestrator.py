@@ -63,7 +63,9 @@ SYSTEM_PROMPT = """你是 DocMind 的智能文档助手。你可以调用工具�
 4. 不要编造工具没返回的信息。
 5. 生成逐句证据校验报告前优先调用 select_evaluated_rag_pipeline；若它返回
    selected，把 selected.pipeline_id 原样传给 generate_verified_research_report。
-   若没有合格管线，可以使用 configured，但必须如实说明没有评测背书。
+   该交付路径的 target 必须为 retrieval，不要传 dataset_id 或 language；
+   宿主会把当前文档映射到匹配的公开评测集。若没有 selected，不得自行编造
+   pipeline_id 或声称获得评测背书。
 6. 高风险能力由宿主在执行前暂停并请求用户审批；不要声称绕过或代替用户审批。"""
 
 ARTIFACT_TYPES = {
@@ -73,6 +75,8 @@ ARTIFACT_TYPES = {
     "weekly_report",
     "presentation",
 }
+_QUALITY_ADVISOR_SKILL = "select_evaluated_rag_pipeline"
+_EVIDENCE_DELIVERY_SKILL = "generate_verified_research_report"
 
 
 class AgentState(TypedDict, total=False):
@@ -91,6 +95,7 @@ class AgentState(TypedDict, total=False):
     trace: list[dict[str, Any]]
     pending_tool_calls: list[dict[str, Any]]
     current_tool: dict[str, Any] | None
+    evaluated_pipeline_selection: dict[str, Any] | None
     step: int
     answer: str
     status: str
@@ -484,6 +489,62 @@ def _next_planned_skill(plan: Mapping[str, Any] | None) -> str | None:
     return None
 
 
+def _plan_requires_verified_delivery(plan: Mapping[str, Any] | None) -> bool:
+    return any(
+        step.get("skill") == _EVIDENCE_DELIVERY_SKILL
+        for step in (plan or {}).get("steps") or []
+        if isinstance(step, Mapping)
+    )
+
+
+def _normalize_tool_args(
+    state: AgentState,
+    *,
+    name: str,
+    args: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep the eval-selected evidence path independent of model ID guesses."""
+
+    normalized = dict(args)
+    if (
+        name == _QUALITY_ADVISOR_SKILL
+        and _plan_requires_verified_delivery(state.get("plan"))
+    ):
+        return {"target": "retrieval"}
+    if name == _EVIDENCE_DELIVERY_SKILL:
+        selection = state.get("evaluated_pipeline_selection")
+        selected_pipeline_id = (
+            str(selection.get("pipeline_id") or "").strip()
+            if isinstance(selection, Mapping)
+            else ""
+        )
+        if selected_pipeline_id:
+            normalized["pipeline_id"] = selected_pipeline_id
+        elif isinstance(selection, Mapping):
+            normalized.pop("pipeline_id", None)
+    return normalized
+
+
+def _evidence_delivery_block_reason(
+    state: AgentState,
+    *,
+    name: str,
+) -> str | None:
+    """Require a successful same-workflow evaluation decision before delivery."""
+
+    if name != _EVIDENCE_DELIVERY_SKILL:
+        return None
+    selection = state.get("evaluated_pipeline_selection")
+    if not isinstance(selection, Mapping):
+        return "生成证据报告前必须先选择经过公开回归评测的 RAG 管线。"
+    if (
+        selection.get("status") != "selected"
+        or not str(selection.get("pipeline_id") or "").strip()
+    ):
+        return "当前文档没有通过公开回归门禁的 RAG 管线，已拒绝生成证据报告。"
+    return None
+
+
 def _supervisor(state: AgentState) -> dict[str, Any]:
     """执行一轮 LLM 决策；不在该节点内执行任何工具副作用。"""
     if state.get("status") in {"completed", "failed"}:
@@ -641,6 +702,11 @@ def _select_tool(state: AgentState) -> dict[str, Any]:
     )
     call_id = str(raw_call.get("id") or uuid.uuid4().hex)
     step = max(0, int(state.get("step", 1)) - 1)
+    args = _normalize_tool_args(
+        state,
+        name=name,
+        args=_json_arguments(function.get("arguments")),
+    )
     current = {
         "id": call_id,
         # 一些兼容 OpenAI 的 provider 会在后续轮次复用 tool_call.id。
@@ -648,7 +714,7 @@ def _select_tool(state: AgentState) -> dict[str, Any]:
         # 后一轮调用误判成前一轮已完成的副作用。
         "receipt_id": f"{step}:{call_id}",
         "name": name,
-        "args": _json_arguments(function.get("arguments")),
+        "args": args,
         "step": step,
         "approval_required": approval_required,
         "risk_capabilities": risk_capabilities,
@@ -748,12 +814,35 @@ def _record_tool_result(
         succeeded=succeeded,
         summary=str(summary),
     )
+    selected_pipeline = state.get("evaluated_pipeline_selection")
+    if trace_item["skill"] == _QUALITY_ADVISOR_SKILL:
+        selected = result.get("selected")
+        selected_pipeline = {
+            "status": str(result.get("status") or ""),
+            "pipeline_id": (
+                str(selected.get("pipeline_id") or "").strip()
+                if isinstance(selected, Mapping)
+                else ""
+            ),
+        }
+        scope_resolution = result.get("scope_resolution")
+        if isinstance(scope_resolution, Mapping):
+            trace_item["scope_resolution"] = {
+                key: scope_resolution.get(key)
+                for key in (
+                    "requested_dataset_id",
+                    "resolved_dataset_id",
+                    "strategy",
+                )
+                if key in scope_resolution
+            }
     return {
         "messages": messages,
         "artifacts": artifacts,
         "trace": trace,
         "plan": plan,
         "current_tool": None,
+        "evaluated_pipeline_selection": selected_pipeline,
         "status": "running",
     }
 
@@ -845,6 +934,15 @@ def _execute_tool(state: AgentState) -> dict[str, Any]:
         result = {"error": f"未知技能: {name}"}
     elif not skill.available:
         result = {"error": f"技能 {name} 当前不可调用：{skill.unavailable_reason}"}
+    elif delivery_error := _evidence_delivery_block_reason(state, name=name):
+        result = {
+            "error": delivery_error,
+            "workflow": {
+                "contract": "evaluated_pipeline_delivery_gate_v1",
+                "status": "failed",
+                "reason": "no_evaluated_pipeline",
+            },
+        }
     else:
         context = SkillContext(
             user_id=int(state["user_id"]),
@@ -1179,6 +1277,7 @@ def run_agent(
         "trace": [],
         "pending_tool_calls": [],
         "current_tool": None,
+        "evaluated_pipeline_selection": None,
         "step": 0,
         "answer": preflight_error,
         "status": "completed" if preflight_error else "running",

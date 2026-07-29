@@ -15,6 +15,7 @@ DOCMIND_BENCHMARK_TOKEN="<登录后 JWT>" \
 uv run python scripts/benchmark_agent.py \
   --scenarios benchmarks/agent/scenarios.example.json \
   --concurrency 2 \
+  --timeout-seconds 600 \
   --output /tmp/docmind-agent-eval.json \
   --markdown /tmp/docmind-agent-eval.md
 ```
@@ -39,3 +40,6 @@ Provider token usage 和货币成本只有在 `/agent/chat` 明确返回对应 t
 完整公开演示前置为已启动 FastAPI、Qdrant、embedding 服务，以及已导入与上述指纹
 一致的 SciFact 语料。导入完成后，上述单条命令会自动定位该用户的公开文档并运行
 Agent 验收，不需要手填数据库 document ID。
+
+`--timeout-seconds` 是单个端到端 Agent 请求的等待上限；它应覆盖多轮规划、检索、
+长上下文报告生成与逐结论依据性校验，而不是只按一次模型调用的耗时设置。

@@ -39,6 +39,23 @@ _PUBLIC_PROVENANCE_FIELDS = (
     "source_snapshot_fingerprint",
     "transform_spec",
 )
+DEFAULT_AGENT_REQUEST_TIMEOUT_SECONDS = 600.0
+
+
+def _positive_timeout_seconds(value: str) -> float:
+    """Parse a bounded benchmark request timeout from the CLI."""
+
+    try:
+        parsed = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "timeout_seconds must be a positive number"
+        ) from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(
+            "timeout_seconds must be greater than zero"
+        )
+    return parsed
 
 
 class _ConcurrencyTracker:
@@ -505,6 +522,15 @@ def main() -> None:
         default=1,
         help="并发执行的公开 Agent 场景数（默认 1）",
     )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=_positive_timeout_seconds,
+        default=DEFAULT_AGENT_REQUEST_TIMEOUT_SECONDS,
+        help=(
+            "单个 Agent HTTP 请求的端到端等待上限，"
+            f"默认 {int(DEFAULT_AGENT_REQUEST_TIMEOUT_SECONDS)} 秒"
+        ),
+    )
     args = parser.parse_args()
     if not args.token:
         parser.error("--token or DOCMIND_BENCHMARK_TOKEN is required")
@@ -515,7 +541,7 @@ def main() -> None:
     with httpx.Client(
         base_url=args.base_url.rstrip("/"),
         headers={"Authorization": f"Bearer {args.token}"},
-        timeout=180,
+        timeout=args.timeout_seconds,
     ) as client:
         datasets_response = client.get("/eval/datasets")
         datasets_response.raise_for_status()

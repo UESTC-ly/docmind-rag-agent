@@ -47,8 +47,10 @@ class _PipelineAdvisorSkill(BaseSkill):
     name = "select_evaluated_rag_pipeline"
     description = "根据公开回归评测选择管线"
     parameters = {"type": "object", "properties": {}}
+    last_kwargs = None
 
     def run(self, context: SkillContext, **kwargs) -> dict:
+        type(self).last_kwargs = kwargs
         return {
             "contract": "evaluated_pipeline_selection_v1",
             "status": "selected",
@@ -79,6 +81,20 @@ class _VerifiedDeliverySkill(BaseSkill):
                 "passed": True,
             },
             "workflow": {"status": "completed"},
+        }
+
+
+class _NoPipelineAdvisorSkill(BaseSkill):
+    name = "select_evaluated_rag_pipeline"
+    description = "没有合格公开回归管线"
+    parameters = {"type": "object", "properties": {}}
+
+    def run(self, context: SkillContext, **kwargs) -> dict:
+        return {
+            "contract": "evaluated_pipeline_selection_v1",
+            "status": "no_eligible_pipeline",
+            "selected": None,
+            "candidates": [],
         }
 
 
@@ -165,6 +181,56 @@ def test_evidence_delivery_plan_injects_public_eval_pipeline_selection():
         "generate_verified_research_report",
     ]
     assert [step["id"] for step in plan["steps"]] == ["step-1", "step-2"]
+
+
+def test_evidence_delivery_plan_runs_complete_report_workflow_once():
+    response = _FakeMsg(
+        content=json.dumps(
+            {
+                "objective": "生成可信研究报告",
+                "steps": [
+                    {
+                        "title": "起草研究报告",
+                        "skill": "generate_verified_research_report",
+                        "success_criteria": "产物通过证据门",
+                    },
+                    {
+                        "title": "补充报告证据",
+                        "skill": "generate_verified_research_report",
+                        "success_criteria": "补充更多原文引用",
+                    },
+                    {
+                        "title": "再次输出报告",
+                        "skill": "generate_verified_research_report",
+                        "success_criteria": "形成最终版本",
+                    },
+                ],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    plan = create_task_plan(
+        question="生成可信研究报告",
+        available_skills=[
+            {
+                "name": "select_evaluated_rag_pipeline",
+                "description": "根据公开评测选择管线",
+            },
+            {
+                "name": "generate_verified_research_report",
+                "description": "生成证据闭环报告",
+            },
+        ],
+        llm=lambda *args, **kwargs: response,
+        max_steps=4,
+    )
+
+    assert [step["skill"] for step in plan["steps"]] == [
+        "select_evaluated_rag_pipeline",
+        "generate_verified_research_report",
+    ]
+    assert plan["steps"][1]["title"] == "起草研究报告"
 
 
 def test_langgraph_executes_and_completes_explicit_plan(monkeypatch):
@@ -281,6 +347,95 @@ def test_agent_feeds_evaluation_selection_into_evidence_delivery(monkeypatch):
     registry.register_skill(_PipelineAdvisorSkill)
     registry.register_skill(_VerifiedDeliverySkill)
     _VerifiedDeliverySkill.last_pipeline_id = None
+    _PipelineAdvisorSkill.last_kwargs = None
+    try:
+        monkeypatch.setattr(orchestrator.settings, "agent_planning_mode", "explicit")
+        monkeypatch.setattr(
+            orchestrator,
+            "create_task_plan",
+            lambda **kwargs: {
+                "contract": "agent_plan_v1",
+                "objective": "生成评测驱动的证据报告",
+                "mode": "explicit",
+                "status": "pending",
+                "steps": [
+                    {
+                        "id": "step-1",
+                        "title": "选择管线",
+                        "skill": "select_evaluated_rag_pipeline",
+                        "success_criteria": "返回公开评测决策",
+                        "status": "pending",
+                        "attempts": 0,
+                    },
+                    {
+                        "id": "step-2",
+                        "title": "生成报告",
+                        "skill": "generate_verified_research_report",
+                        "success_criteria": "通过证据质量门",
+                        "status": "pending",
+                        "attempts": 0,
+                    },
+                ],
+            },
+        )
+        responses = iter(
+            [
+                _FakeMsg(
+                    tool_calls=[
+                        _FakeToolCall(
+                            "quality-call",
+                            "select_evaluated_rag_pipeline",
+                            (
+                                '{"dataset_id":3,"language":"en",'
+                                '"target":"grounded_generation"}'
+                            ),
+                        )
+                    ]
+                ),
+                _FakeMsg(
+                    tool_calls=[
+                        _FakeToolCall(
+                            "delivery-call",
+                            "generate_verified_research_report",
+                            '{"topic":"DocMind","pipeline_id":"configured"}',
+                        )
+                    ]
+                ),
+                _FakeMsg(content="报告已通过证据门"),
+            ]
+        )
+        monkeypatch.setattr(
+            orchestrator,
+            "chat_completion",
+            lambda messages, tools=None, tool_choice="auto": next(responses),
+        )
+
+        result = orchestrator.run_agent(
+            user_id=1,
+            question="生成评测驱动的证据报告",
+        )
+
+        assert [row["skill"] for row in result["trace"]] == [
+            "select_evaluated_rag_pipeline",
+            "generate_verified_research_report",
+        ]
+        assert _PipelineAdvisorSkill.last_kwargs == {"target": "retrieval"}
+        assert _VerifiedDeliverySkill.last_pipeline_id == "hybrid"
+        assert result["plan"]["status"] == "completed"
+        assert result["artifacts"][0]["verification"]["passed"] is True
+    finally:
+        registry._REGISTRY.clear()
+        registry._REGISTRY.update(saved)
+
+
+def test_agent_blocks_evidence_delivery_without_an_evaluated_pipeline(
+    monkeypatch,
+):
+    saved = dict(registry._REGISTRY)
+    registry._REGISTRY.clear()
+    registry.register_skill(_NoPipelineAdvisorSkill)
+    registry.register_skill(_VerifiedDeliverySkill)
+    _VerifiedDeliverySkill.last_pipeline_id = None
     try:
         monkeypatch.setattr(orchestrator.settings, "agent_planning_mode", "explicit")
         monkeypatch.setattr(
@@ -327,11 +482,11 @@ def test_agent_feeds_evaluation_selection_into_evidence_delivery(monkeypatch):
                         _FakeToolCall(
                             "delivery-call",
                             "generate_verified_research_report",
-                            '{"topic":"DocMind","pipeline_id":"hybrid"}',
+                            '{"topic":"DocMind","pipeline_id":"configured"}',
                         )
                     ]
                 ),
-                _FakeMsg(content="报告已通过证据门"),
+                _FakeMsg(content="当前没有合格管线，无法生成证据报告。"),
             ]
         )
         monkeypatch.setattr(
@@ -345,13 +500,16 @@ def test_agent_feeds_evaluation_selection_into_evidence_delivery(monkeypatch):
             question="生成评测驱动的证据报告",
         )
 
-        assert [row["skill"] for row in result["trace"]] == [
-            "select_evaluated_rag_pipeline",
-            "generate_verified_research_report",
-        ]
-        assert _VerifiedDeliverySkill.last_pipeline_id == "hybrid"
-        assert result["plan"]["status"] == "completed"
-        assert result["artifacts"][0]["verification"]["passed"] is True
+        assert _VerifiedDeliverySkill.last_pipeline_id is None
+        assert result["plan"]["status"] == "partial"
+        assert result["plan"]["steps"][1]["status"] == "failed"
+        assert result["trace"][-1]["skill"] == "generate_verified_research_report"
+        assert result["trace"][-1]["ok"] is False
+        assert result["trace"][-1]["workflow"] == {
+            "contract": "evaluated_pipeline_delivery_gate_v1",
+            "status": "failed",
+        }
+        assert result["artifacts"] == []
     finally:
         registry._REGISTRY.clear()
         registry._REGISTRY.update(saved)

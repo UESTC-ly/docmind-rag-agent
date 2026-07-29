@@ -45,6 +45,8 @@ _PLAN_PROMPT = """你是 DocMind 的任务规划器。把用户目标拆成少�
 - 若用户锁定了 Skill，计划必须包含该 Skill；
 - 生成逐句证据校验报告前，若可用，先调用 select_evaluated_rag_pipeline，
   再把其 selected.pipeline_id 交给 generate_verified_research_report；
+- generate_verified_research_report 已包含检索、草拟、证据校验与修复的完整
+  交付流程，计划中最多出现一次，不得拆成多次生成；
 - 计划描述结果，不要假装工具已经执行。"""
 
 _QUALITY_ADVISOR_SKILL = "select_evaluated_rag_pipeline"
@@ -104,6 +106,28 @@ def _fallback_plan(
     }
 
 
+def _reindex_steps(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for index, step in enumerate(steps, start=1):
+        step["id"] = f"step-{index}"
+    return steps
+
+
+def _deduplicate_evidence_delivery_steps(
+    steps: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Keep one complete verified-report workflow in a task plan."""
+
+    delivery_seen = False
+    deduplicated: list[dict[str, Any]] = []
+    for step in steps:
+        if step.get("skill") in _EVIDENCE_DELIVERY_SKILLS:
+            if delivery_seen:
+                continue
+            delivery_seen = True
+        deduplicated.append(step)
+    return _reindex_steps(deduplicated)
+
+
 def _inject_quality_selection_step(
     steps: list[dict[str, Any]],
     *,
@@ -157,9 +181,7 @@ def _inject_quality_selection_step(
             "attempts": 0,
         },
     )
-    for index, step in enumerate(steps, start=1):
-        step["id"] = f"step-{index}"
-    return steps
+    return _reindex_steps(steps)
 
 
 def create_task_plan(
@@ -239,6 +261,7 @@ def create_task_plan(
             )
             if step is not None:
                 steps.append(step)
+    steps = _deduplicate_evidence_delivery_steps(steps)
     steps = _inject_quality_selection_step(
         steps,
         allowed_skills=allowed_skills,

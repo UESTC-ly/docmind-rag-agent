@@ -1,8 +1,11 @@
-"""llm_service 流式聚合 + embedding_service 分批 的测试。
+"""llm_service 协议适配 + embedding_service 分批 的测试。
 
 用假的流式 chunk 验证 _aggregate_stream 的内容拼接与 tool_calls 按 index 合并；
-用假 client 验证 embed_texts 的分批与空输入。
+用假 client 验证 SSE / 非 SSE Chat Completions 与 embedding 分批行为。
 """
+
+import httpx
+import pytest
 
 from app.services import embedding_service, llm_service
 
@@ -29,6 +32,17 @@ class _TCDelta:
         self.index = index
         self.id = id
         self.function = type("F", (), {"name": name, "arguments": arguments})()
+
+
+class _HttpResponse:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.payload
 
 
 class TestAggregateStream:
@@ -76,9 +90,10 @@ class TestChatCompletionUsesStream:
             return [_Chunk(content="hi")]
 
         monkeypatch.setattr(llm_service._client.chat.completions, "create", _fake_create)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", True)
         msg = llm_service.chat_completion([{"role": "user", "content": "x"}])
         assert msg.content == "hi"
-        assert captured["stream"] is True  # 中转强制流式，必须显式声明
+        assert captured["stream"] is True
 
     def test_tools_trigger_tool_choice(self, monkeypatch):
         captured = {}
@@ -88,6 +103,7 @@ class TestChatCompletionUsesStream:
             return [_Chunk(content="ok")]
 
         monkeypatch.setattr(llm_service._client.chat.completions, "create", _fake_create)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", True)
         tools = [{"type": "function", "function": {"name": "f", "parameters": {}}}]
         llm_service.chat_completion([{"role": "user", "content": "x"}], tools=tools)
         assert captured["tool_choice"] == "auto"
@@ -100,6 +116,7 @@ class TestChatCompletionUsesStream:
             return [_Chunk(content="ok")]
 
         monkeypatch.setattr(llm_service._client.chat.completions, "create", _fake_create)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", True)
         tools = [{"type": "function", "function": {"name": "f", "parameters": {}}}]
         choice = {"type": "function", "function": {"name": "f"}}
         llm_service.chat_completion(
@@ -108,6 +125,332 @@ class TestChatCompletionUsesStream:
             tool_choice=choice,
         )
         assert captured["tool_choice"] == choice
+
+    def test_non_stream_returns_provider_message(self, monkeypatch):
+        captured = {}
+
+        def _fake_post(url, *, headers, json, timeout):
+            captured.update(
+                {
+                    "url": url,
+                    "headers": headers,
+                    "json": json,
+                    "timeout": timeout,
+                }
+            )
+            return _HttpResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "non-stream response",
+                            }
+                        }
+                    ]
+                }
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(
+            llm_service.settings,
+            "openai_base_url",
+            "https://relay.test/v1",
+        )
+
+        message = llm_service.chat_completion(
+            [{"role": "user", "content": "x"}]
+        )
+        assert message.content == "non-stream response"
+        assert captured["url"] == "https://relay.test/v1/chat/completions"
+        assert "stream" not in captured["json"]
+
+    def test_non_stream_preserves_tools_and_parses_provider_tool_calls(
+        self, monkeypatch
+    ):
+        captured = {}
+
+        def _fake_post(_url, *, headers, json, timeout):
+            captured.update({"headers": headers, "json": json, "timeout": timeout})
+            return _HttpResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "tool result",
+                                "tool_calls": [
+                                    None,
+                                    {"function": None},
+                                    {
+                                        "id": "call_1",
+                                        "function": {
+                                            "name": "search",
+                                            "arguments": '{"q":"SciFact"}',
+                                        },
+                                    },
+                                ],
+                            }
+                        }
+                    ]
+                }
+            )
+
+        tools = [
+            {
+                "type": "function",
+                "function": {"name": "search", "parameters": {}},
+            }
+        ]
+        choice = {"type": "function", "function": {"name": "search"}}
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(
+            llm_service.settings,
+            "openai_send_temperature",
+            True,
+        )
+
+        message = llm_service.chat_completion(
+            [{"role": "user", "content": "x"}],
+            tools=tools,
+            temperature=0.7,
+            tool_choice=choice,
+        )
+
+        assert captured["json"]["temperature"] == 0.7
+        assert captured["json"]["tools"] == tools
+        assert captured["json"]["tool_choice"] == choice
+        assert message.content == "tool result"
+        assert message.tool_calls[0].function.name == "search"
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"choices": []},
+            {"choices": [{"message": ["not", "an", "object"]}]},
+        ],
+    )
+    def test_non_stream_rejects_invalid_provider_message(
+        self, monkeypatch, payload
+    ):
+        monkeypatch.setattr(
+            llm_service.httpx,
+            "post",
+            lambda *_args, **_kwargs: _HttpResponse(payload),
+        )
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+
+        with pytest.raises(ValueError):
+            llm_service.chat_completion([{"role": "user", "content": "x"}])
+
+    def test_non_stream_accepts_a_full_chat_completions_url(self, monkeypatch):
+        captured = {}
+
+        def _fake_post(url, **_kwargs):
+            captured["url"] = url
+            return _HttpResponse(
+                {"choices": [{"message": {"role": "assistant", "content": "ok"}}]}
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(
+            llm_service.settings,
+            "openai_base_url",
+            "https://relay.test/v1/chat/completions/",
+        )
+
+        assert llm_service.chat_completion(
+            [{"role": "user", "content": "x"}]
+        ).content == "ok"
+        assert captured["url"] == "https://relay.test/v1/chat/completions"
+
+    def test_non_stream_chat_sse_yields_one_content_chunk(self, monkeypatch):
+        monkeypatch.setattr(
+            llm_service.httpx,
+            "post",
+            lambda *_args, **_kwargs: _HttpResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "single response",
+                            }
+                        }
+                    ]
+                }
+            ),
+        )
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+
+        assert list(
+            llm_service.chat_completion_stream(
+                [{"role": "user", "content": "x"}]
+            )
+        ) == ["single response"]
+
+    def test_omits_temperature_when_provider_requires_it(self, monkeypatch):
+        captured = {}
+
+        def _fake_post(_url, *, headers, json, timeout):
+            captured.update(
+                {
+                    "headers": headers,
+                    "json": json,
+                    "timeout": timeout,
+                }
+            )
+            return _HttpResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "configured",
+                            }
+                        }
+                    ]
+                }
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(
+            llm_service.settings,
+            "openai_send_temperature",
+            False,
+        )
+
+        llm_service.chat_completion(
+            [{"role": "user", "content": "x"}],
+            temperature=0.7,
+        )
+
+        assert "temperature" not in captured["json"]
+
+    def test_non_stream_retries_transient_provider_error(self, monkeypatch):
+        calls = 0
+        request = httpx.Request("POST", "https://relay.test/v1/chat/completions")
+
+        def _fake_post(*_args, **_kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                response = httpx.Response(503, request=request)
+                raise httpx.HTTPStatusError(
+                    "temporarily unavailable",
+                    request=request,
+                    response=response,
+                )
+            return _HttpResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "recovered",
+                            }
+                        }
+                    ]
+                }
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.time, "sleep", lambda _seconds: None)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(llm_service.settings, "openai_max_retries", 1)
+
+        message = llm_service.chat_completion(
+            [{"role": "user", "content": "retry"}]
+        )
+
+        assert message.content == "recovered"
+        assert calls == 2
+
+    def test_non_stream_retries_transport_error(self, monkeypatch):
+        calls = 0
+        request = httpx.Request("POST", "https://relay.test/v1/chat/completions")
+
+        def _fake_post(*_args, **_kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise httpx.ConnectError("offline", request=request)
+            return _HttpResponse(
+                {"choices": [{"message": {"role": "assistant", "content": "back"}}]}
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.time, "sleep", lambda _seconds: None)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(llm_service.settings, "openai_max_retries", 1)
+
+        assert llm_service.chat_completion(
+            [{"role": "user", "content": "retry"}]
+        ).content == "back"
+        assert calls == 2
+
+    def test_non_stream_does_not_retry_non_transient_http_error(
+        self, monkeypatch
+    ):
+        calls = 0
+        request = httpx.Request("POST", "https://relay.test/v1/chat/completions")
+
+        def _fake_post(*_args, **_kwargs):
+            nonlocal calls
+            calls += 1
+            response = httpx.Response(401, request=request)
+            raise httpx.HTTPStatusError(
+                "unauthorized",
+                request=request,
+                response=response,
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(llm_service.settings, "openai_max_retries", 3)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            llm_service.chat_completion([{"role": "user", "content": "x"}])
+
+        assert calls == 1
+
+    def test_stream_generator_yields_content_and_forwards_temperature(
+        self, monkeypatch
+    ):
+        captured = {}
+
+        def _fake_create(**kwargs):
+            captured.update(kwargs)
+            return [
+                type("E", (), {"choices": []})(),
+                _Chunk(content="stream"),
+                _Chunk(content="ed"),
+            ]
+
+        monkeypatch.setattr(
+            llm_service._client.chat.completions,
+            "create",
+            _fake_create,
+        )
+        monkeypatch.setattr(llm_service.settings, "openai_stream", True)
+        monkeypatch.setattr(
+            llm_service.settings,
+            "openai_send_temperature",
+            True,
+        )
+
+        assert list(
+            llm_service.chat_completion_stream(
+                [{"role": "user", "content": "x"}],
+                temperature=0.4,
+            )
+        ) == ["stream", "ed"]
+        assert captured["stream"] is True
+        assert captured["temperature"] == 0.4
 
 
 # ── embedding 分批 ──────────────────────────────────────────

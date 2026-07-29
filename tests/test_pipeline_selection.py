@@ -14,6 +14,8 @@ from app.services.evaluation.pipeline_selection import (
     recommend_evaluated_pipeline,
 )
 from app.services.rag_pipeline import pipeline_presets
+from app.skills.base import SkillContext
+from app.skills.evaluation_advisor import _resolve_dataset_scope
 
 
 def _seed_public_dataset(sync_db):
@@ -201,6 +203,19 @@ def test_incomplete_public_provenance_cannot_back_agent_selection(sync_db):
     decision = recommend_evaluated_pipeline(sync_db, user_id=user.id)
 
     assert decision["status"] == "no_eligible_pipeline"
+
+
+def test_current_document_scope_recovers_from_unknown_dataset_id(sync_db):
+    user, dataset = _seed_public_dataset(sync_db)
+
+    resolved_id, strategy = _resolve_dataset_scope(
+        sync_db,
+        context=SkillContext(user_id=user.id, document_id=dataset.document_id),
+        requested_dataset_id=999,
+    )
+
+    assert resolved_id == dataset.id
+    assert strategy == "current_document_public_dataset"
 
 
 def test_diagnostic_subset_run_never_replaces_full_release_evidence(sync_db):

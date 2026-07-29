@@ -25,8 +25,17 @@ class Settings(BaseSettings):
     openai_api_key: str
     openai_base_url: str | None = None  # 兼容中转，None 用官方地址
     chat_model: str = "gpt-4o-mini"
-    openai_timeout_seconds: int = 60
+    # Evidence-closed Agent workflows can require several long-context model
+    # turns. Keep a bounded but practical default for compatible providers.
+    openai_timeout_seconds: int = 180
     openai_max_retries: int = 1
+    # Some OpenAI-compatible relays implement Chat Completions and Function
+    # Calling but fail SSE streaming. Keep the original streaming default,
+    # while allowing deployment-specific protocol adaptation.
+    openai_stream: bool = True
+    # Some reasoning-model relays reject a temperature parameter entirely.
+    # Keep it enabled by default for standard Chat Completions providers.
+    openai_send_temperature: bool = True
 
     # Embedding（可用与对话不同的独立服务）
     # 留空则复用上面的对话 API（key / base_url）
