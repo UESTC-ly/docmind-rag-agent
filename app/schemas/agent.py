@@ -37,6 +37,9 @@ class AgentResponse(BaseModel):
     trace: list[dict] = Field(default_factory=list)
     plan: dict[str, Any] | None = None
     approval: dict[str, Any] | None = None
+    provider_usage: dict[str, Any] = Field(default_factory=dict)
+    provider_cost: dict[str, Any] = Field(default_factory=dict)
+    provider_model: dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentResumeRequest(BaseModel):

@@ -1,0 +1,761 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": false,
+  "release_evidence_eligible": true,
+  "release_gate_passed": false,
+  "provenance": {
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "transform_spec": {
+      "contract": "ms_marco_passages_v1",
+      "corpus_items": 998,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "fa733e719a4b526dce08ceb21e779dad38aeddbcc9f2d59d0c9d7673aa654725",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 0.0,
+    "verified_task_completion_rate": 0.0,
+    "mean_plan_completion_rate": 0.666667,
+    "mean_tool_selection_recall": 0.5,
+    "mean_tool_selection_precision": 0.5,
+    "mean_artifact_completion_rate": 0.0,
+    "mean_verified_artifact_rate": 0.0,
+    "mean_quality_adaptation_count": 0.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 60.13389,
+    "p95_latency_seconds": 74.066262,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 28838.0,
+      "output_tokens": 2286.0,
+      "total_tokens": 31124.0,
+      "request_count": 30.0,
+      "retry_count": 14.0,
+      "response_count": 12.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 30.0,
+      "retry_count": 14.0,
+      "response_count": 12.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 30.0,
+      "response_count": 12.0
+    },
+    "failure_class_counts": {
+      "agent_outcome_failure": 2
+    },
+    "failed_case_ids": [
+      "ms-marco-corporation-verified-report",
+      "ms-marco-lightning-verified-report"
+    ],
+    "cases": [
+      {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 74.066262,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 17279.0,
+          "output_tokens": 1614.0,
+          "total_tokens": 18893.0,
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 7
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 17,
+          "response_count": 7,
+          "observed_response_count": 7
+        }
+      },
+      {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：8,640,000 / 8640000 / 8.64 million / 864万 / 864 万"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 46.201518,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 11559.0,
+          "output_tokens": 672.0,
+          "total_tokens": 12231.0,
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 5
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 13,
+          "response_count": 5,
+          "observed_response_count": 5
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 120.268318,
+    "throughput_cases_per_second": 0.016629,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 28838.0,
+      "output_tokens": 2286.0,
+      "total_tokens": 31124.0,
+      "request_count": 30.0,
+      "retry_count": 14.0,
+      "response_count": 12.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 30.0,
+      "retry_count": 14.0,
+      "response_count": 12.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 30.0,
+      "response_count": 12.0
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "ms-marco-corporation-verified-report",
+      "source_sample_id": "ms_marco:validation:query-1102432",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验问题“what is a corporation?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-a88aa1e542"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "company",
+            "公司"
+          ],
+          [
+            "single entity",
+            "单一实体"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-corporation-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 74.066262,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 17279.0,
+          "output_tokens": 1614.0,
+          "total_tokens": 18893.0,
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 7
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 17,
+          "response_count": 7,
+          "observed_response_count": 7
+        }
+      },
+      "result": {
+        "conversation_id": 46,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-a88aa1e542",
+        "thread_id": "agent-eval-ms-marco-corporation-verified-report-a88aa1e542",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "## “What is a corporation?”核验简报\n\n**证据范围：**当前 MS MARCO v2.1 validation 公开语料。检索采用 **hybrid-rerank** 管线；该管线在同一公开评测集上处于 approved 状态，且检索与 badcase 回归门禁均通过。\n\n### 可由语料支持的结论\n\n1. **公司（corporation）是依法设立或获法律授权的组织／人群联合体。**  \n   语料将其定义为“由法律或在法律授权下创建的个人联合体”。【D6:C2】  \n   另有表述称，它是“获授权作为单一实体行事、并在法律上得到承认的公司或人群”。【D6:C5】\n\n2. **公司具有独立于成员的持续存在，以及与成员不同的权力和责任。**  \n   语料明确指出，公司可在其成员存续之外持续存在，其权力和责任也区别于成员。【D6:C2】\n\n3. **公司在法律上可作为一个主体活动。**  \n   语料称公司可买卖、拥有财产、订立合同、起诉他人或机构，并可被起诉。【D6:C6】\n\n4. **公司通常受其注册／设立地法律管辖。**  \n   语料说明，公司在特定国家及可能的州、省等辖区注册，并受该注册地法律治理。【D6:C0】\n\n### 简明答案\n\n> **Corporation（公司／法人公司）是依法成立并获法律承认、能够作为独立法律主体行事的组织；它可独立于成员持续存在，并拥有不同于成员的权力与责任。**\n\n### 证据不足与拒答\n\n- 语料提到公司**可能**发行股票，也可能是非股份公司；因此，不能据此断言“所有公司都会发行股票”或“所有公司均由股东所有”。【D6:C0】\n- 当前证据未充分覆盖不同法域下公司设立、有限责任、税务或治理结构的具体规则；对此不作泛化结论。\n\n**说明：**逐句引用自动校验报告生成服务本次返回 503，未能产出该自动化报告文件；以上仅依据已成功检索到的语料片段作出核验，不将其表述为已完成自动逐句校验的交付物。",
+        "artifacts": [],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "what is a corporation? 核验定义、逐结论证据；仅限 MS MARCO v2.1 validation 公开语料"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.7167
+                },
+                {
+                  "citation_id": "D6:C3",
+                  "document_id": 6,
+                  "chunk_index": 3,
+                  "score": 0.6454
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.6151
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.5687
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.5309
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验问题“what is a corporation?”：基于 MS MARCO v2.1 validation 的简短逐结论证据报告；仅陈述可由语料支持的结论，对证据不足内容明确拒答"
+            },
+            "ok": false,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified"
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验“what is a corporation?”并生成简短、逐结论附证据的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "partial",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集与当前语料一致。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "基于选定管线检索证据并生成逐结论核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，围绕问题生成简短报告；每项结论均有经过校验的语料证据引用，无法由证据支持的内容明确标注拒答或证据不足。",
+              "status": "failed",
+              "attempts": 1,
+              "result": "技能执行失败: Server error '503 Service Unavailable' for url 'https://wawapii.com/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 7,
+          "input_tokens": 17279.0,
+          "output_tokens": 1614.0,
+          "total_tokens": 18893.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 17,
+          "retry_count": 8,
+          "response_count": 7,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 17,
+          "response_count": 7,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 7
+        }
+      }
+    },
+    {
+      "case_id": "ms-marco-lightning-verified-report",
+      "source_sample_id": "ms_marco:validation:query-39449",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验“average number of lightning strikes per day”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-63b3e2c94d"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "8,640,000",
+            "8640000",
+            "8.64 million",
+            "864万",
+            "864 万"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-lightning-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：8,640,000 / 8640000 / 8.64 million / 864万 / 864 万"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 46.201518,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 11559.0,
+          "output_tokens": 672.0,
+          "total_tokens": 12231.0,
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 5
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 13,
+          "response_count": 5,
+          "observed_response_count": 5
+        }
+      },
+      "result": {
+        "conversation_id": 49,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-63b3e2c94d",
+        "thread_id": "agent-eval-ms-marco-lightning-verified-report-63b3e2c94d",
+        "status": "failed",
+        "recoverable": false,
+        "answer": "模型服务暂不可用，本次任务未完成。请稍后重试。",
+        "artifacts": [],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "\"average number of lightning strikes per day\""
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.8429
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.8384
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.7007
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.6635
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.6322
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验“average number of lightning strikes per day”的答案：基于 MS MARCO v2.1 validation 公开语料的逐结论证据报告"
+            },
+            "ok": false,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified"
+          },
+          {
+            "step": 3,
+            "skill": "model_provider",
+            "ok": false,
+            "graph_node": "supervisor",
+            "failure_code": "provider_unavailable"
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验“average number of lightning strikes per day”的答案，并生成一份逐结论可追溯证据的简短报告；若证据不足则明确拒答。",
+          "mode": "explicit",
+          "status": "failed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回适用于 MS MARCO v2.1 validation 的 selected.pipeline_id，并确认其具备可复现评测结果、badcase 回归门禁和当前管线指纹；不跨数据集比较评分。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "使用已选管线检索语料并生成逐结论证据核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "将上一步的 selected.pipeline_id 传入报告生成流程，围绕该问题在当前公开 validation 语料中检索并核验答案，输出简短报告；每项结论均附可验证引用并完成引用校验与自动修复。若无法获得足以支持答案的直接证据，报告明确说明证据不足并拒绝给出确定答案。",
+              "status": "failed",
+              "attempts": 1,
+              "result": "技能执行失败: Server error '503 Service Unavailable' for url 'https://wawapii.com/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 5,
+          "input_tokens": 11559.0,
+          "output_tokens": 672.0,
+          "total_tokens": 12231.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 13,
+          "retry_count": 6,
+          "response_count": 5,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 13,
+          "response_count": 5,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 5
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "MS MARCO",
+      "split": "validation",
+      "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+      "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836"
+    },
+    "resolved_document_id": 6,
+    "source_sample_ids": [
+      "ms_marco:validation:query-1102432",
+      "ms_marco:validation:query-39449"
+    ]
+  }
+}

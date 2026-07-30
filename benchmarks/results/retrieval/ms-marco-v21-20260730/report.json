@@ -1,0 +1,3463 @@
+{
+  "contract": "docmind_retrieval_benchmark_v2",
+  "generated_at": "2026-07-30T03:07:47.465765+00:00",
+  "benchmark_fingerprint": "2e936adced698d718ddfd1d6691781ec9efd0bab967415da4018467f9e942ab1",
+  "manifest": {
+    "contract": "docmind_retrieval_benchmark_manifest_v2",
+    "dataset_id": 2,
+    "corpus_fingerprint": "7aa0afdbae10d474b5e3a02d91a4fd673c202e417315a828d0a7cf6f429160a0",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "source_version": "2.1",
+    "split": "validation",
+    "sample_ids": [
+      "1102432",
+      "1102431",
+      "1090282",
+      "39449",
+      "76162",
+      "195512",
+      "1090280",
+      "331318",
+      "300674",
+      "15177",
+      "125705",
+      "85224",
+      "114414",
+      "280709",
+      "302299",
+      "94798",
+      "1090278",
+      "44932",
+      "202671",
+      "9083",
+      "174249",
+      "230982",
+      "281439",
+      "177008",
+      "1090275",
+      "271872",
+      "40287",
+      "50983",
+      "1090274",
+      "180613"
+    ],
+    "pipelines": {
+      "dense": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "hybrid": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "hybrid-rerank": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8"
+    },
+    "embedding_model": "qwen3.7-text-embedding",
+    "embedding_dim": 1024,
+    "code_revision": null
+  },
+  "dataset": {
+    "id": 2,
+    "name": "MS MARCO v2.1",
+    "document_id": 4,
+    "sample_count": 30,
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "7aa0afdbae10d474b5e3a02d91a4fd673c202e417315a828d0a7cf6f429160a0",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "language": "en",
+    "domain": "web search",
+    "task_type": "rag_qa",
+    "label_source": "public_ground_truth",
+    "transform_spec": "{\"contract\":\"ms_marco_passages_v1\",\"corpus_items\":298,\"sample_count\":30}"
+  },
+  "metric_scope": "chunk_retrieval",
+  "metric_scope_note": "该报告只发布 passage/chunk 检索指标；单一虚拟文档语料不会被伪装成 document retrieval 指标。",
+  "pipelines": [
+    {
+      "id": "dense",
+      "fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 0.966667,
+      "mrr": 0.522778,
+      "recall": 0.927778,
+      "precision": 0.193333,
+      "map_at_k": 0.501667,
+      "ndcg_at_k": 0.613338,
+      "badcase_count": 10,
+      "latency_ms": {
+        "mean": 259.053,
+        "p50": 241.288,
+        "p95": 339.819
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 0.966667,
+          "mrr": 0.522778,
+          "recall": 0.927778,
+          "precision": 0.193333,
+          "map_at_k": 0.501667,
+          "ndcg_at_k": 0.613338
+        }
+      }
+    },
+    {
+      "id": "hybrid",
+      "fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 0.933333,
+      "mrr": 0.516111,
+      "recall": 0.894444,
+      "precision": 0.186667,
+      "map_at_k": 0.495,
+      "ndcg_at_k": 0.600443,
+      "badcase_count": 10,
+      "latency_ms": {
+        "mean": 232.212,
+        "p50": 228.746,
+        "p95": 260.402
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 0.933333,
+          "mrr": 0.516111,
+          "recall": 0.894444,
+          "precision": 0.186667,
+          "map_at_k": 0.495,
+          "ndcg_at_k": 0.600443
+        }
+      }
+    },
+    {
+      "id": "hybrid-rerank",
+      "fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 0.933333,
+      "mrr": 0.541111,
+      "recall": 0.894444,
+      "precision": 0.186667,
+      "map_at_k": 0.52,
+      "ndcg_at_k": 0.619421,
+      "badcase_count": 9,
+      "latency_ms": {
+        "mean": 233.966,
+        "p50": 227.983,
+        "p95": 263.204
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 0.933333,
+          "mrr": 0.541111,
+          "recall": 0.894444,
+          "precision": 0.186667,
+          "map_at_k": 0.52,
+          "ndcg_at_k": 0.619421
+        }
+      }
+    }
+  ],
+  "sample_results": {
+    "dense": [
+      {
+        "sample_id": 101,
+        "external_id": "1102432",
+        "question": ". what is a corporation?",
+        "retrieved_chunk_ids": [
+          2,
+          5,
+          0,
+          3,
+          6
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 668.778,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 235.151,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 103,
+        "external_id": "1090282",
+        "question": "symptoms of a dying mouse",
+        "retrieved_chunk_ids": [
+          26,
+          25,
+          20,
+          21,
+          23
+        ],
+        "relevant_chunk_ids": [
+          25
+        ],
+        "chunk_qrels": {
+          "25": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 276.464,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 104,
+        "external_id": "39449",
+        "question": "average number of lightning strikes per day",
+        "retrieved_chunk_ids": [
+          35,
+          31,
+          32,
+          39,
+          37
+        ],
+        "relevant_chunk_ids": [
+          35
+        ],
+        "chunk_qrels": {
+          "35": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 235.253,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          40,
+          41,
+          46,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 220.111,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 106,
+        "external_id": "195512",
+        "question": "goch meaning",
+        "retrieved_chunk_ids": [
+          50,
+          52,
+          51,
+          53,
+          58
+        ],
+        "relevant_chunk_ids": [
+          51
+        ],
+        "chunk_qrels": {
+          "51": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 246.877,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 107,
+        "external_id": "1090280",
+        "question": "symptoms of a gastric ulcer in women",
+        "retrieved_chunk_ids": [
+          68,
+          69,
+          62,
+          63,
+          61
+        ],
+        "relevant_chunk_ids": [
+          68
+        ],
+        "chunk_qrels": {
+          "68": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 284.644,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 108,
+        "external_id": "331318",
+        "question": "how often can ativan be taken",
+        "retrieved_chunk_ids": [
+          76,
+          70,
+          79,
+          75,
+          72
+        ],
+        "relevant_chunk_ids": [
+          79
+        ],
+        "chunk_qrels": {
+          "79": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 206.554,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 109,
+        "external_id": "300674",
+        "question": "how many years did william bradford serve as governor of plymouth colony?",
+        "retrieved_chunk_ids": [
+          84,
+          81,
+          89,
+          87,
+          86
+        ],
+        "relevant_chunk_ids": [
+          84
+        ],
+        "chunk_qrels": {
+          "84": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 207.295,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 110,
+        "external_id": "15177",
+        "question": "albany mn population",
+        "retrieved_chunk_ids": [
+          93,
+          95,
+          94,
+          90,
+          92
+        ],
+        "relevant_chunk_ids": [
+          93
+        ],
+        "chunk_qrels": {
+          "93": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 222.472,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 111,
+        "external_id": "125705",
+        "question": "define preventive",
+        "retrieved_chunk_ids": [
+          104,
+          98,
+          107,
+          103,
+          106
+        ],
+        "relevant_chunk_ids": [
+          98
+        ],
+        "chunk_qrels": {
+          "98": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 282.538,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 112,
+        "external_id": "85224",
+        "question": "causes of achalasia",
+        "retrieved_chunk_ids": [
+          108,
+          109,
+          115,
+          116,
+          112
+        ],
+        "relevant_chunk_ids": [
+          109
+        ],
+        "chunk_qrels": {
+          "109": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 241.464,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 234.411,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 114,
+        "external_id": "280709",
+        "question": "how many days after ovulation can i tell i'm pregnant",
+        "retrieved_chunk_ids": [
+          133,
+          128,
+          135,
+          137,
+          134
+        ],
+        "relevant_chunk_ids": [
+          135
+        ],
+        "chunk_qrels": {
+          "135": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 221.608,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 115,
+        "external_id": "302299",
+        "question": "how much are postage stamps right now",
+        "retrieved_chunk_ids": [
+          139,
+          141,
+          146,
+          140,
+          138
+        ],
+        "relevant_chunk_ids": [
+          140
+        ],
+        "chunk_qrels": {
+          "140": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 234.471,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 116,
+        "external_id": "94798",
+        "question": "color overlay photoshop",
+        "retrieved_chunk_ids": [
+          157,
+          153,
+          151,
+          155,
+          156
+        ],
+        "relevant_chunk_ids": [
+          153
+        ],
+        "chunk_qrels": {
+          "153": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 225.984,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          161,
+          167,
+          159,
+          163,
+          166
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 203.725,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 118,
+        "external_id": "44932",
+        "question": "average temperature cardiff wales",
+        "retrieved_chunk_ids": [
+          173,
+          172,
+          168,
+          175,
+          177
+        ],
+        "relevant_chunk_ids": [
+          172
+        ],
+        "chunk_qrels": {
+          "172": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 259.723,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 119,
+        "external_id": "202671",
+        "question": "highest paying subspecialty in orthopedics",
+        "retrieved_chunk_ids": [
+          182,
+          186,
+          179,
+          187,
+          184
+        ],
+        "relevant_chunk_ids": [
+          186
+        ],
+        "chunk_qrels": {
+          "186": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 242.725,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 120,
+        "external_id": "9083",
+        "question": "____________________ is considered the father of modern medicine.",
+        "retrieved_chunk_ids": [
+          193,
+          188,
+          191,
+          192,
+          189
+        ],
+        "relevant_chunk_ids": [
+          193
+        ],
+        "chunk_qrels": {
+          "193": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 230.601,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 208.725,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 264.636,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 123,
+        "external_id": "281439",
+        "question": "how many days is an appraisal good for a fannie loan",
+        "retrieved_chunk_ids": [
+          227,
+          219,
+          224,
+          226,
+          220
+        ],
+        "relevant_chunk_ids": [
+          219
+        ],
+        "chunk_qrels": {
+          "219": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 287.632,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 227.997,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 241.288,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 126,
+        "external_id": "271872",
+        "question": "how long to recover from wisdom teeth removal",
+        "retrieved_chunk_ids": [
+          252,
+          248,
+          250,
+          257,
+          251
+        ],
+        "relevant_chunk_ids": [
+          248
+        ],
+        "chunk_qrels": {
+          "248": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 245.833,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 127,
+        "external_id": "40287",
+        "question": "average pharmacy tech salary",
+        "retrieved_chunk_ids": [
+          265,
+          263,
+          259,
+          261,
+          266
+        ],
+        "relevant_chunk_ids": [
+          259
+        ],
+        "chunk_qrels": {
+          "259": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 261.563,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 128,
+        "external_id": "50983",
+        "question": "benefits of lymphatic drainage facial",
+        "retrieved_chunk_ids": [
+          268,
+          274,
+          273,
+          272,
+          270
+        ],
+        "relevant_chunk_ids": [
+          268
+        ],
+        "chunk_qrels": {
+          "268": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 245.753,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 129,
+        "external_id": "1090274",
+        "question": "symptoms of an uti sensation",
+        "retrieved_chunk_ids": [
+          280,
+          282,
+          279,
+          287,
+          283
+        ],
+        "relevant_chunk_ids": [
+          280
+        ],
+        "chunk_qrels": {
+          "280": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 267.499,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          297,
+          290,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 339.819,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "sample_id": 101,
+        "external_id": "1102432",
+        "question": ". what is a corporation?",
+        "retrieved_chunk_ids": [
+          2,
+          5,
+          0,
+          3,
+          6
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 205.981,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 282.865,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 103,
+        "external_id": "1090282",
+        "question": "symptoms of a dying mouse",
+        "retrieved_chunk_ids": [
+          26,
+          25,
+          20,
+          21,
+          23
+        ],
+        "relevant_chunk_ids": [
+          25
+        ],
+        "chunk_qrels": {
+          "25": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 224.927,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 104,
+        "external_id": "39449",
+        "question": "average number of lightning strikes per day",
+        "retrieved_chunk_ids": [
+          35,
+          31,
+          32,
+          39,
+          37
+        ],
+        "relevant_chunk_ids": [
+          35
+        ],
+        "chunk_qrels": {
+          "35": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 234.057,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          40,
+          41,
+          46,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 260.402,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 106,
+        "external_id": "195512",
+        "question": "goch meaning",
+        "retrieved_chunk_ids": [
+          50,
+          52,
+          51,
+          53,
+          58
+        ],
+        "relevant_chunk_ids": [
+          51
+        ],
+        "chunk_qrels": {
+          "51": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 201.871,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 107,
+        "external_id": "1090280",
+        "question": "symptoms of a gastric ulcer in women",
+        "retrieved_chunk_ids": [
+          68,
+          69,
+          62,
+          63,
+          61
+        ],
+        "relevant_chunk_ids": [
+          68
+        ],
+        "chunk_qrels": {
+          "68": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 226.61,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 108,
+        "external_id": "331318",
+        "question": "how often can ativan be taken",
+        "retrieved_chunk_ids": [
+          76,
+          70,
+          79,
+          75,
+          72
+        ],
+        "relevant_chunk_ids": [
+          79
+        ],
+        "chunk_qrels": {
+          "79": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 228.746,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 109,
+        "external_id": "300674",
+        "question": "how many years did william bradford serve as governor of plymouth colony?",
+        "retrieved_chunk_ids": [
+          84,
+          81,
+          89,
+          87,
+          86
+        ],
+        "relevant_chunk_ids": [
+          84
+        ],
+        "chunk_qrels": {
+          "84": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 256.046,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 110,
+        "external_id": "15177",
+        "question": "albany mn population",
+        "retrieved_chunk_ids": [
+          93,
+          95,
+          94,
+          90,
+          92
+        ],
+        "relevant_chunk_ids": [
+          93
+        ],
+        "chunk_qrels": {
+          "93": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 204.163,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 111,
+        "external_id": "125705",
+        "question": "define preventive",
+        "retrieved_chunk_ids": [
+          104,
+          98,
+          107,
+          103,
+          106
+        ],
+        "relevant_chunk_ids": [
+          98
+        ],
+        "chunk_qrels": {
+          "98": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 247.733,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 112,
+        "external_id": "85224",
+        "question": "causes of achalasia",
+        "retrieved_chunk_ids": [
+          108,
+          109,
+          115,
+          116,
+          112
+        ],
+        "relevant_chunk_ids": [
+          109
+        ],
+        "chunk_qrels": {
+          "109": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 220.937,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 223.303,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 114,
+        "external_id": "280709",
+        "question": "how many days after ovulation can i tell i'm pregnant",
+        "retrieved_chunk_ids": [
+          133,
+          128,
+          135,
+          137,
+          134
+        ],
+        "relevant_chunk_ids": [
+          135
+        ],
+        "chunk_qrels": {
+          "135": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 236.195,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 115,
+        "external_id": "302299",
+        "question": "how much are postage stamps right now",
+        "retrieved_chunk_ids": [
+          139,
+          141,
+          146,
+          140,
+          138
+        ],
+        "relevant_chunk_ids": [
+          140
+        ],
+        "chunk_qrels": {
+          "140": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 255.668,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 116,
+        "external_id": "94798",
+        "question": "color overlay photoshop",
+        "retrieved_chunk_ids": [
+          157,
+          153,
+          155,
+          151,
+          156
+        ],
+        "relevant_chunk_ids": [
+          153
+        ],
+        "chunk_qrels": {
+          "153": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 244.741,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          160,
+          161,
+          167,
+          159,
+          163
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 253.08,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 118,
+        "external_id": "44932",
+        "question": "average temperature cardiff wales",
+        "retrieved_chunk_ids": [
+          173,
+          172,
+          168,
+          175,
+          177
+        ],
+        "relevant_chunk_ids": [
+          172
+        ],
+        "chunk_qrels": {
+          "172": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 238.373,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 119,
+        "external_id": "202671",
+        "question": "highest paying subspecialty in orthopedics",
+        "retrieved_chunk_ids": [
+          182,
+          186,
+          179,
+          187,
+          184
+        ],
+        "relevant_chunk_ids": [
+          186
+        ],
+        "chunk_qrels": {
+          "186": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 227.787,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 120,
+        "external_id": "9083",
+        "question": "____________________ is considered the father of modern medicine.",
+        "retrieved_chunk_ids": [
+          193,
+          188,
+          191,
+          192,
+          189
+        ],
+        "relevant_chunk_ids": [
+          193
+        ],
+        "chunk_qrels": {
+          "193": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 236.624,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 202.418,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 237.446,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 123,
+        "external_id": "281439",
+        "question": "how many days is an appraisal good for a fannie loan",
+        "retrieved_chunk_ids": [
+          227,
+          219,
+          224,
+          226,
+          220
+        ],
+        "relevant_chunk_ids": [
+          219
+        ],
+        "chunk_qrels": {
+          "219": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 224.433,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 216.815,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 250.518,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 126,
+        "external_id": "271872",
+        "question": "how long to recover from wisdom teeth removal",
+        "retrieved_chunk_ids": [
+          252,
+          248,
+          250,
+          257,
+          251
+        ],
+        "relevant_chunk_ids": [
+          248
+        ],
+        "chunk_qrels": {
+          "248": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 226.49,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 127,
+        "external_id": "40287",
+        "question": "average pharmacy tech salary",
+        "retrieved_chunk_ids": [
+          265,
+          263,
+          259,
+          261,
+          266
+        ],
+        "relevant_chunk_ids": [
+          259
+        ],
+        "chunk_qrels": {
+          "259": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 210.901,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 128,
+        "external_id": "50983",
+        "question": "benefits of lymphatic drainage facial",
+        "retrieved_chunk_ids": [
+          268,
+          274,
+          273,
+          272,
+          270
+        ],
+        "relevant_chunk_ids": [
+          268
+        ],
+        "chunk_qrels": {
+          "268": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 218.946,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 129,
+        "external_id": "1090274",
+        "question": "symptoms of an uti sensation",
+        "retrieved_chunk_ids": [
+          280,
+          282,
+          279,
+          287,
+          283
+        ],
+        "relevant_chunk_ids": [
+          280
+        ],
+        "chunk_qrels": {
+          "280": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 230.822,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          297,
+          290,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 237.458,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ],
+    "hybrid-rerank": [
+      {
+        "sample_id": 101,
+        "external_id": "1102432",
+        "question": ". what is a corporation?",
+        "retrieved_chunk_ids": [
+          2,
+          5,
+          0,
+          3,
+          6
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 242.005,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 216.413,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 103,
+        "external_id": "1090282",
+        "question": "symptoms of a dying mouse",
+        "retrieved_chunk_ids": [
+          26,
+          25,
+          20,
+          21,
+          23
+        ],
+        "relevant_chunk_ids": [
+          25
+        ],
+        "chunk_qrels": {
+          "25": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 243.906,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 104,
+        "external_id": "39449",
+        "question": "average number of lightning strikes per day",
+        "retrieved_chunk_ids": [
+          35,
+          31,
+          32,
+          39,
+          37
+        ],
+        "relevant_chunk_ids": [
+          35
+        ],
+        "chunk_qrels": {
+          "35": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 209.489,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          46,
+          40,
+          41,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 235.499,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 106,
+        "external_id": "195512",
+        "question": "goch meaning",
+        "retrieved_chunk_ids": [
+          50,
+          52,
+          51,
+          53,
+          58
+        ],
+        "relevant_chunk_ids": [
+          51
+        ],
+        "chunk_qrels": {
+          "51": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 241.07,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 107,
+        "external_id": "1090280",
+        "question": "symptoms of a gastric ulcer in women",
+        "retrieved_chunk_ids": [
+          68,
+          69,
+          63,
+          62,
+          60
+        ],
+        "relevant_chunk_ids": [
+          68
+        ],
+        "chunk_qrels": {
+          "68": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 227.687,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 108,
+        "external_id": "331318",
+        "question": "how often can ativan be taken",
+        "retrieved_chunk_ids": [
+          76,
+          70,
+          79,
+          75,
+          72
+        ],
+        "relevant_chunk_ids": [
+          79
+        ],
+        "chunk_qrels": {
+          "79": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 213.205,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 109,
+        "external_id": "300674",
+        "question": "how many years did william bradford serve as governor of plymouth colony?",
+        "retrieved_chunk_ids": [
+          84,
+          81,
+          89,
+          86,
+          87
+        ],
+        "relevant_chunk_ids": [
+          84
+        ],
+        "chunk_qrels": {
+          "84": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 252.271,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 110,
+        "external_id": "15177",
+        "question": "albany mn population",
+        "retrieved_chunk_ids": [
+          93,
+          95,
+          94,
+          90,
+          92
+        ],
+        "relevant_chunk_ids": [
+          93
+        ],
+        "chunk_qrels": {
+          "93": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 224.248,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 111,
+        "external_id": "125705",
+        "question": "define preventive",
+        "retrieved_chunk_ids": [
+          104,
+          98,
+          107,
+          103,
+          106
+        ],
+        "relevant_chunk_ids": [
+          98
+        ],
+        "chunk_qrels": {
+          "98": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 257.075,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 112,
+        "external_id": "85224",
+        "question": "causes of achalasia",
+        "retrieved_chunk_ids": [
+          108,
+          109,
+          115,
+          116,
+          112
+        ],
+        "relevant_chunk_ids": [
+          109
+        ],
+        "chunk_qrels": {
+          "109": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 238.584,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 240.188,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 114,
+        "external_id": "280709",
+        "question": "how many days after ovulation can i tell i'm pregnant",
+        "retrieved_chunk_ids": [
+          133,
+          128,
+          135,
+          137,
+          134
+        ],
+        "relevant_chunk_ids": [
+          135
+        ],
+        "chunk_qrels": {
+          "135": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 226.414,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 115,
+        "external_id": "302299",
+        "question": "how much are postage stamps right now",
+        "retrieved_chunk_ids": [
+          146,
+          139,
+          140,
+          141,
+          138
+        ],
+        "relevant_chunk_ids": [
+          140
+        ],
+        "chunk_qrels": {
+          "140": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.3333333333333333,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.3333333333333333,
+        "ndcg_at_k": 0.5,
+        "latency_ms": 208.881,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 116,
+        "external_id": "94798",
+        "question": "color overlay photoshop",
+        "retrieved_chunk_ids": [
+          153,
+          157,
+          155,
+          151,
+          156
+        ],
+        "relevant_chunk_ids": [
+          153
+        ],
+        "chunk_qrels": {
+          "153": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 221.178,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          160,
+          161,
+          167,
+          159,
+          163
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 217.962,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 118,
+        "external_id": "44932",
+        "question": "average temperature cardiff wales",
+        "retrieved_chunk_ids": [
+          173,
+          172,
+          175,
+          177,
+          168
+        ],
+        "relevant_chunk_ids": [
+          172
+        ],
+        "chunk_qrels": {
+          "172": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 216.614,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 119,
+        "external_id": "202671",
+        "question": "highest paying subspecialty in orthopedics",
+        "retrieved_chunk_ids": [
+          182,
+          186,
+          179,
+          181,
+          187
+        ],
+        "relevant_chunk_ids": [
+          186
+        ],
+        "chunk_qrels": {
+          "186": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 247.566,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 120,
+        "external_id": "9083",
+        "question": "____________________ is considered the father of modern medicine.",
+        "retrieved_chunk_ids": [
+          193,
+          188,
+          191,
+          192,
+          190
+        ],
+        "relevant_chunk_ids": [
+          193
+        ],
+        "chunk_qrels": {
+          "193": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 256.662,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 227.983,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 209.312,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 123,
+        "external_id": "281439",
+        "question": "how many days is an appraisal good for a fannie loan",
+        "retrieved_chunk_ids": [
+          227,
+          219,
+          226,
+          224,
+          220
+        ],
+        "relevant_chunk_ids": [
+          219
+        ],
+        "chunk_qrels": {
+          "219": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 242.922,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 217.061,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 222.89,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 126,
+        "external_id": "271872",
+        "question": "how long to recover from wisdom teeth removal",
+        "retrieved_chunk_ids": [
+          252,
+          248,
+          250,
+          257,
+          251
+        ],
+        "relevant_chunk_ids": [
+          248
+        ],
+        "chunk_qrels": {
+          "248": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 263.204,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 127,
+        "external_id": "40287",
+        "question": "average pharmacy tech salary",
+        "retrieved_chunk_ids": [
+          265,
+          259,
+          263,
+          261,
+          266
+        ],
+        "relevant_chunk_ids": [
+          259
+        ],
+        "chunk_qrels": {
+          "259": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.5,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6309297535714575,
+        "latency_ms": 286.347,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 128,
+        "external_id": "50983",
+        "question": "benefits of lymphatic drainage facial",
+        "retrieved_chunk_ids": [
+          268,
+          273,
+          274,
+          272,
+          270
+        ],
+        "relevant_chunk_ids": [
+          268
+        ],
+        "chunk_qrels": {
+          "268": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 219.655,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 129,
+        "external_id": "1090274",
+        "question": "symptoms of an uti sensation",
+        "retrieved_chunk_ids": [
+          280,
+          282,
+          279,
+          283,
+          287
+        ],
+        "relevant_chunk_ids": [
+          280
+        ],
+        "chunk_qrels": {
+          "280": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 236.541,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          290,
+          297,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 256.15,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ]
+  },
+  "badcases": {
+    "dense": [
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 235.151,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          40,
+          41,
+          46,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 220.111,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 234.411,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 115,
+        "external_id": "302299",
+        "question": "how much are postage stamps right now",
+        "retrieved_chunk_ids": [
+          139,
+          141,
+          146,
+          140,
+          138
+        ],
+        "relevant_chunk_ids": [
+          140
+        ],
+        "chunk_qrels": {
+          "140": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 234.471,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          161,
+          167,
+          159,
+          163,
+          166
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 203.725,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 208.725,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 264.636,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 227.997,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 241.288,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          297,
+          290,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 339.819,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 282.865,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          40,
+          41,
+          46,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 260.402,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 223.303,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 115,
+        "external_id": "302299",
+        "question": "how much are postage stamps right now",
+        "retrieved_chunk_ids": [
+          139,
+          141,
+          146,
+          140,
+          138
+        ],
+        "relevant_chunk_ids": [
+          140
+        ],
+        "chunk_qrels": {
+          "140": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 255.668,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          160,
+          161,
+          167,
+          159,
+          163
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 253.08,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 202.418,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 237.446,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 216.815,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 250.518,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          297,
+          290,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 237.458,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ],
+    "hybrid-rerank": [
+      {
+        "sample_id": 102,
+        "external_id": "1102431",
+        "question": "why did rachel carson write an obligation to endure",
+        "retrieved_chunk_ids": [
+          14,
+          16,
+          17,
+          13,
+          11
+        ],
+        "relevant_chunk_ids": [
+          14,
+          15
+        ],
+        "chunk_qrels": {
+          "14": 1,
+          "15": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 0.5,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.5,
+        "ndcg_at_k": 0.6131471927654584,
+        "latency_ms": 216.413,
+        "badcase_reasons": [
+          "incomplete_recall"
+        ]
+      },
+      {
+        "sample_id": 105,
+        "external_id": "76162",
+        "question": "can you burn your lawn with fertilizer",
+        "retrieved_chunk_ids": [
+          49,
+          46,
+          40,
+          41,
+          48
+        ],
+        "relevant_chunk_ids": [
+          48
+        ],
+        "chunk_qrels": {
+          "48": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.2,
+        "ndcg_at_k": 0.38685280723454163,
+        "latency_ms": 235.499,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 113,
+        "external_id": "114414",
+        "question": "current weather in volcano, ca",
+        "retrieved_chunk_ids": [
+          122,
+          126,
+          121,
+          127,
+          118
+        ],
+        "relevant_chunk_ids": [
+          118,
+          120,
+          125
+        ],
+        "chunk_qrels": {
+          "118": 1,
+          "120": 1,
+          "125": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.2,
+        "recall_at_k": 0.3333333333333333,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.06666666666666667,
+        "ndcg_at_k": 0.18154179253735267,
+        "latency_ms": 240.188,
+        "badcase_reasons": [
+          "incomplete_recall",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 117,
+        "external_id": "1090278",
+        "question": "symptoms of air pollution exposure",
+        "retrieved_chunk_ids": [
+          160,
+          161,
+          167,
+          159,
+          163
+        ],
+        "relevant_chunk_ids": [
+          166
+        ],
+        "chunk_qrels": {
+          "166": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 217.962,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 121,
+        "external_id": "174249",
+        "question": "does xpress bet charge to deposit money in your account",
+        "retrieved_chunk_ids": [
+          204,
+          206,
+          199,
+          201,
+          200
+        ],
+        "relevant_chunk_ids": [
+          202
+        ],
+        "chunk_qrels": {
+          "202": 1
+        },
+        "hit": 0,
+        "reciprocal_rank": 0.0,
+        "recall_at_k": 0.0,
+        "precision_at_k": 0.0,
+        "average_precision_at_k": 0.0,
+        "ndcg_at_k": 0.0,
+        "latency_ms": 227.983,
+        "badcase_reasons": [
+          "retrieval_miss",
+          "incomplete_recall",
+          "low_precision",
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 122,
+        "external_id": "230982",
+        "question": "how far is faribault from winona?",
+        "retrieved_chunk_ids": [
+          211,
+          215,
+          212,
+          210,
+          217
+        ],
+        "relevant_chunk_ids": [
+          210
+        ],
+        "chunk_qrels": {
+          "210": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 209.312,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 124,
+        "external_id": "177008",
+        "question": "dynamics crm outlook synchronization process",
+        "retrieved_chunk_ids": [
+          234,
+          237,
+          231,
+          232,
+          233
+        ],
+        "relevant_chunk_ids": [
+          232
+        ],
+        "chunk_qrels": {
+          "232": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 217.061,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 125,
+        "external_id": "1090275",
+        "question": "symptoms of an intolerance to barley",
+        "retrieved_chunk_ids": [
+          241,
+          238,
+          243,
+          242,
+          239
+        ],
+        "relevant_chunk_ids": [
+          242
+        ],
+        "chunk_qrels": {
+          "242": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 222.89,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      },
+      {
+        "sample_id": 130,
+        "external_id": "180613",
+        "question": "english is the official state language in some states like california",
+        "retrieved_chunk_ids": [
+          296,
+          290,
+          297,
+          294,
+          293
+        ],
+        "relevant_chunk_ids": [
+          294
+        ],
+        "chunk_qrels": {
+          "294": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 0.25,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 0.25,
+        "ndcg_at_k": 0.43067655807339306,
+        "latency_ms": 256.15,
+        "badcase_reasons": [
+          "poor_ranking"
+        ]
+      }
+    ]
+  }
+}

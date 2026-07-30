@@ -1,0 +1,75 @@
+{
+  "contract": "public_agent_scenarios_v2",
+  "provenance": {
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "transform_spec": {
+      "contract": "ms_marco_passages_v1",
+      "corpus_items": 998,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "document_selector": {
+    "source_name": "MS MARCO",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836"
+  },
+  "cases": [
+    {
+      "id": "ms-marco-corporation-verified-report",
+      "source_sample_id": "ms_marco:validation:query-1102432",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验问题“what is a corporation?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": ["verified_research_report"],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          ["company", "公司"],
+          ["single entity", "单一实体"]
+        ],
+        "max_interventions": 0
+      }
+    },
+    {
+      "id": "ms-marco-bradford-verified-report",
+      "source_sample_id": "ms_marco:validation:query-300674",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验“how many years did William Bradford serve as governor of Plymouth Colony?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": ["verified_research_report"],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          ["thirty years", "30 years", "三十年", "30 年"]
+        ],
+        "max_interventions": 0
+      }
+    }
+  ]
+}

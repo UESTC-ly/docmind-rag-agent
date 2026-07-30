@@ -1,0 +1,2565 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": false,
+  "release_evidence_eligible": true,
+  "release_gate_passed": false,
+  "provenance": {
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "transform_spec": {
+      "contract": "ms_marco_passages_v1",
+      "corpus_items": 998,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "fa733e719a4b526dce08ceb21e779dad38aeddbcc9f2d59d0c9d7673aa654725",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 0.5,
+    "verified_task_completion_rate": 0.5,
+    "mean_plan_completion_rate": 0.833333,
+    "mean_tool_selection_recall": 0.75,
+    "mean_tool_selection_precision": 0.583333,
+    "mean_artifact_completion_rate": 1.0,
+    "mean_verified_artifact_rate": 0.5,
+    "mean_quality_adaptation_count": 2.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 223.274042,
+    "p95_latency_seconds": 295.973195,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 58897.0,
+      "output_tokens": 17973.0,
+      "total_tokens": 76870.0,
+      "request_count": 24.0,
+      "retry_count": 1.0,
+      "response_count": 23.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 24.0,
+      "retry_count": 1.0,
+      "response_count": 23.0
+    },
+    "provider_model": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "configured_request_models": [],
+      "provider_reported_models": [],
+      "reason": "No Agent case exposed provider model telemetry."
+    },
+    "failure_class_counts": {
+      "agent_outcome_failure": 1,
+      "passed": 1
+    },
+    "failed_case_ids": [
+      "ms-marco-lightning-verified-report"
+    ],
+    "cases": [
+      {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 150.574889,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 24561.0,
+          "output_tokens": 4525.0,
+          "total_tokens": 29086.0,
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0
+        }
+      },
+      {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 295.973195,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 34336.0,
+          "output_tokens": 13448.0,
+          "total_tokens": 47784.0,
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 0
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 446.54864,
+    "throughput_cases_per_second": 0.004479,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 58897.0,
+      "output_tokens": 17973.0,
+      "total_tokens": 76870.0,
+      "request_count": 24.0,
+      "retry_count": 1.0,
+      "response_count": 23.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 24.0,
+      "retry_count": 1.0,
+      "response_count": 23.0
+    },
+    "provider_model": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "configured_request_models": [],
+      "provider_reported_models": [],
+      "reason": "No Agent case exposed provider model telemetry."
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "ms-marco-corporation-verified-report",
+      "source_sample_id": "ms_marco:validation:query-1102432",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验问题“what is a corporation?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-140bb9c29a"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "company",
+            "公司"
+          ],
+          [
+            "single entity",
+            "单一实体"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-corporation-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 150.574889,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 24561.0,
+          "output_tokens": 4525.0,
+          "total_tokens": 29086.0,
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0
+        }
+      },
+      "result": {
+        "conversation_id": 34,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-140bb9c29a",
+        "thread_id": "agent-eval-ms-marco-corporation-verified-report-140bb9c29a",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成并完成逐结论引用校验的简短报告，正文与下载文件见产出物。\n\n**核验结论：**\n- **Corporation（公司/法人公司）**是由法律创设或依法授权设立的个人联合体；它具有独立、持续的存续，不因成员变动而终止，且其权力和责任与成员本身相区分。`[D6:C2]`\n- 公司可被授权以单一实体行动，在法律上被承认为“人”。`[D6:C5]`\n- 公司能够持有、买卖财产，订立合同，并可起诉或被起诉。`[D6:C6]`\n- 公司由股东持有；股东分享企业经营产生的利润和损失。`[D6:C6]`\n- 公司受其注册地的相关法律管辖；发行股票的公司通常由股东直接或间接治理。`[D6:C0]`\n\n**证据不足／拒答：**  \n现有语料虽说明公司责任与成员责任相区分，但**没有直接说明**股东是否必然承担有限责任、责任上限及具体适用条件；因此不能据此断言股东责任范围。`[D6:C2]`\n\n本次使用了在同一 **MS MARCO v2.1 validation** 公开回归评测中获批准、且通过 badcase 回归门禁的 `hybrid-rerank` 检索管线；报告经逐句语义证据校验后，7 项事实性结论均获有效引用支持。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "基于 MS MARCO v2.1 validation 公开语料核验：what is a corporation?；简短逐结论证据报告，证据不足处明确拒答",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "公司（corporation）的基本定义与法律特征",
+                "query": "What is a corporation and what legal characteristics distinguish it from its owners?"
+              },
+              {
+                "title": "公司设立、独立法人地位与责任范围",
+                "query": "How is a corporation formed, and how does it affect shareholder liability and ownership?"
+              }
+            ],
+            "content": "# 报告标题\n\n## 公司（corporation）的基本定义与法律特征\n\n- 公司是由法律创设或依据法律授权设立的个人联合体，其持续存在不依赖于成员的存续，且其权力与责任不同于成员的权力与责任。[D6:C2]\n- 公司可以被授权作为单一实体行动，并在法律上被视为“人”、获得法律承认。[D6:C5]\n- 公司可以购买、出售、拥有财产、订立合同、起诉其他个人或企业，也可以被其起诉。[D6:C6]\n- 公司由股东持有，股东分享企业经营产生的利润和损失。[D6:C6]\n\n## 公司设立、独立法人地位与责任范围\n\n- 公司受注册地相关法律管辖。[D6:C0]\n- 早期的公司实体可通过特许状设立，例如由君主临时授予，或由议会、立法机关通过法案设立。[D6:C5]\n- 如发行股票，公司通常由股东直接或间接治理。[D6:C0]\n- 证据不足：现有材料仅说明公司的责任与成员责任相互区分，未直接说明股东是否承担有限责任、责任上限或具体适用条件，故不能据此断言股东责任范围。[D6:C2]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "公司（corporation）的基本定义与法律特征",
+                  "query": "What is a corporation and what legal characteristics distinguish it from its owners?",
+                  "original_query": "What is a corporation and what legal characteristics distinguish it from its owners?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "公司设立、独立法人地位与责任范围",
+                  "query": "How is a corporation formed, and how does it affect shareholder liability and ownership?",
+                  "original_query": "How is a corporation formed, and how does it affect shareholder liability and ownership?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 479
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 2,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.75,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 2
+                },
+                {
+                  "step": "fail_safe",
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "7/7 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 7,
+                "supported_claim_count": 7,
+                "unsupported_claim_count": 0,
+                "citation_count": 7,
+                "valid_citation_count": 7,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "公司是由法律创设或依据法律授权设立的个人联合体，其持续存在不依赖于成员的存续，且其权力与责任不同于成员的权力与责任。[D6:C2]",
+                    "citations": [
+                      "D6:C2"
+                    ],
+                    "valid_citations": [
+                      "D6:C2"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接将公司定义为依法创设或获法律授权设立的个人联合体，并明确其持续存在、权力和责任均独立于成员。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司可以被授权作为单一实体行动，并在法律上被视为“人”、获得法律承认。[D6:C5]",
+                    "citations": [
+                      "D6:C5"
+                    ],
+                    "valid_citations": [
+                      "D6:C5"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司或人群获授权作为单一实体行动，在法律上是人并获法律承认。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司可以购买、出售、拥有财产、订立合同、起诉其他个人或企业，也可以被其起诉。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接列明公司可以购买、出售、拥有财产、订立合同、起诉他人或企业，以及被其起诉。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司由股东持有，股东分享企业经营产生的利润和损失。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司由股东持有，且股东分享公司经营产生的利润和损失。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司受注册地相关法律管辖。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司受其注册成立所在州的公司注册法律管辖。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "早期的公司实体可通过特许状设立，例如由君主临时授予，或由议会、立法机关通过法案设立。[D6:C5]",
+                    "citations": [
+                      "D6:C5"
+                    ],
+                    "valid_citations": [
+                      "D6:C5"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明早期法人实体通过特许状设立，包括君主临时授予或经议会、立法机关通过。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "如发行股票，公司通常由股东直接或间接治理。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明如发行股票，公司通常由股东直接或间接治理。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "58d3c18ad244983e7220488079d8508c2b1445a70f514f9a1bb6b067b205fba9",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 7,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 0
+                }
+              },
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 7,
+              "valid_citation_count": 7,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "58d3c18ad244983e7220488079d8508c2b1445a70f514f9a1bb6b067b205fba9",
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              },
+              "claims": [
+                {
+                  "text": "公司是由法律创设或依据法律授权设立的个人联合体，其持续存在不依赖于成员的存续，且其权力与责任不同于成员的权力与责任。[D6:C2]",
+                  "citations": [
+                    "D6:C2"
+                  ],
+                  "valid_citations": [
+                    "D6:C2"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接将公司定义为依法创设或获法律授权设立的个人联合体，并明确其持续存在、权力和责任均独立于成员。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司可以被授权作为单一实体行动，并在法律上被视为“人”、获得法律承认。[D6:C5]",
+                  "citations": [
+                    "D6:C5"
+                  ],
+                  "valid_citations": [
+                    "D6:C5"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司或人群获授权作为单一实体行动，在法律上是人并获法律承认。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司可以购买、出售、拥有财产、订立合同、起诉其他个人或企业，也可以被其起诉。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接列明公司可以购买、出售、拥有财产、订立合同、起诉他人或企业，以及被其起诉。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司由股东持有，股东分享企业经营产生的利润和损失。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司由股东持有，且股东分享公司经营产生的利润和损失。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司受注册地相关法律管辖。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司受其注册成立所在州的公司注册法律管辖。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "早期的公司实体可通过特许状设立，例如由君主临时授予，或由议会、立法机关通过法案设立。[D6:C5]",
+                  "citations": [
+                    "D6:C5"
+                  ],
+                  "valid_citations": [
+                    "D6:C5"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明早期法人实体通过特许状设立，包括君主临时授予或经议会、立法机关通过。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "如发行股票，公司通常由股东直接或间接治理。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明如发行股票，公司通常由股东直接或间接治理。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.76666667,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/6",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.73318514,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/2",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.62875682,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/0",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.59760371,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/5",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.50175277,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/4",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C9",
+                  "document_id": 6,
+                  "chunk_index": 9,
+                  "score": 0.49922127,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/9",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1180,
+              "content_sha256": "e82465b9afc4f4b9290a1ead00f09fe93b9833551a0ada52de5f71bf833ca897"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "what is a corporation?"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.8
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.7577
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.7227
+                },
+                {
+                  "citation_id": "D6:C3",
+                  "document_id": 6,
+                  "chunk_index": 3,
+                  "score": 0.6118
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.5924
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "基于 MS MARCO v2.1 validation 公开语料核验：what is a corporation?；简短逐结论证据报告，证据不足处明确拒答"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.76666667
+                },
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.73318514
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.62875682
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.59760371
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.50175277
+                },
+                {
+                  "citation_id": "D6:C9",
+                  "document_id": 6,
+                  "chunk_index": 9,
+                  "score": 0.49922127
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 7,
+              "valid_citation_count": 7,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "58d3c18ad244983e7220488079d8508c2b1445a70f514f9a1bb6b067b205fba9",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验“what is a corporation?”并产出简短、逐结论有证据支持的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集与当前任务均为 MS MARCO v2.1 validation。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "检索语料并生成逐结论引用核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，对问题进行证据检索、答案草拟、逐句引用校验与自动修复，输出简短报告；每项实质结论均有可核验语料证据，无法由证据支持的内容明确标注为拒答或证据不足。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11,
+          "input_tokens": 24561.0,
+          "output_tokens": 4525.0,
+          "total_tokens": 29086.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        }
+      }
+    },
+    {
+      "case_id": "ms-marco-lightning-verified-report",
+      "source_sample_id": "ms_marco:validation:query-39449",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验“average number of lightning strikes per day”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-2979e2dc6d"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "8,640,000",
+            "8640000",
+            "8.64 million",
+            "864万",
+            "864 万"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-lightning-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 295.973195,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 34336.0,
+          "output_tokens": 13448.0,
+          "total_tokens": 47784.0,
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 0
+        }
+      },
+      "result": {
+        "conversation_id": 35,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-2979e2dc6d",
+        "thread_id": "agent-eval-ms-marco-lightning-verified-report-2979e2dc6d",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已完成同一公开数据集上的管线选择：`hybrid-rerank`，对应 **MS MARCO v2.1 validation** 的已批准评测运行，并通过了检索指标与 badcase 回归门禁。\n\n## 简短核验结论\n\n- 当前语料中，一条直接证据称：地面闪电约 **800 万次/日**（并表述为约 100 次/秒）。【D6:C31】\n- 另一条证据称：全球约 **864 万次/日**的闪电击中，并称每天超过 100 万次。【D6:C35】\n- 因此，**不能在现有证据下核定唯一的“平均每天雷击次数”**。可谨慎报告为：现有材料给出的量级约为 **800 万至 864 万次/日**，但不能断言其中任何一个是唯一、统一口径的平均值。【D6:C31】【D6:C35】\n\n## 拒答/证据缺口\n\n拒绝给出单一精确答案。原因是两条材料没有说明其统计口径是否一致，例如是否都只计“击中地面”的事件、是否包含云间闪电，以及对应的统计时期和地域范围。【D6:C31】【D6:C35】\n\n已生成逐结论引用报告草稿；但自动逐句核验流程最终未通过完整质量门禁，因此该产出应视为**带明确证据缺口的核验结果**，而非已完全验证的最终定论。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "核验“average number of lightning strikes per day”的答案；仅在 MS MARCO v2.1 validation 公开语料证据充分时给出结论，否则明确说明证据缺口",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "全球平均每日闪电次数的直接统计证据",
+                "query": "\"average number of lightning strikes per day\""
+              },
+              {
+                "title": "闪电年均或分钟均频率换算为每日次数的证据",
+                "query": "how many lightning strikes occur per year worldwide average lightning strikes per minute"
+              }
+            ],
+            "content": "# 报告标题\n\n## 全球平均每日闪电次数的直接统计证据：“average number of lightning strikes per day”\n\n- 一项证据称，地面闪电每天可达约 8,000,000 次，或每秒 100 次。[D6:C31]\n- 另一项证据称，全球每天有 8,640,000 次闪电击中，并同时表述为每天超过 1,000,000 次。[D6:C35]\n- 给定证据对全球每日闪电击中次数报告了约 8,000,000 次/日和 8,640,000 次/日两个数值。[D6:C31] [D6:C35]\n- 推测：证据缺口：给定条目未说明这两个每日数值是否采用相同的统计范围、时间段或“strike”的计数口径。[D6:C31] [D6:C35]\n- 可确认的直接报告数值为约 800 万次/日和 864 万次/日。[D6:C31] [D6:C35]\n\n## 闪电年均或分钟均频率换算为每日次数的证据：“how many lightning strikes occur per year worldwide average lightning strikes per minute”\n\n- 一项证据称，全球每秒约有 40 至 50 次闪电闪光，或每年近 14 亿次闪光。[D6:C34]\n- 另一项证据称，全球约同时存在 2,000 个活跃雷暴，并产生每秒超过 100 次闪电击中。[D6:C39]\n- 另一项证据称，全球每年约有 14 亿个闪电，其中 25%、即超过 3.5 亿个，会击中地表或地表物体。[D6:C35]\n- 该数值与一项直接报告的“Globally, 8,640,000 lightning strikes per day”一致。[D6:C35]\n- 证据中分别使用“flashes”“bolts”和“strikes”描述闪电事件或闪电击中。[D6:C34] [D6:C35] [D6:C31] [D6:C39]\n- 推测：证据缺口：给定条目未定义“flashes”“bolts”与“strikes”之间是否可一一对应，因此不能仅凭这些年均或秒均表述确定其与每日“strikes”统计完全相同。[D6:C34] [D6:C35] [D6:C31] [D6:C39]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "failed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "全球平均每日闪电次数的直接统计证据",
+                  "query": "\"average number of lightning strikes per day\"",
+                  "original_query": "\"average number of lightning strikes per day\"",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "闪电年均或分钟均频率换算为每日次数的证据",
+                  "query": "how many lightning strikes occur per year worldwide average lightning strikes per minute",
+                  "original_query": "how many lightning strikes occur per year worldwide average lightning strikes per minute",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 791
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 2,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.75,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 2
+                },
+                {
+                  "step": "mark_supported_inferences",
+                  "status": "failed",
+                  "marked_inference_count": 2
+                },
+                {
+                  "step": "fail_safe",
+                  "status": "failed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": false,
+              "score": 0.5,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": false,
+                  "detail": "11/11 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 11,
+                "supported_claim_count": 11,
+                "unsupported_claim_count": 0,
+                "citation_count": 20,
+                "valid_citation_count": 20,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": false,
+                "claims": [
+                  {
+                    "text": "一项证据称，地面闪电每天可达约 8,000,000 次，或每秒 100 次。[D6:C31]",
+                    "citations": [
+                      "D6:C31"
+                    ],
+                    "valid_citations": [
+                      "D6:C31"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.1,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称地面闪电每天最多约800万次，或每秒100次。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "另一项证据称，全球每天有 8,640,000 次闪电击中，并同时表述为每天超过 1,000,000 次。[D6:C35]",
+                    "citations": [
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.142857,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确同时写有“每天超过100万次”及“全球每天8,640,000次闪电击中”。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "给定证据对全球每日闪电击中次数报告了约 8,000,000 次/日和 8,640,000 次/日两个数值。[D6:C31] [D6:C35]",
+                    "citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.115385,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两项证据分别直接报告每天约800万次和每天8,640,000次。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：证据缺口：给定条目未说明这两个每日数值是否采用相同的统计范围、时间段或“strike”的计数口径。[D6:C31] [D6:C35]",
+                    "citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.027027,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两条条目均未明确比较或说明其统计范围、数据时间段及strike计数口径是否一致；据此可合理判断存在该信息缺口。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "可确认的直接报告数值为约 800 万次/日和 864 万次/日。[D6:C31] [D6:C35]",
+                    "citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "C31直接报告约800万次/日，C35直接报告8,640,000次/日。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "一项证据称，全球每秒约有 40 至 50 次闪电闪光，或每年近 14 亿次闪光。[D6:C34]",
+                    "citations": [
+                      "D6:C34"
+                    ],
+                    "valid_citations": [
+                      "D6:C34"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.086957,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C34",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称全球每秒约40至50次闪电闪光，或每年近14亿次闪光。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "另一项证据称，全球约同时存在 2,000 个活跃雷暴，并产生每秒超过 100 次闪电击中。[D6:C39]",
+                    "citations": [
+                      "D6:C39"
+                    ],
+                    "valid_citations": [
+                      "D6:C39"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.090909,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C39",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称全球同时约有2,000个活跃雷暴，并产生每秒超过100次strike。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "另一项证据称，全球每年约有 14 亿个闪电，其中 25%、即超过 3.5 亿个，会击中地表或地表物体。[D6:C35]",
+                    "citations": [
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.03125,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称年均14亿个lightning bolts，其中25%、即超过3.5亿个击中地表或地表物体。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "该数值与一项直接报告的“Globally, 8,640,000 lightning strikes per day”一致。[D6:C35]",
+                    "citations": [
+                      "D6:C35"
+                    ],
+                    "valid_citations": [
+                      "D6:C35"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.4,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接报告“Globally, 8,640,000 lightning strikes per day”。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据中分别使用“flashes”“bolts”和“strikes”描述闪电事件或闪电击中。[D6:C34] [D6:C35] [D6:C31] [D6:C39]",
+                    "citations": [
+                      "D6:C34",
+                      "D6:C35",
+                      "D6:C31",
+                      "D6:C39"
+                    ],
+                    "valid_citations": [
+                      "D6:C34",
+                      "D6:C35",
+                      "D6:C31",
+                      "D6:C39"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.157895,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C34",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C39",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "C34使用flashes，C35使用flashes、bolts和strikes，C31与C39使用strikes。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：证据缺口：给定条目未定义“flashes”“bolts”与“strikes”之间是否可一一对应，因此不能仅凭这些年均或秒均表述确定其与每日“strikes”统计完全相同。[D6:C34] [D6:C35] [D6:C31] [D6:C39]",
+                    "citations": [
+                      "D6:C34",
+                      "D6:C35",
+                      "D6:C31",
+                      "D6:C39"
+                    ],
+                    "valid_citations": [
+                      "D6:C34",
+                      "D6:C35",
+                      "D6:C31",
+                      "D6:C39"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0625,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C34",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C35",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C31",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C39",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据使用flashes、bolts和strikes等不同术语，但未定义它们是否一一对应；因此无法仅据这些表述确认其与每日strikes统计完全同口径。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "d77e0a8349d48b1212632762c3e09454f2fede2cbb32d38f8928e57d6632582f",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 1,
+                "conflicts": [
+                  {
+                    "citation_ids": [
+                      "D6:C31",
+                      "D6:C35"
+                    ],
+                    "reason": "两者都在陈述全球或地球地面每日lightning strikes：C31称每天“as much as 8 million”，而C35称每天8,640,000；后者超过前者所述上限。"
+                  }
+                ],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 9,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 2
+                }
+              },
+              "claim_count": 11,
+              "supported_claim_count": 11,
+              "unsupported_claim_count": 0,
+              "citation_count": 20,
+              "valid_citation_count": 20,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 1,
+              "conflicts": [
+                {
+                  "citation_ids": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "reason": "两者都在陈述全球或地球地面每日lightning strikes：C31称每天“as much as 8 million”，而C35称每天8,640,000；后者超过前者所述上限。"
+                }
+              ],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "d77e0a8349d48b1212632762c3e09454f2fede2cbb32d38f8928e57d6632582f",
+              "claim_state_counts": {
+                "supported": 9,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              },
+              "claims": [
+                {
+                  "text": "一项证据称，地面闪电每天可达约 8,000,000 次，或每秒 100 次。[D6:C31]",
+                  "citations": [
+                    "D6:C31"
+                  ],
+                  "valid_citations": [
+                    "D6:C31"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.1,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称地面闪电每天最多约800万次，或每秒100次。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "另一项证据称，全球每天有 8,640,000 次闪电击中，并同时表述为每天超过 1,000,000 次。[D6:C35]",
+                  "citations": [
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.142857,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确同时写有“每天超过100万次”及“全球每天8,640,000次闪电击中”。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "给定证据对全球每日闪电击中次数报告了约 8,000,000 次/日和 8,640,000 次/日两个数值。[D6:C31] [D6:C35]",
+                  "citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.115385,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两项证据分别直接报告每天约800万次和每天8,640,000次。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：证据缺口：给定条目未说明这两个每日数值是否采用相同的统计范围、时间段或“strike”的计数口径。[D6:C31] [D6:C35]",
+                  "citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.027027,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两条条目均未明确比较或说明其统计范围、数据时间段及strike计数口径是否一致；据此可合理判断存在该信息缺口。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "可确认的直接报告数值为约 800 万次/日和 864 万次/日。[D6:C31] [D6:C35]",
+                  "citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C31",
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "C31直接报告约800万次/日，C35直接报告8,640,000次/日。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "一项证据称，全球每秒约有 40 至 50 次闪电闪光，或每年近 14 亿次闪光。[D6:C34]",
+                  "citations": [
+                    "D6:C34"
+                  ],
+                  "valid_citations": [
+                    "D6:C34"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.086957,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C34",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称全球每秒约40至50次闪电闪光，或每年近14亿次闪光。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "另一项证据称，全球约同时存在 2,000 个活跃雷暴，并产生每秒超过 100 次闪电击中。[D6:C39]",
+                  "citations": [
+                    "D6:C39"
+                  ],
+                  "valid_citations": [
+                    "D6:C39"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.090909,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C39",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称全球同时约有2,000个活跃雷暴，并产生每秒超过100次strike。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "另一项证据称，全球每年约有 14 亿个闪电，其中 25%、即超过 3.5 亿个，会击中地表或地表物体。[D6:C35]",
+                  "citations": [
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.03125,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称年均14亿个lightning bolts，其中25%、即超过3.5亿个击中地表或地表物体。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "该数值与一项直接报告的“Globally, 8,640,000 lightning strikes per day”一致。[D6:C35]",
+                  "citations": [
+                    "D6:C35"
+                  ],
+                  "valid_citations": [
+                    "D6:C35"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.4,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接报告“Globally, 8,640,000 lightning strikes per day”。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据中分别使用“flashes”“bolts”和“strikes”描述闪电事件或闪电击中。[D6:C34] [D6:C35] [D6:C31] [D6:C39]",
+                  "citations": [
+                    "D6:C34",
+                    "D6:C35",
+                    "D6:C31",
+                    "D6:C39"
+                  ],
+                  "valid_citations": [
+                    "D6:C34",
+                    "D6:C35",
+                    "D6:C31",
+                    "D6:C39"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.157895,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C34",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C39",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "C34使用flashes，C35使用flashes、bolts和strikes，C31与C39使用strikes。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：证据缺口：给定条目未定义“flashes”“bolts”与“strikes”之间是否可一一对应，因此不能仅凭这些年均或秒均表述确定其与每日“strikes”统计完全相同。[D6:C34] [D6:C35] [D6:C31] [D6:C39]",
+                  "citations": [
+                    "D6:C34",
+                    "D6:C35",
+                    "D6:C31",
+                    "D6:C39"
+                  ],
+                  "valid_citations": [
+                    "D6:C34",
+                    "D6:C35",
+                    "D6:C31",
+                    "D6:C39"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0625,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C34",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C35",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C31",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C39",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据使用flashes、bolts和strikes等不同术语，但未定义它们是否一一对应；因此无法仅据这些表述确认其与每日strikes统计完全同口径。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.84285714,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/35",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.83837325,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/31",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.70067184,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/32",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.66347783,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/37",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.63217218,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/39",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C34",
+                  "document_id": 6,
+                  "chunk_index": 34,
+                  "score": 0.67530233,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/34",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1815,
+              "content_sha256": "f56d3b53deacedda8d2186141a621288b234fd8ee685f60a9f7497b895a1c4b3"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "average number of lightning strikes per day"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.8429
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.839
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.7009
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.6582
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.629
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验“average number of lightning strikes per day”的答案；仅在 MS MARCO v2.1 validation 公开语料证据充分时给出结论，否则明确说明证据缺口"
+            },
+            "ok": false,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.84285714
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.83837325
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.70067184
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.66347783
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.63217218
+                },
+                {
+                  "citation_id": "D6:C34",
+                  "document_id": 6,
+                  "chunk_index": 34,
+                  "score": 0.67530233
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "failed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": false,
+              "score": 0.5,
+              "claim_count": 11,
+              "supported_claim_count": 11,
+              "unsupported_claim_count": 0,
+              "citation_count": 20,
+              "valid_citation_count": 20,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 1,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "d77e0a8349d48b1212632762c3e09454f2fede2cbb32d38f8928e57d6632582f",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": false
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 9,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，使用经同数据集回归评测通过的 RAG 管线核验“average number of lightning strikes per day”的答案，并产出简短、逐结论有证据且证据不足时明确拒答的报告。",
+          "mode": "explicit",
+          "status": "partial",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回适用于当前 MS MARCO v2.1 validation 任务的 selected.pipeline_id，并确认其具备可复现评测与 badcase 回归门禁记录。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "检索并核验证据，生成逐结论引用报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，围绕该问题在当前公开语料中检索、草拟并完成引用校验与自动修复；报告简短，逐项结论附可追溯证据，给出经证据支持的答案，若无法充分支持则明确拒答并说明证据缺口。",
+              "status": "failed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 34336.0,
+          "output_tokens": 13448.0,
+          "total_tokens": 47784.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 13,
+          "retry_count": 1,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "MS MARCO",
+      "split": "validation",
+      "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+      "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836"
+    },
+    "resolved_document_id": 6,
+    "source_sample_ids": [
+      "ms_marco:validation:query-1102432",
+      "ms_marco:validation:query-39449"
+    ]
+  }
+}

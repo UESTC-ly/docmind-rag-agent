@@ -8,6 +8,10 @@ from types import SimpleNamespace
 import pytest
 
 from app.agent import orchestrator
+from app.services.provider_telemetry import (
+    record_provider_attempt,
+    record_provider_response,
+)
 from app.skills import registry
 from app.skills.base import BaseSkill, SkillContext
 
@@ -229,6 +233,57 @@ def test_high_risk_tool_interrupts_before_side_effect_and_recovers_after_restart
         "approved": True,
         "comment": "同意本次调用",
     }
+
+
+def test_provider_telemetry_preserves_interrupt_checkpoint_and_accumulates_on_resume(
+    monkeypatch, tmp_path, risk_skill
+):
+    responses = iter([_risk_call(), _FakeMsg(content="审批后完成")])
+
+    def _llm(messages, tools=None, tool_choice="auto"):
+        record_provider_attempt(model="test-provider-model")
+        record_provider_response(
+            {
+                "model": "test-provider-model",
+                "usage": {
+                    "prompt_tokens": 3,
+                    "completion_tokens": 2,
+                    "total_tokens": 5,
+                },
+            }
+        )
+        return next(responses)
+
+    monkeypatch.setattr(orchestrator, "chat_completion", _llm)
+    checkpoint_path = tmp_path / "agent-checkpoints.sqlite3"
+
+    waiting = orchestrator.run_agent(
+        user_id=71,
+        question="执行高风险操作",
+        thread_id="telemetry-interrupt",
+        checkpoint_path=checkpoint_path,
+    )
+    inspected = orchestrator.inspect_agent_run(
+        "telemetry-interrupt",
+        checkpoint_path=checkpoint_path,
+        expected_user_id=71,
+    )
+
+    assert waiting["status"] == "waiting_approval"
+    assert inspected["status"] == "waiting_approval"
+    assert inspected["provider_usage"]["total_tokens"] == 5.0
+    assert inspected["provider_usage"]["request_count"] == 1
+
+    completed = orchestrator.resume_agent(
+        "telemetry-interrupt",
+        approved=True,
+        checkpoint_path=checkpoint_path,
+        expected_user_id=71,
+    )
+
+    assert completed["status"] == "completed"
+    assert completed["provider_usage"]["total_tokens"] == 10.0
+    assert completed["provider_usage"]["request_count"] == 2
 
 
 def test_rejection_skips_side_effect_and_returns_observation_to_supervisor(

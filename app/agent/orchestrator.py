@@ -41,6 +41,12 @@ from app.agent.planning import (
 )
 from app.config import settings
 from app.services.llm_service import chat_completion
+from app.services.provider_telemetry import (
+    ProviderTelemetry,
+    capture_provider_telemetry,
+    current_provider_telemetry_state,
+    public_telemetry,
+)
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import all_tools, get_skill
 
@@ -96,6 +102,7 @@ class AgentState(TypedDict, total=False):
     pending_tool_calls: list[dict[str, Any]]
     current_tool: dict[str, Any] | None
     evaluated_pipeline_selection: dict[str, Any] | None
+    provider_telemetry: dict[str, Any]
     step: int
     answer: str
     status: str
@@ -331,6 +338,85 @@ def compact_artifact_for_audit(artifact: Any) -> dict[str, Any] | None:
     return compact or None
 
 
+def _compact_pipeline_selection(value: Any) -> dict[str, Any] | None:
+    """Retain the evaluation decision without copying free-form evidence."""
+
+    if not isinstance(value, Mapping):
+        return None
+    selected = value.get("selected")
+    dataset = value.get("dataset")
+    compact: dict[str, Any] = {
+        key: _audit_scalar(value.get(key), max_chars=240)
+        for key in (
+            "contract",
+            "status",
+            "target",
+            "selection_policy",
+            "candidate_count",
+        )
+        if key in value
+    }
+    if isinstance(dataset, Mapping):
+        compact["dataset"] = {
+            key: _audit_scalar(dataset.get(key), max_chars=255)
+            for key in (
+                "id",
+                "name",
+                "source_name",
+                "source_version",
+                "split",
+                "corpus_fingerprint",
+                "source_snapshot_fingerprint",
+            )
+            if key in dataset
+        }
+    if isinstance(selected, Mapping):
+        compact_selected = {
+            key: _audit_scalar(selected.get(key), max_chars=255)
+            for key in (
+                "run_id",
+                "dataset_id",
+                "pipeline_id",
+                "pipeline_fingerprint",
+                "comparison_role",
+                "release_status",
+            )
+            if key in selected
+        }
+        gates = [
+            row
+            for row in selected.get("regression_gates") or []
+            if isinstance(row, Mapping)
+            and row.get("severity") == "error"
+            and row.get("applicable") is True
+        ]
+        if gates:
+            compact_selected["error_gate_summary"] = {
+                "total": len(gates),
+                "passed": sum(row.get("passed") is True for row in gates),
+                "failed": sum(row.get("passed") is False for row in gates),
+                "unavailable": sum(row.get("passed") is None for row in gates),
+            }
+        compact["selected"] = compact_selected
+    candidates = value.get("candidates")
+    if isinstance(candidates, list):
+        compact["candidate_count"] = len(
+            [item for item in candidates if isinstance(item, Mapping)]
+        )
+    scope = value.get("scope_resolution")
+    if isinstance(scope, Mapping):
+        compact["scope_resolution"] = {
+            key: _audit_scalar(scope.get(key), max_chars=255)
+            for key in (
+                "requested_dataset_id",
+                "resolved_dataset_id",
+                "strategy",
+            )
+            if key in scope
+        }
+    return compact or None
+
+
 def compact_agent_trace_for_audit(value: Any) -> list[dict[str, Any]]:
     """Drop arguments and free-form observations from persisted trace rows."""
 
@@ -388,6 +474,11 @@ def compact_agent_trace_for_audit(value: Any) -> list[dict[str, Any]]:
                 )
                 if key in workflow
             }
+        pipeline_selection = _compact_pipeline_selection(
+            raw.get("pipeline_selection")
+        )
+        if pipeline_selection:
+            row["pipeline_selection"] = pipeline_selection
         rows.append(row)
     return rows
 
@@ -545,6 +636,15 @@ def _evidence_delivery_block_reason(
     return None
 
 
+def _with_provider_telemetry(update: dict[str, Any]) -> dict[str, Any]:
+    """Commit provider counters in the same checkpoint as the graph node."""
+
+    telemetry = current_provider_telemetry_state()
+    if telemetry is not None:
+        update["provider_telemetry"] = telemetry
+    return update
+
+
 def _supervisor(state: AgentState) -> dict[str, Any]:
     """执行一轮 LLM 决策；不在该节点内执行任何工具副作用。"""
     if state.get("status") in {"completed", "failed"}:
@@ -597,7 +697,9 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
             tool_choice=tool_choice,
         )
     except Exception:  # noqa: BLE001 - provider boundary must fail closed
-        return _model_provider_failure(state, stage="supervisor")
+        return _with_provider_telemetry(
+            _model_provider_failure(state, stage="supervisor")
+        )
     tool_calls = _assistant_tool_calls(llm_message)
     if not tool_calls:
         if forced_skill_name is not None:
@@ -607,14 +709,16 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
             )
         else:
             answer = llm_message.content or ""
-        return {
-            "answer": answer,
-            "status": "completed",
-            "step": step + 1,
-            "plan": finalize_plan(state.get("plan")),
-            "pending_tool_calls": [],
-            "current_tool": None,
-        }
+        return _with_provider_telemetry(
+            {
+                "answer": answer,
+                "status": "completed",
+                "step": step + 1,
+                "plan": finalize_plan(state.get("plan")),
+                "pending_tool_calls": [],
+                "current_tool": None,
+            }
+        )
 
     messages.append(
         {
@@ -623,14 +727,16 @@ def _supervisor(state: AgentState) -> dict[str, Any]:
             "tool_calls": tool_calls,
         }
     )
-    return {
-        "messages": messages,
-        "pending_tool_calls": tool_calls,
-        "current_tool": None,
-        "step": step + 1,
-        "answer": "",
-        "status": "running",
-    }
+    return _with_provider_telemetry(
+        {
+            "messages": messages,
+            "pending_tool_calls": tool_calls,
+            "current_tool": None,
+            "step": step + 1,
+            "answer": "",
+            "status": "running",
+        }
+    )
 
 
 def _route_after_supervisor(state: AgentState) -> str:
@@ -817,6 +923,9 @@ def _record_tool_result(
     selected_pipeline = state.get("evaluated_pipeline_selection")
     if trace_item["skill"] == _QUALITY_ADVISOR_SKILL:
         selected = result.get("selected")
+        pipeline_selection = _compact_pipeline_selection(result)
+        if pipeline_selection:
+            trace_item["pipeline_selection"] = pipeline_selection
         selected_pipeline = {
             "status": str(result.get("status") or ""),
             "pipeline_id": (
@@ -824,6 +933,24 @@ def _record_tool_result(
                 if isinstance(selected, Mapping)
                 else ""
             ),
+            "pipeline_fingerprint": (
+                str(selected.get("pipeline_fingerprint") or "").strip()
+                if isinstance(selected, Mapping)
+                else ""
+            ),
+            "run_id": (
+                selected.get("run_id")
+                if isinstance(selected, Mapping)
+                else None
+            ),
+            "release_status": (
+                str(selected.get("release_status") or "").strip()
+                if isinstance(selected, Mapping)
+                else ""
+            ),
+            "selection_policy": str(
+                result.get("selection_policy") or ""
+            ).strip(),
         }
         scope_resolution = result.get("scope_resolution")
         if isinstance(scope_resolution, Mapping):
@@ -898,7 +1025,9 @@ def _execute_tool(state: AgentState) -> dict[str, Any]:
     receipt_state, cached_result = _claim_tool_receipt(state, current)
     if receipt_state == "completed" and cached_result is not None:
         current["receipt_reused"] = True
-        return _record_tool_result(state, current, cached_result)
+        return _with_provider_telemetry(
+            _record_tool_result(state, current, cached_result)
+        )
     if receipt_state == "uncertain":
         decision = interrupt(
             {
@@ -927,7 +1056,7 @@ def _execute_tool(state: AgentState) -> dict[str, Any]:
                 "recovery": current["recovery"],
             }
             _complete_tool_receipt(state, current, result)
-            return _record_tool_result(state, current, result)
+            return _with_provider_telemetry(_record_tool_result(state, current, result))
 
     skill = get_skill(name)
     if skill is None:
@@ -958,7 +1087,7 @@ def _execute_tool(state: AgentState) -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001 - Skill 是隔离边界
             result = {"error": f"技能执行失败: {exc}"}
     _complete_tool_receipt(state, current, result)
-    return _record_tool_result(state, current, result)
+    return _with_provider_telemetry(_record_tool_result(state, current, result))
 
 
 def _route_after_tool(state: AgentState) -> str:
@@ -1136,6 +1265,7 @@ def _public_result(
     answer = str(state.get("answer") or "")
     if waiting and not answer:
         answer = "检测到高风险工具调用，等待人工审批后继续。"
+    provider_usage, provider_cost, provider_model = public_telemetry(state)
     return {
         "run_id": run_id,
         "thread_id": run_id,
@@ -1147,7 +1277,32 @@ def _public_result(
         "trace": list(state.get("trace", [])),
         "plan": state.get("plan"),
         "approval": approval,
+        "provider_usage": provider_usage,
+        "provider_cost": provider_cost,
+        "provider_model": provider_model,
     }
+
+
+def _invoke_with_provider_telemetry(
+    graph: Any,
+    invocation: Any,
+    run_id: str,
+    *,
+    initial_state: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Run one graph leg and persist only explicit provider telemetry."""
+
+    config = _graph_config(run_id)
+    prior = (
+        initial_state.get("provider_telemetry")
+        if isinstance(initial_state, Mapping)
+        else None
+    )
+    with capture_provider_telemetry(prior) as telemetry:
+        result = graph.invoke(invocation, config)
+    telemetry_state = telemetry.to_state()
+    result["provider_telemetry"] = telemetry_state
+    return result
 
 
 def _checkpoint_state(graph: Any, run_id: str, expected_user_id: int | None):
@@ -1278,6 +1433,7 @@ def run_agent(
         "pending_tool_calls": [],
         "current_tool": None,
         "evaluated_pipeline_selection": None,
+        "provider_telemetry": ProviderTelemetry().to_state(),
         "step": 0,
         "answer": preflight_error,
         "status": "completed" if preflight_error else "running",
@@ -1289,7 +1445,12 @@ def run_agent(
         if existing.values:
             raise AgentRunStateError(f"Agent run_id 已存在: {run_id}")
         _record_persistent_run(checkpoint_path, initial, run_id, "running")
-        result = graph.invoke(initial, _graph_config(run_id))
+        result = _invoke_with_provider_telemetry(
+            graph,
+            initial,
+            run_id,
+            initial_state=initial,
+        )
     public = _public_result(result, run_id, _interrupt_value(result))
     _record_persistent_run(checkpoint_path, result, run_id, public["status"])
     return public
@@ -1338,7 +1499,12 @@ def resume_agent(
         if _interrupt_value(snapshot) is None:
             raise AgentRunStateError("Agent run 当前不在等待审批")
         _record_persistent_run(checkpoint_path, values, run_id, "running")
-        result = graph.invoke(Command(resume=resume_value), _graph_config(run_id))
+        result = _invoke_with_provider_telemetry(
+            graph,
+            Command(resume=resume_value),
+            run_id,
+            initial_state=values,
+        )
     public = _public_result(result, run_id, _interrupt_value(result))
     _record_persistent_run(checkpoint_path, result, run_id, public["status"])
     return public
@@ -1359,7 +1525,12 @@ def recover_agent(
         if not snapshot.next:
             raise AgentRunStateError("Agent run 已完成，没有可恢复节点")
         _record_persistent_run(checkpoint_path, values, run_id, "running")
-        result = graph.invoke(None, _graph_config(run_id))
+        result = _invoke_with_provider_telemetry(
+            graph,
+            None,
+            run_id,
+            initial_state=values,
+        )
     public = _public_result(result, run_id, _interrupt_value(result))
     _record_persistent_run(checkpoint_path, result, run_id, public["status"])
     return public

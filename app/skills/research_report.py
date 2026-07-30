@@ -1,9 +1,10 @@
 """Bounded Agentic workflow for a cited, automatically verified report.
 
 The workflow is deliberately narrow and observable:
-plan -> retrieve per section -> draft -> validate -> one repair -> fail-safe
-removal of claims that still lack valid evidence.  The outer LangGraph Agent
-provides durable execution, approval, run leases, and tool receipts.
+plan -> retrieve per section -> draft -> validate -> one repair -> bounded
+fail-safe removal of claims that still lack valid evidence. The outer
+LangGraph Agent provides durable execution, approval, run leases, and tool
+receipts.
 """
 
 from __future__ import annotations
@@ -24,6 +25,8 @@ from app.services.llm_service import chat_completion
 from app.services.skill_retrieval import run_pipeline_for_skill
 from app.skills.base import BaseSkill, SkillContext
 from app.skills.registry import register_skill
+
+_EMPTY_MARKDOWN_ITEM_RE = re.compile(r"^\s*(?:[-*+]|\d+[.)、])\s*$")
 
 _PLAN_PROMPT = """你正在规划一份基于知识库的研究报告。
 主题：{topic}
@@ -179,7 +182,11 @@ def _fail_safe_report(text: str, report: dict[str, Any]) -> str:
             continue
         for invalid in claim["invalid_citations"]:
             sanitized = sanitized.replace(f"[{invalid}]", "")
-    lines = [line.rstrip() for line in sanitized.splitlines()]
+    lines = [
+        line.rstrip()
+        for line in sanitized.splitlines()
+        if not _EMPTY_MARKDOWN_ITEM_RE.fullmatch(line)
+    ]
     compact: list[str] = []
     for line in lines:
         if not line and compact and not compact[-1]:
@@ -187,6 +194,8 @@ def _fail_safe_report(text: str, report: dict[str, Any]) -> str:
         compact.append(line)
     sanitized = "\n".join(compact).strip()
     note = "> 证据不足或引用无效的句子已由验证器自动移除。"
+    if note in sanitized:
+        return sanitized
     return f"{sanitized}\n\n{note}".strip()
 
 
@@ -598,19 +607,26 @@ class VerifiedResearchReportSkill(BaseSkill):
 
         if not verification["passed"]:
             fail_safe_applied = True
-            report_text = _fail_safe_report(report_text, verification)
-            verification = evaluate_grounding(report_text, hits)
-            workflow_steps.append(
-                {
-                    "step": "fail_safe",
-                    "status": (
-                        "passed" if verification["passed"] else "failed"
-                    ),
-                    "unsupported_claim_count": verification[
-                        "unsupported_claim_count"
-                    ],
-                }
-            )
+            # A model judge can expose a second unsupported claim only after
+            # the first one is removed. Keep cleanup bounded while verifying
+            # every revision that may actually be delivered.
+            for pass_index in range(1, 4):
+                report_text = _fail_safe_report(report_text, verification)
+                verification = evaluate_grounding(report_text, hits)
+                workflow_steps.append(
+                    {
+                        "step": "fail_safe",
+                        "pass": pass_index,
+                        "status": (
+                            "passed" if verification["passed"] else "failed"
+                        ),
+                        "unsupported_claim_count": verification[
+                            "unsupported_claim_count"
+                        ],
+                    }
+                )
+                if verification["passed"]:
+                    break
 
         verification = merge_artifact_verification(
             "verified_research_report",

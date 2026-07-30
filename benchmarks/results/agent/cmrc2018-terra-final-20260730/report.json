@@ -1,0 +1,2560 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": true,
+  "release_evidence_eligible": true,
+  "release_gate_passed": true,
+  "provenance": {
+    "source_name": "CMRC 2018",
+    "source_uri": "https://ymcui.com/cmrc2018/",
+    "source_version": "2018",
+    "license_name": "CC BY-SA 4.0",
+    "split": "validation",
+    "corpus_fingerprint": "f3563fb04a1f1aec86c9452ae3e63dd789ec83650b15e5e842246d4f1612f077",
+    "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126",
+    "transform_spec": {
+      "contract": "cmrc_context_dedupe_v1",
+      "corpus_items": 28,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "1097bbc820b1f8e90f72535856881d1f190434048b79e59e6fbe6c41811e21f2",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 1.0,
+    "verified_task_completion_rate": 1.0,
+    "mean_plan_completion_rate": 1.0,
+    "mean_tool_selection_recall": 1.0,
+    "mean_tool_selection_precision": 0.666667,
+    "mean_artifact_completion_rate": 1.0,
+    "mean_verified_artifact_rate": 1.0,
+    "mean_quality_adaptation_count": 1.5,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 144.220011,
+    "p95_latency_seconds": 171.857225,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 95234.0,
+      "output_tokens": 11397.0,
+      "total_tokens": 106631.0,
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 22.0,
+      "response_count": 22.0
+    },
+    "failure_class_counts": {
+      "passed": 2
+    },
+    "failed_case_ids": [],
+    "cases": [
+      {
+        "case_id": "cmrc-sengoku-musou-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 171.857225,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 49682.0,
+          "output_tokens": 6954.0,
+          "total_tokens": 56636.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      {
+        "case_id": "cmrc-gongchepu-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 1,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 116.582796,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 45552.0,
+          "output_tokens": 4443.0,
+          "total_tokens": 49995.0,
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 10,
+          "response_count": 10,
+          "observed_response_count": 10
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 288.440635,
+    "throughput_cases_per_second": 0.006934,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 95234.0,
+      "output_tokens": 11397.0,
+      "total_tokens": 106631.0,
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 22.0,
+      "response_count": 22.0
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "cmrc-sengoku-musou-verified-report",
+      "source_sample_id": "cmrc2018:validation:DEV_0_QUERY_0",
+      "request": {
+        "message": "基于当前 CMRC 2018 validation 公开语料，核验“《战国无双3》是由哪两个公司合作开发的？”并生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 7,
+        "run_id": "agent-eval-cmrc-sengoku-musou-verified-report-9f11fac080"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "光荣",
+            "Koei"
+          ],
+          [
+            "ω-force",
+            "ω-Force",
+            "Omega Force"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "cmrc-sengoku-musou-verified-report"
+      },
+      "score": {
+        "case_id": "cmrc-sengoku-musou-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 171.857225,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 49682.0,
+          "output_tokens": 6954.0,
+          "total_tokens": 56636.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      "result": {
+        "conversation_id": 54,
+        "run_id": "agent-eval-cmrc-sengoku-musou-verified-report-9f11fac080",
+        "thread_id": "agent-eval-cmrc-sengoku-musou-verified-report-9f11fac080",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成逐结论证据核验报告，产出物中可查看完整正文。\n\n**核验结论**\n- 《战国无双3》由**光荣**和 **ω-force** 开发。[D7:C0]\n- 依据：当前语料原文直接表述“《战国无双3》是由光荣和ω-force开发”的作品。[D7:C0]\n\n**证据边界**\n- 该证据足以支持“两个开发方为光荣、ω-force”。\n- 但仅凭该段语料，不能进一步严格确认二者在该表述中的法律/组织性质都属于“公司”；因此结论仅按原文表述为“开发方”。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "基于当前 CMRC 2018 validation 公开语料核验：《战国无双3》由哪两个公司合作开发；逐结论提供引用依据，若无法证明则明确拒答并说明证据缺口。",
+            "document_id": 7,
+            "outline": [
+              {
+                "title": "语料原文中的开发合作方结论",
+                "query": "《战国无双3》由哪两个公司合作开发？请检索 CMRC 2018 validation 公开语料中包含该问题及答案的原文段落，并提取两个公司名称。"
+              },
+              {
+                "title": "证据可核验性与拒答条件",
+                "query": "检索 CMRC 2018 validation 公开语料及其对应上下文，是否存在明确表述《战国无双3》“由A和B合作开发”的句子；若不存在，请说明缺少哪些能够证明两个开发公司的直接证据。"
+              }
+            ],
+            "content": "# 《战国无双3》开发方核验报告\n\n## 语料原文中的开发合作方结论\n\n- 证据原文称，《战国无双3》“是由光荣和ω-force开发”的作品。[D7:C0]\n- 据此，可提取的两名开发方为：**光荣**与**ω-force**。[D7:C0]\n- 因而，依据给定证据，对“由哪两个开发方合作开发”的回答是：**光荣和ω-force**。[D7:C0]\n\n## 证据可核验性与拒答条件\n\n- 证据使用“由光荣和ω-force开发”的表述，直接并列列出两名开发方。[D7:C0]\n- 推测：因此，无法仅凭该段文字核验其是否确属当前 CMRC 2018 validation 公开语料中的对应样本。[D7:C0]\n- 推测：因此，无法仅凭该证据确认二者均为“公司”。[D7:C0]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "语料原文中的开发合作方结论",
+                  "query": "《战国无双3》由哪两个公司合作开发？请检索 CMRC 2018 validation 公开语料中包含该问题及答案的原文段落，并提取两个公司名称。",
+                  "original_query": "《战国无双3》由哪两个公司合作开发？请检索 CMRC 2018 validation 公开语料中包含该问题及答案的原文段落，并提取两个公司名称。",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "证据可核验性与拒答条件",
+                  "query": "检索 CMRC 2018 validation 公开语料及其对应上下文，是否存在明确表述《战国无双3》“由A和B合作开发”的句子；若不存在，请说明缺少哪些能够证明两个开发公司的直接证据。",
+                  "original_query": "检索 CMRC 2018 validation 公开语料及其对应上下文，是否存在明确表述《战国无双3》“由A和B合作开发”的句子；若不存在，请说明缺少哪些能够证明两个开发公司的直接证据。",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 475
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 1,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.875,
+                  "citation_correctness": 0.833333
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 2
+                },
+                {
+                  "step": "mark_supported_inferences",
+                  "status": "failed",
+                  "marked_inference_count": 2
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "6/6 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 6,
+                "supported_claim_count": 6,
+                "unsupported_claim_count": 0,
+                "citation_count": 6,
+                "valid_citation_count": 6,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "证据原文称，《战国无双3》“是由光荣和ω-force开发”的作品。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.809524,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据原文直接写明《战国无双3》“是由光荣和ω-force开发”的作品。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "据此，可提取的两名开发方为：**光荣**与**ω-force**。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.6875,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接将“光荣”和“ω-force”并列为开发方，恰为两名开发方。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "因而，依据给定证据，对“由哪两个开发方合作开发”的回答是：**光荣和ω-force**。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.56,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确称该作品由“光荣和ω-force开发”，直接支持该回答。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据使用“由光荣和ω-force开发”的表述，直接并列列出两名开发方。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.681818,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据中确实使用“由光荣和ω-force开发”的表述，并以“和”并列两方。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：因此，无法仅凭该段文字核验其是否确属当前 CMRC 2018 validation 公开语料中的对应样本。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.352941,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "该段文字未包含CMRC 2018 validation公开语料或样本标识等信息，因此仅据该文字不能核验其对应语料样本身份。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：因此，无法仅凭该证据确认二者均为“公司”。[D7:C0]",
+                    "citations": [
+                      "D7:C0"
+                    ],
+                    "valid_citations": [
+                      "D7:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.263158,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据仅称二者为开发方，未陈述或界定二者均为“公司”，故不能仅凭该证据确认该属性。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "b8f6c303880ae5b7a808739708f0fed8e16fd72bf402e69a5b033f120a08c2ae",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 4,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 2
+                }
+              },
+              "claim_count": 6,
+              "supported_claim_count": 6,
+              "unsupported_claim_count": 0,
+              "citation_count": 6,
+              "valid_citation_count": 6,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "b8f6c303880ae5b7a808739708f0fed8e16fd72bf402e69a5b033f120a08c2ae",
+              "claim_state_counts": {
+                "supported": 4,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              },
+              "claims": [
+                {
+                  "text": "证据原文称，《战国无双3》“是由光荣和ω-force开发”的作品。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.809524,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据原文直接写明《战国无双3》“是由光荣和ω-force开发”的作品。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "据此，可提取的两名开发方为：**光荣**与**ω-force**。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.6875,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接将“光荣”和“ω-force”并列为开发方，恰为两名开发方。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "因而，依据给定证据，对“由哪两个开发方合作开发”的回答是：**光荣和ω-force**。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.56,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确称该作品由“光荣和ω-force开发”，直接支持该回答。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据使用“由光荣和ω-force开发”的表述，直接并列列出两名开发方。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.681818,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据中确实使用“由光荣和ω-force开发”的表述，并以“和”并列两方。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：因此，无法仅凭该段文字核验其是否确属当前 CMRC 2018 validation 公开语料中的对应样本。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.352941,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "该段文字未包含CMRC 2018 validation公开语料或样本标识等信息，因此仅据该文字不能核验其对应语料样本身份。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：因此，无法仅凭该证据确认二者均为“公司”。[D7:C0]",
+                  "citations": [
+                    "D7:C0"
+                  ],
+                  "valid_citations": [
+                    "D7:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.263158,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据仅称二者为开发方，未陈述或界定二者均为“公司”，故不能仅凭该证据确认该属性。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D7:C0",
+                  "document_id": 7,
+                  "chunk_index": 0,
+                  "score": 0.78571429,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/0",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C24",
+                  "document_id": 7,
+                  "chunk_index": 24,
+                  "score": 0.53472335,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/24",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C2",
+                  "document_id": 7,
+                  "chunk_index": 2,
+                  "score": 0.49760779,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/2",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C6",
+                  "document_id": 7,
+                  "chunk_index": 6,
+                  "score": 0.43965848,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/6",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.43885131,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/8",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C12",
+                  "document_id": 7,
+                  "chunk_index": 12,
+                  "score": 0.47322773,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/12",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 809,
+              "content_sha256": "4b454752ba219bec1662ca0bbe0cfaca3c9ebf2d4fb620decbb3735fd80735a0"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 7,
+              "query": "《战国无双3》由哪两个公司合作开发？合作开发 公司"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D7:C0",
+                  "document_id": 7,
+                  "chunk_index": 0,
+                  "score": 0.8467
+                },
+                {
+                  "citation_id": "D7:C24",
+                  "document_id": 7,
+                  "chunk_index": 24,
+                  "score": 0.5685
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.5622
+                },
+                {
+                  "citation_id": "D7:C12",
+                  "document_id": 7,
+                  "chunk_index": 12,
+                  "score": 0.5069
+                },
+                {
+                  "citation_id": "D7:C11",
+                  "document_id": 7,
+                  "chunk_index": 11,
+                  "score": 0.4367
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 5,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 7,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "基于当前 CMRC 2018 validation 公开语料核验：《战国无双3》由哪两个公司合作开发；逐结论提供引用依据，若无法证明则明确拒答并说明证据缺口。"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D7:C0",
+                  "document_id": 7,
+                  "chunk_index": 0,
+                  "score": 0.78571429
+                },
+                {
+                  "citation_id": "D7:C24",
+                  "document_id": 7,
+                  "chunk_index": 24,
+                  "score": 0.53472335
+                },
+                {
+                  "citation_id": "D7:C2",
+                  "document_id": 7,
+                  "chunk_index": 2,
+                  "score": 0.49760779
+                },
+                {
+                  "citation_id": "D7:C6",
+                  "document_id": 7,
+                  "chunk_index": 6,
+                  "score": 0.43965848
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.43885131
+                },
+                {
+                  "citation_id": "D7:C12",
+                  "document_id": 7,
+                  "chunk_index": 12,
+                  "score": 0.47322773
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 6,
+              "supported_claim_count": 6,
+              "unsupported_claim_count": 0,
+              "citation_count": 6,
+              "valid_citation_count": 6,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "b8f6c303880ae5b7a808739708f0fed8e16fd72bf402e69a5b033f120a08c2ae",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 4,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 CMRC 2018 validation 公开语料核验《战国无双3》的合作开发公司，并输出证据不足时拒答的简短逐结论依据报告。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 CMRC 2018 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且适用于当前文档 ID 7 所在数据集。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "生成带逐结论引用与证据校验的核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，围绕“《战国无双3》由哪两个公司合作开发”检索当前公开语料并生成简短报告；每项结论附可核验依据，若无法证明两个公司名称则明确拒答并说明证据缺口。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 49682.0,
+          "output_tokens": 6954.0,
+          "total_tokens": 56636.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 12,
+          "response_count": 12,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 12
+        }
+      }
+    },
+    {
+      "case_id": "cmrc-gongchepu-verified-report",
+      "source_sample_id": "cmrc2018:validation:DEV_1_QUERY_0",
+      "request": {
+        "message": "基于当前 CMRC 2018 validation 公开语料，核验“锣鼓经是什么？”并生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 7,
+        "run_id": "agent-eval-cmrc-gongchepu-verified-report-8681eafecf"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "打击乐",
+            "percussion"
+          ],
+          [
+            "记谱",
+            "notation"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "cmrc-gongchepu-verified-report"
+      },
+      "score": {
+        "case_id": "cmrc-gongchepu-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 1,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 116.582796,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 45552.0,
+          "output_tokens": 4443.0,
+          "total_tokens": 49995.0,
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 10,
+          "response_count": 10,
+          "observed_response_count": 10
+        }
+      },
+      "result": {
+        "conversation_id": 55,
+        "run_id": "agent-eval-cmrc-gongchepu-verified-report-8681eafecf",
+        "thread_id": "agent-eval-cmrc-gongchepu-verified-report-8681eafecf",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**逐结论证据核验报告**，正文与下载文件已在产出物中提供。\n\n**核验结论（简要）**\n- **锣鼓经**是大陆传统器乐及戏曲中常用的**打击乐记谱方法**。  \n- 它以中文字的声音模拟敲击乐声音，用于记录不同的打击乐演奏方法；常用节奏型称为**“锣鼓点”**。  \n- 在戏曲中，锣鼓可强化身段动作节奏，并用于引子、尾声、提示板式与速度，以及伴奏唱腔、念白等。  \n- 以上结论均直接引自当前 CMRC 2018 validation 语料的同一证据片段 **[D7:C1]**，报告已完成逐句引用校验与自动修复：**13/13 条事实性结论获得支持，无未支持结论**。\n\n**管线说明**\n- 已选用在同一 **CMRC 2018 validation** 公开评测上获批准、且回归与 badcase 门禁均通过的检索管线：`hybrid-rerank`。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "基于 CMRC 2018 validation 公开语料核验“锣鼓经是什么？”：简短逐结论证据报告；证据不足时明确拒答",
+            "document_id": 7,
+            "outline": [
+              {
+                "title": "定义与核心特征核验",
+                "query": "在 CMRC 2018 validation 语料中检索包含“锣鼓经”的段落，核验其定义、用途和基本表现形式。"
+              },
+              {
+                "title": "适用场景与相关艺术门类核验",
+                "query": "在 CMRC 2018 validation 语料中检索“锣鼓经”出现的上下文，核验其与戏曲、曲艺、舞台表演或乐器演奏的具体关系。"
+              }
+            ],
+            "content": "# 基于 CMRC 2018 validation 公开语料核验“锣鼓经是什么？”：简短逐结论证据报告\n\n## 定义与核心特征核验\n\n1. 锣鼓经是大陆传统器乐及戏曲中常用的打击乐记谱方法。 [D7:C1]\n\n2. 锣鼓经以中文字的声音模拟敲击乐声音，用以记录打击乐的不同演奏方法。 [D7:C1]\n\n3. 常用的节奏型称为“锣鼓点”。 [D7:C1]\n\n4. 戏曲锣鼓所用敲击乐器主要分为鼓、锣、钹、板四类。 [D7:C1]\n\n5. 证据列举的相关乐器包括板鼓、大锣、铙钹、檀板、木鱼和梆子等。 [D7:C1]\n\n## 适用场景与相关艺术门类核验\n\n6. 锣鼓是戏曲节奏的支柱，可加强演员身段动作的节奏感。 [D7:C1]\n\n7. 锣鼓可作为音乐的引子和尾声，并可提示音乐的板式和速度。 [D7:C1]\n\n8. 锣鼓可作为唱腔和念白的伴奏。 [D7:C1]\n\n9. 锣鼓的运用有约定俗成的程式，依照角色行当的身份、性格、情绪和环境，配合相应的锣鼓点。 [D7:C1]\n\n10. 锣鼓可以模仿雷电、波浪等自然音响效果。 [D7:C1]\n\n11. 证据提及京剧、昆剧和粤剧锣鼓。 [D7:C1]\n\n12. 京剧的锣鼓通常由四位乐师负责，领奏者称为“鼓佬”，负责控制速度并以手势提示乐师演奏不同锣鼓点。 [D7:C1]\n\n13. 粤剧吸收了部分京剧锣鼓，并以木鱼和沙代替京剧的板和鼓，作为打拍子的主要乐器。 [D7:C1]",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": false,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "定义与核心特征核验",
+                  "query": "在 CMRC 2018 validation 语料中检索包含“锣鼓经”的段落，核验其定义、用途和基本表现形式。",
+                  "original_query": "在 CMRC 2018 validation 语料中检索包含“锣鼓经”的段落，核验其定义、用途和基本表现形式。",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "适用场景与相关艺术门类核验",
+                  "query": "在 CMRC 2018 validation 语料中检索“锣鼓经”出现的上下文，核验其与戏曲、曲艺、舞台表演或乐器演奏的具体关系。",
+                  "original_query": "在 CMRC 2018 validation 语料中检索“锣鼓经”出现的上下文，核验其与戏曲、曲艺、舞台表演或乐器演奏的具体关系。",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 593
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 2,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.818182,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "13/13 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 13,
+                "supported_claim_count": 13,
+                "unsupported_claim_count": 0,
+                "citation_count": 13,
+                "valid_citation_count": 13,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "锣鼓经是大陆传统器乐及戏曲中常用的打击乐记谱方法。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称锣鼓经是大陆传统器乐及戏曲中常用的打击乐记谱方法。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓经以中文字的声音模拟敲击乐声音，用以记录打击乐的不同演奏方法。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明其以中文字声音模拟敲击乐声音，并记录不同演奏方法。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "常用的节奏型称为“锣鼓点”。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接写明“常用的节奏型称为『锣鼓点』”。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "戏曲锣鼓所用敲击乐器主要分为鼓、锣、钹、板四类。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称戏曲锣鼓所用敲击乐器主要分为鼓、锣、钹和板四类。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据列举的相关乐器包括板鼓、大锣、铙钹、檀板、木鱼和梆子等。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.791667,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据的乐器列举中明确包括板鼓、大锣、铙钹、檀板、木鱼和梆子。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓是戏曲节奏的支柱，可加强演员身段动作的节奏感。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称锣鼓是戏曲节奏的支柱，并可加强演员身段动作的节奏感。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓可作为音乐的引子和尾声，并可提示音乐的板式和速度。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.95,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明锣鼓可作音乐的引子和尾声，并提示音乐的板式和速度。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓可作为唱腔和念白的伴奏。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明锣鼓可作为唱腔和念白的伴奏。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓的运用有约定俗成的程式，依照角色行当的身份、性格、情绪和环境，配合相应的锣鼓点。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接陈述锣鼓运用有约定俗成的程式，并按角色行当的身份、性格、情绪及环境配合相应锣鼓点。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "锣鼓可以模仿雷电、波浪等自然音响效果。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 1.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接称锣鼓可模仿雷电、波浪等大自然音响效果。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据提及京剧、昆剧和粤剧锣鼓。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.818182,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据末尾明确提及“京剧、昆剧和粤剧锣鼓”。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "京剧的锣鼓通常由四位乐师负责，领奏者称为“鼓佬”，负责控制速度并以手势提示乐师演奏不同锣鼓点。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.941176,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明京剧锣鼓通常由四位乐师负责，领奏者称“鼓佬”，负责控制速度及以手势提示不同锣鼓点。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "粤剧吸收了部分京剧锣鼓，并以木鱼和沙代替京剧的板和鼓，作为打拍子的主要乐器。 [D7:C1]",
+                    "citations": [
+                      "D7:C1"
+                    ],
+                    "valid_citations": [
+                      "D7:C1"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.965517,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D7:C1",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明粤剧吸收部分京剧锣鼓，并以木鱼和沙代替京剧的板和鼓作为主要打拍子乐器。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "33faca5efec017f51b83988cd67ac3221cacdea2833f372eb8f532b48f3a99ab",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": false,
+                "claim_state_counts": {
+                  "supported": 13,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 0
+                }
+              },
+              "claim_count": 13,
+              "supported_claim_count": 13,
+              "unsupported_claim_count": 0,
+              "citation_count": 13,
+              "valid_citation_count": 13,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "33faca5efec017f51b83988cd67ac3221cacdea2833f372eb8f532b48f3a99ab",
+              "claim_state_counts": {
+                "supported": 13,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              },
+              "claims": [
+                {
+                  "text": "锣鼓经是大陆传统器乐及戏曲中常用的打击乐记谱方法。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称锣鼓经是大陆传统器乐及戏曲中常用的打击乐记谱方法。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓经以中文字的声音模拟敲击乐声音，用以记录打击乐的不同演奏方法。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明其以中文字声音模拟敲击乐声音，并记录不同演奏方法。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "常用的节奏型称为“锣鼓点”。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接写明“常用的节奏型称为『锣鼓点』”。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "戏曲锣鼓所用敲击乐器主要分为鼓、锣、钹、板四类。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称戏曲锣鼓所用敲击乐器主要分为鼓、锣、钹和板四类。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据列举的相关乐器包括板鼓、大锣、铙钹、檀板、木鱼和梆子等。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.791667,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据的乐器列举中明确包括板鼓、大锣、铙钹、檀板、木鱼和梆子。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓是戏曲节奏的支柱，可加强演员身段动作的节奏感。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称锣鼓是戏曲节奏的支柱，并可加强演员身段动作的节奏感。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓可作为音乐的引子和尾声，并可提示音乐的板式和速度。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.95,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明锣鼓可作音乐的引子和尾声，并提示音乐的板式和速度。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓可作为唱腔和念白的伴奏。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明锣鼓可作为唱腔和念白的伴奏。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓的运用有约定俗成的程式，依照角色行当的身份、性格、情绪和环境，配合相应的锣鼓点。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接陈述锣鼓运用有约定俗成的程式，并按角色行当的身份、性格、情绪及环境配合相应锣鼓点。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "锣鼓可以模仿雷电、波浪等自然音响效果。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 1.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接称锣鼓可模仿雷电、波浪等大自然音响效果。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据提及京剧、昆剧和粤剧锣鼓。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.818182,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据末尾明确提及“京剧、昆剧和粤剧锣鼓”。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "京剧的锣鼓通常由四位乐师负责，领奏者称为“鼓佬”，负责控制速度并以手势提示乐师演奏不同锣鼓点。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.941176,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明京剧锣鼓通常由四位乐师负责，领奏者称“鼓佬”，负责控制速度及以手势提示不同锣鼓点。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "粤剧吸收了部分京剧锣鼓，并以木鱼和沙代替京剧的板和鼓，作为打拍子的主要乐器。 [D7:C1]",
+                  "citations": [
+                    "D7:C1"
+                  ],
+                  "valid_citations": [
+                    "D7:C1"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.965517,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D7:C1",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明粤剧吸收部分京剧锣鼓，并以木鱼和沙代替京剧的板和鼓作为主要打拍子乐器。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": false
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D7:C1",
+                  "document_id": 7,
+                  "chunk_index": 1,
+                  "score": 0.78387097,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/1",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C18",
+                  "document_id": 7,
+                  "chunk_index": 18,
+                  "score": 0.48622788,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/18",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C23",
+                  "document_id": 7,
+                  "chunk_index": 23,
+                  "score": 0.47224569,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/23",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C17",
+                  "document_id": 7,
+                  "chunk_index": 17,
+                  "score": 0.42254616,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/17",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C25",
+                  "document_id": 7,
+                  "chunk_index": 25,
+                  "score": 0.39916579,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/25",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.42559989,
+                  "document_name": "CMRC 2018",
+                  "source_uri": "https://ymcui.com/cmrc2018/",
+                  "source_version": "2018",
+                  "source_status": "current",
+                  "jump_url": "/documents/7/chunks/8",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1413,
+              "content_sha256": "0e21059130769b65eaed028e0f520bd04de087b3335cd6dbeb78edf40ae2cffd"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 7,
+              "query": "锣鼓经是什么？请检索 CMRC 2018 validation 语料中可直接支持定义的原文片段。"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D7:C1",
+                  "document_id": 7,
+                  "chunk_index": 1,
+                  "score": 0.7815
+                },
+                {
+                  "citation_id": "D7:C16",
+                  "document_id": 7,
+                  "chunk_index": 16,
+                  "score": 0.537
+                },
+                {
+                  "citation_id": "D7:C20",
+                  "document_id": 7,
+                  "chunk_index": 20,
+                  "score": 0.4649
+                },
+                {
+                  "citation_id": "D7:C25",
+                  "document_id": 7,
+                  "chunk_index": 25,
+                  "score": 0.4337
+                },
+                {
+                  "citation_id": "D7:C0",
+                  "document_id": 7,
+                  "chunk_index": 0,
+                  "score": 0.4057
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 5,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 7,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "基于 CMRC 2018 validation 公开语料核验“锣鼓经是什么？”：简短逐结论证据报告；证据不足时明确拒答"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D7:C1",
+                  "document_id": 7,
+                  "chunk_index": 1,
+                  "score": 0.78387097
+                },
+                {
+                  "citation_id": "D7:C18",
+                  "document_id": 7,
+                  "chunk_index": 18,
+                  "score": 0.48622788
+                },
+                {
+                  "citation_id": "D7:C23",
+                  "document_id": 7,
+                  "chunk_index": 23,
+                  "score": 0.47224569
+                },
+                {
+                  "citation_id": "D7:C17",
+                  "document_id": 7,
+                  "chunk_index": 17,
+                  "score": 0.42254616
+                },
+                {
+                  "citation_id": "D7:C25",
+                  "document_id": 7,
+                  "chunk_index": 25,
+                  "score": 0.39916579
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.42559989
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": false
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 13,
+              "supported_claim_count": 13,
+              "unsupported_claim_count": 0,
+              "citation_count": 13,
+              "valid_citation_count": 13,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "33faca5efec017f51b83988cd67ac3221cacdea2833f372eb8f532b48f3a99ab",
+              "repair_attempted": true,
+              "fail_safe_applied": false,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 13,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 CMRC 2018 validation 公开语料核验“锣鼓经是什么？”，并输出一份简短、逐结论具备可核验证据的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 CMRC 2018 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集与当前 CMRC 2018 validation 语料一致。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "基于选定管线核验定义并生成逐结论证据报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id 和当前文档 ID 7 生成简短报告；每项结论均附可追溯至 CMRC 2018 validation 公开语料的引用并通过引用校验与自动修复；如无法获得充分直接证据，报告明确拒答而非推断。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10,
+          "input_tokens": 45552.0,
+          "output_tokens": 4443.0,
+          "total_tokens": 49995.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 10,
+          "response_count": 10,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 10
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "CMRC 2018",
+      "split": "validation",
+      "corpus_fingerprint": "f3563fb04a1f1aec86c9452ae3e63dd789ec83650b15e5e842246d4f1612f077",
+      "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126"
+    },
+    "resolved_document_id": 7,
+    "source_sample_ids": [
+      "cmrc2018:validation:DEV_0_QUERY_0",
+      "cmrc2018:validation:DEV_1_QUERY_0"
+    ]
+  }
+}

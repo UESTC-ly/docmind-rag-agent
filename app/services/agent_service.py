@@ -219,6 +219,9 @@ async def _persist_assistant_message(
         {
             "agent_run_id": str(result["run_id"]),
             "plan": result.get("plan"),
+            "provider_usage": result.get("provider_usage"),
+            "provider_cost": result.get("provider_cost"),
+            "provider_model": result.get("provider_model"),
             "trace": compact_agent_trace_for_audit(result.get("trace", [])),
             "artifacts": [
                 compact
@@ -261,6 +264,9 @@ def _agent_response(result: dict, conversation_id: int) -> AgentResponse:
         trace=result.get("trace", []),
         plan=result.get("plan"),
         approval=result.get("approval"),
+        provider_usage=result.get("provider_usage", {}),
+        provider_cost=result.get("provider_cost", {}),
+        provider_model=result.get("provider_model", {}),
     )
 
 

@@ -1,0 +1,143 @@
+name: docmind
+
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+  REDIS_URL: redis://redis:6379/0
+  QDRANT_URL: http://qdrant:6333
+  TASK_EXECUTION_MODE: celery
+  UPLOAD_DIR: /var/lib/docmind/uploads
+  SKILL_WORKSPACE_DIR: /var/lib/docmind/skill-workspaces
+  AGENT_CHECKPOINT_PATH: /var/lib/docmind/agent-checkpoints.sqlite3
+
+x-app-service: &app-service
+  build:
+    context: .
+    dockerfile: Dockerfile
+  env_file:
+    - ${DOCMIND_ENV_FILE:-.env.production}
+  environment: *app-environment
+  volumes:
+    - app_data:/var/lib/docmind
+  networks:
+    - private
+    # API/worker must reach explicitly configured LLM and embedding providers.
+    # Keep databases on the internal network while using a second bridge only
+    # for outbound provider traffic.
+    - provider-egress
+  read_only: true
+  tmpfs:
+    - /tmp
+
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:e013e867e712fec275706a6c51c966f0bb0c93cfa8f51000f85a15f9865a28cb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - private
+    restart: unless-stopped
+
+  migrate:
+    <<: *app-service
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app-service
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    ports:
+      - "${DOCMIND_BIND_HOST:-127.0.0.1}:${DOCMIND_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    <<: *app-service
+    command:
+      [
+        "celery",
+        "-A",
+        "app.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--concurrency=${CELERY_CONCURRENCY:-2}",
+      ]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.celery_app inspect ping -d celery@$$HOSTNAME --timeout=5 | grep -q pong",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+
+networks:
+  private:
+    internal: true
+  provider-egress:

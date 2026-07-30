@@ -19,6 +19,9 @@ greenlet                  # SQLAlchemy async 依赖
 passlib[bcrypt]
 bcrypt==4.0.1             # 钉死：passlib 1.7.4 与 bcrypt 5.x 不兼容
 python-jose[cryptography]
+# cryptography 49.0.0 wheel exits with SIGILL on the supported Colima arm64
+# production-smoke runtime; 46.0.3 is verified on host and container.
+cryptography==46.0.3
 
 # ── 异步任务 ─────────────────────────────
 celery

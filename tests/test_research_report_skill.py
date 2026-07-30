@@ -451,6 +451,107 @@ def test_workflow_removes_claims_that_still_fail_after_repair(monkeypatch):
     assert result["workflow"]["status"] == "failed"
 
 
+def test_workflow_repeats_bounded_fail_safe_when_judge_exposes_next_bad_claim(
+    monkeypatch,
+):
+    report_text = (
+        "# 报告\n\n"
+        "- 断言甲。[D3:C1]\n"
+        "- 断言乙。[D3:C1]\n"
+        "- 断言丙。[D3:C1]"
+    )
+    responses = iter(
+        [
+            _FakeMessage("not-json"),
+            _FakeMessage(report_text),
+            _FakeMessage(report_text),
+        ]
+    )
+
+    def shifting_evaluate(answer, hits):
+        report = validate_citations(answer, hits)
+        if "断言甲" in answer:
+            rejected = "断言甲"
+        elif "断言乙" in answer:
+            rejected = "断言乙"
+        else:
+            rejected = ""
+        for claim in report["claims"]:
+            supported = not rejected or rejected not in claim["text"]
+            claim.update(
+                {
+                    "semantically_supported": supported,
+                    "verdict": "entailed" if supported else "unsupported",
+                    "claim_type": "fact",
+                    "explicit_inference": False,
+                    "citation_verdicts": [
+                        {
+                            "citation_id": citation_id,
+                            "verdict": "supports" if supported else "irrelevant",
+                        }
+                        for citation_id in claim["valid_citations"]
+                    ],
+                    "reason": "fixture",
+                }
+            )
+        supported_count = sum(
+            bool(claim["semantically_supported"])
+            for claim in report["claims"]
+        )
+        claim_count = report["claim_count"]
+        passed = bool(claim_count) and supported_count == claim_count
+        return {
+            **report,
+            "contract": "claim_grounding_v1",
+            "semantic_entailment_checked": bool(claim_count),
+            "judge_status": "completed" if claim_count else "not_applicable",
+            "groundedness": (
+                supported_count / claim_count if claim_count else None
+            ),
+            "faithfulness": (
+                supported_count / claim_count if claim_count else None
+            ),
+            "citation_correctness": 1.0 if claim_count else None,
+            "conflict_count": 0,
+            "conflicts": [],
+            "supported_claim_count": supported_count,
+            "unsupported_claim_count": claim_count - supported_count,
+            "passed": report["passed"] and passed,
+        }
+
+    monkeypatch.setattr(
+        research_report,
+        "run_pipeline_for_skill",
+        lambda **kwargs: _execution(),
+    )
+    monkeypatch.setattr(research_report, "evaluate_grounding", shifting_evaluate)
+    monkeypatch.setattr(
+        research_report,
+        "chat_completion",
+        lambda messages, temperature=0.3: next(responses),
+    )
+
+    result = research_report.VerifiedResearchReportSkill().run(
+        SkillContext(user_id=7),
+        topic="DocMind",
+        section_count=2,
+        pipeline_id="hybrid-rerank",
+    )
+
+    assert result["verification"]["passed"] is True
+    assert "断言甲" not in result["content"]
+    assert "断言乙" not in result["content"]
+    assert "断言丙" in result["content"]
+    assert result["content"].count("验证器自动移除") == 1
+    fail_safe_steps = [
+        step
+        for step in result["workflow"]["steps"]
+        if step["step"] == "fail_safe"
+    ]
+    assert [step["pass"] for step in fail_safe_steps] == [1, 2]
+    assert [step["status"] for step in fail_safe_steps] == ["failed", "passed"]
+
+
 def test_workflow_stops_when_no_evidence_is_retrieved(monkeypatch):
     responses = iter([_FakeMessage("not-json")])
     empty = _execution()

@@ -1,0 +1,1951 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": false,
+  "release_evidence_eligible": true,
+  "release_gate_passed": false,
+  "provenance": {
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "transform_spec": {
+      "contract": "ms_marco_passages_v1",
+      "corpus_items": 998,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "fa733e719a4b526dce08ceb21e779dad38aeddbcc9f2d59d0c9d7673aa654725",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 0.5,
+    "verified_task_completion_rate": 0.5,
+    "mean_plan_completion_rate": 0.833333,
+    "mean_tool_selection_recall": 0.75,
+    "mean_tool_selection_precision": 0.583333,
+    "mean_artifact_completion_rate": 1.0,
+    "mean_verified_artifact_rate": 0.5,
+    "mean_quality_adaptation_count": 2.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 181.595089,
+    "p95_latency_seconds": 193.71812,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 52066.0,
+      "output_tokens": 13621.0,
+      "total_tokens": 65687.0,
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 22.0,
+      "response_count": 22.0
+    },
+    "failure_class_counts": {
+      "agent_outcome_failure": 1,
+      "passed": 1
+    },
+    "failed_case_ids": [
+      "ms-marco-lightning-verified-report"
+    ],
+    "cases": [
+      {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 169.472058,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 26034.0,
+          "output_tokens": 6074.0,
+          "total_tokens": 32108.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 193.71812,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 26032.0,
+          "output_tokens": 7547.0,
+          "total_tokens": 33579.0,
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 10,
+          "response_count": 10,
+          "observed_response_count": 10
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 363.190755,
+    "throughput_cases_per_second": 0.005507,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 52066.0,
+      "output_tokens": 13621.0,
+      "total_tokens": 65687.0,
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 22.0,
+      "retry_count": 0.0,
+      "response_count": 22.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 22.0,
+      "response_count": 22.0
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "ms-marco-corporation-verified-report",
+      "source_sample_id": "ms_marco:validation:query-1102432",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验问题“what is a corporation?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-8c91552cfa"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "company",
+            "公司"
+          ],
+          [
+            "single entity",
+            "单一实体"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-corporation-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 169.472058,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 26034.0,
+          "output_tokens": 6074.0,
+          "total_tokens": 32108.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      "result": {
+        "conversation_id": 50,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-8c91552cfa",
+        "thread_id": "agent-eval-ms-marco-corporation-verified-report-8c91552cfa",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**简短逐结论证据核验报告**，正文与下载文件见产出物。\n\n- 使用的 RAG 管线：`hybrid-rerank`\n- 该管线在同一 **MS MARCO v2.1 validation** 公开评测上处于 approved 状态，且通过检索与 badcase 回归门禁。\n- 报告已完成逐句语义证据校验：**7/7** 条事实性结论有有效引用支持。\n- 对语料未能充分支持的“有限责任”特征，报告已明确标记为**证据不足，不作为已核验结论**。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "核验问题“what is a corporation?”：基于 MS MARCO v2.1 validation 公开语料的简短逐结论证据报告；证据不足时明确拒答",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "公司定义与法律性质",
+                "query": "What is a corporation in legal terms, including its status as a separate legal entity?"
+              },
+              {
+                "title": "公司主要特征与权利义务",
+                "query": "What are the main characteristics of a corporation, including ownership, limited liability, and ability to enter contracts?"
+              }
+            ],
+            "content": "# 报告标题：核验“什么是公司（corporation）？”\n\n## 公司定义与法律性质\n\n- 其存续独立于成员，并具有区别于成员的权力和责任。[D6:C2]\n- 公司也可被定义为获授权以单一实体行动、在法律上被承认为“人”的公司或人群。[D6:C5]\n- 公司在特定国家注册成立，通常还会在该国较小的辖区（如州或省）内成立，并受该辖区的公司设立法律管辖。[D6:C0]\n\n## 公司主要特征与权利义务\n\n- 公司由股东持有，股东分享公司经营产生的利润和损失。[D6:C6]\n- 公司可以发行私募或公开股票，也可以属于非股份公司。[D6:C0]\n- 如发行股票，公司通常由股东直接或间接治理。[D6:C0]\n- 作为具有法律存在的实体，公司可以购买、出售和拥有财产，订立合同，起诉其他个人或企业，也可能被其起诉。[D6:C6]\n- 因证据不足，本报告不将“有限责任”列为已核验的公司特征。\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "公司定义与法律性质",
+                  "query": "What is a corporation in legal terms, including its status as a separate legal entity?",
+                  "original_query": "What is a corporation in legal terms, including its status as a separate legal entity?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "公司主要特征与权利义务",
+                  "query": "What are the main characteristics of a corporation, including ownership, limited liability, and ability to enter contracts?",
+                  "original_query": "What are the main characteristics of a corporation, including ownership, limited liability, and ability to enter contracts?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 448
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 4,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.6,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "failed",
+                  "unsupported_claim_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 2,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "7/7 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 7,
+                "supported_claim_count": 7,
+                "unsupported_claim_count": 0,
+                "citation_count": 7,
+                "valid_citation_count": 7,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "其存续独立于成员，并具有区别于成员的权力和责任。[D6:C2]",
+                    "citations": [
+                      "D6:C2"
+                    ],
+                    "valid_citations": [
+                      "D6:C2"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司具有独立于成员存续的连续存在，并拥有区别于成员的权力和责任。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司也可被定义为获授权以单一实体行动、在法律上被承认为“人”的公司或人群。[D6:C5]",
+                    "citations": [
+                      "D6:C5"
+                    ],
+                    "valid_citations": [
+                      "D6:C5"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接将公司定义为获授权以单一实体行动、在法律上作为人并获法律承认的公司或人群。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司在特定国家注册成立，通常还会在该国较小的辖区（如州或省）内成立，并受该辖区的公司设立法律管辖。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司在特定国家成立，常位于州或省等较小辖区内，并受该州的设立法管辖。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司由股东持有，股东分享公司经营产生的利润和损失。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司由股东拥有，且股东分享公司经营产生的利润和损失。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司可以发行私募或公开股票，也可以属于非股份公司。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明公司可发行私募或公开股票，也可被归类为非股份公司。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "如发行股票，公司通常由股东直接或间接治理。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明如发行股票，公司通常由股东直接或间接治理。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "作为具有法律存在的实体，公司可以购买、出售和拥有财产，订立合同，起诉其他个人或企业，也可能被其起诉。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明具有法律存在的公司可购买、出售、拥有财产、订立合同、起诉他人或企业，并可被其起诉。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "57ebf5dd50009e36023be1be491ace7e6eefa9c14da47d29334b71d199c2eaf0",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 7,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 0
+                }
+              },
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 7,
+              "valid_citation_count": 7,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "57ebf5dd50009e36023be1be491ace7e6eefa9c14da47d29334b71d199c2eaf0",
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              },
+              "claims": [
+                {
+                  "text": "其存续独立于成员，并具有区别于成员的权力和责任。[D6:C2]",
+                  "citations": [
+                    "D6:C2"
+                  ],
+                  "valid_citations": [
+                    "D6:C2"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司具有独立于成员存续的连续存在，并拥有区别于成员的权力和责任。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司也可被定义为获授权以单一实体行动、在法律上被承认为“人”的公司或人群。[D6:C5]",
+                  "citations": [
+                    "D6:C5"
+                  ],
+                  "valid_citations": [
+                    "D6:C5"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接将公司定义为获授权以单一实体行动、在法律上作为人并获法律承认的公司或人群。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司在特定国家注册成立，通常还会在该国较小的辖区（如州或省）内成立，并受该辖区的公司设立法律管辖。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司在特定国家成立，常位于州或省等较小辖区内，并受该州的设立法管辖。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司由股东持有，股东分享公司经营产生的利润和损失。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司由股东拥有，且股东分享公司经营产生的利润和损失。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司可以发行私募或公开股票，也可以属于非股份公司。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明公司可发行私募或公开股票，也可被归类为非股份公司。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "如发行股票，公司通常由股东直接或间接治理。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明如发行股票，公司通常由股东直接或间接治理。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "作为具有法律存在的实体，公司可以购买、出售和拥有财产，订立合同，起诉其他个人或企业，也可能被其起诉。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明具有法律存在的公司可购买、出售、拥有财产、订立合同、起诉他人或企业，并可被其起诉。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.74615385,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/2",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.66502235,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/5",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.65233347,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/6",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.62659908,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/0",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.5232946,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/4",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1056,
+              "content_sha256": "6dd1e7ef30581ad58ad4c2ee0f1bfe5a80f83716b355ca8c0caa474372948d62"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "what is a corporation?"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.8
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.7577
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.7227
+                },
+                {
+                  "citation_id": "D6:C3",
+                  "document_id": 6,
+                  "chunk_index": 3,
+                  "score": 0.6118
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.5924
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验问题“what is a corporation?”：基于 MS MARCO v2.1 validation 公开语料的简短逐结论证据报告；证据不足时明确拒答"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.74615385
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.66502235
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.65233347
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.62659908
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.5232946
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 7,
+              "valid_citation_count": 7,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "57ebf5dd50009e36023be1be491ace7e6eefa9c14da47d29334b71d199c2eaf0",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验“what is a corporation?”并产出简短、逐结论可追溯证据的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集与当前任务均为 MS MARCO v2.1 validation。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "检索语料并生成逐结论证据校验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，围绕“what is a corporation?”在当前公开语料中检索并生成简短报告；每项结论均附经校验的证据引用，无法被证据支持的内容明确标记为拒答或证据不足。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 26034.0,
+          "output_tokens": 6074.0,
+          "total_tokens": 32108.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 12,
+          "response_count": 12,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 12
+        }
+      }
+    },
+    {
+      "case_id": "ms-marco-lightning-verified-report",
+      "source_sample_id": "ms_marco:validation:query-39449",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验“average number of lightning strikes per day”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-ca11013e50"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "8,640,000",
+            "8640000",
+            "8.64 million",
+            "864万",
+            "864 万"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-lightning-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-lightning-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "缺少成功 Skill：generate_verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report"
+        ],
+        "plan_completion_rate": 0.666667,
+        "tool_selection_recall": 0.5,
+        "tool_selection_precision": 0.5,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 193.71812,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 26032.0,
+          "output_tokens": 7547.0,
+          "total_tokens": 33579.0,
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 10,
+          "response_count": 10,
+          "observed_response_count": 10
+        }
+      },
+      "result": {
+        "conversation_id": 51,
+        "run_id": "agent-eval-ms-marco-lightning-verified-report-ca11013e50",
+        "thread_id": "agent-eval-ms-marco-lightning-verified-report-ca11013e50",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已完成同一公开语料上的管线选择：**hybrid-rerank**（MS MARCO v2.1 validation，公开评测已批准，且检索与 badcase 回归门禁均通过）。\n\n## 简短核验报告\n\n### 结论 1：无法给出已核验的单一答案\n**拒答。** 虽然语料中检索到了“约 800 万次/天”“864 万次/天”“超过 100 万次/天”等彼此不一致的表述，但自动逐句证据校验未能为“average number of lightning strikes per day”的单一数值建立充分、可追溯的支持链。\n\n### 结论 2：不能将检索片段中的任一数值作为最终核验结果\n**依据：** 经过检索、草拟、引用校验与一次自动修复后，仍有无法支持的关键主张；系统已按失效保护机制移除了所有实质性结论。最终产物的“证据覆盖”检查未通过，因此不应据此输出具体平均值。\n\n已生成逐结论证据报告产出物；其中明确记录了证据不足与拒答结果。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "核验“average number of lightning strikes per day”的答案：基于 MS MARCO v2.1 validation 的简短逐结论证据报告",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "全球每日平均闪电次数的权威统计",
+                "query": "What is the average number of lightning strikes per day worldwide according to authoritative lightning monitoring sources?"
+              },
+              {
+                "title": "MS MARCO v2.1 validation 中答案表述的出处核验",
+                "query": "In MS MARCO v2.1 validation, what source supports the answer to the question \"average number of lightning strikes per day\" and what exact number does it state?"
+              }
+            ],
+            "content": "# 核验“average number of lightning strikes per day”的答案：基于 MS MARCO v2.1 validation 的简短逐结论证据报告\n\n## 全球每日平均闪电次数的权威统计\n\n## MS MARCO v2.1 validation 中答案表述的出处核验\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "failed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "全球每日平均闪电次数的权威统计",
+                  "query": "What is the average number of lightning strikes per day worldwide according to authoritative lightning monitoring sources?",
+                  "original_query": "What is the average number of lightning strikes per day worldwide according to authoritative lightning monitoring sources?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "MS MARCO v2.1 validation 中答案表述的出处核验",
+                  "query": "In MS MARCO v2.1 validation, what source supports the answer to the question \"average number of lightning strikes per day\" and what exact number does it state?",
+                  "original_query": "In MS MARCO v2.1 validation, what source supports the answer to the question \"average number of lightning strikes per day\" and what exact number does it state?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 801
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 4,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.555556,
+                  "citation_correctness": 0.9
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": false,
+              "score": 0.5,
+              "checks": [
+                {
+                  "id": "citation_presence",
+                  "passed": true,
+                  "detail": "0/0 条事实性内容具有有效引用"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": false,
+                  "detail": "产物没有任何经过引用支持的实质内容"
+                }
+              ],
+              "semantic_entailment_checked": false,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": false,
+                "claim_count": 0,
+                "supported_claim_count": 0,
+                "unsupported_claim_count": 0,
+                "citation_count": 0,
+                "valid_citation_count": 0,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "a408c41a098720443ec4a6e5077def232868c4eb1989688218a687486e9e006e",
+                "judge_status": "not_applicable",
+                "groundedness": null,
+                "faithfulness": null,
+                "citation_correctness": null,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true
+              },
+              "claim_count": 0,
+              "supported_claim_count": 0,
+              "unsupported_claim_count": 0,
+              "citation_count": 0,
+              "valid_citation_count": 0,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": null,
+              "faithfulness": null,
+              "citation_correctness": null,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "not_applicable",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "a408c41a098720443ec4a6e5077def232868c4eb1989688218a687486e9e006e",
+              "claims": [],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.8125,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/35",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.76889127,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/31",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.67975683,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/39",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.62937579,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/32",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C34",
+                  "document_id": 6,
+                  "chunk_index": 34,
+                  "score": 0.59670193,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/34",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.64254518,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/37",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 311,
+              "content_sha256": "9781bbff7639666035a9d03a40a6638a3e09ffa9e3a778e6aeb2f61cf099189d"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "average number of lightning strikes per day"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.8429
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.839
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.7009
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.6582
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.629
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验“average number of lightning strikes per day”的答案：基于 MS MARCO v2.1 validation 的简短逐结论证据报告"
+            },
+            "ok": false,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C35",
+                  "document_id": 6,
+                  "chunk_index": 35,
+                  "score": 0.8125
+                },
+                {
+                  "citation_id": "D6:C31",
+                  "document_id": 6,
+                  "chunk_index": 31,
+                  "score": 0.76889127
+                },
+                {
+                  "citation_id": "D6:C39",
+                  "document_id": 6,
+                  "chunk_index": 39,
+                  "score": 0.67975683
+                },
+                {
+                  "citation_id": "D6:C32",
+                  "document_id": 6,
+                  "chunk_index": 32,
+                  "score": 0.62937579
+                },
+                {
+                  "citation_id": "D6:C34",
+                  "document_id": 6,
+                  "chunk_index": 34,
+                  "score": 0.59670193
+                },
+                {
+                  "citation_id": "D6:C37",
+                  "document_id": 6,
+                  "chunk_index": 37,
+                  "score": 0.64254518
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "failed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": false,
+              "score": 0.5,
+              "claim_count": 0,
+              "supported_claim_count": 0,
+              "unsupported_claim_count": 0,
+              "citation_count": 0,
+              "valid_citation_count": 0,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": false,
+              "groundedness": null,
+              "faithfulness": null,
+              "citation_correctness": null,
+              "conflict_count": 0,
+              "judge_status": "not_applicable",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "a408c41a098720443ec4a6e5077def232868c4eb1989688218a687486e9e006e",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "citation_presence",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": false
+                }
+              ]
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验“average number of lightning strikes per day”的答案，并生成简短、逐结论附可验证依据的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "partial",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过、且适用于当前 MS MARCO v2.1 validation 任务的 selected.pipeline_id。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "检索并核验问题答案，生成逐结论证据报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，在当前文档 ID 6 对应的 MS MARCO v2.1 validation 公开语料中完成检索、草拟、逐句引用校验及自动修复，输出简短报告；每项结论均附可追溯证据，若无法支持答案则明确说明证据不足并拒答。",
+              "status": "failed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 10,
+          "input_tokens": 26032.0,
+          "output_tokens": 7547.0,
+          "total_tokens": 33579.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 10,
+          "retry_count": 0,
+          "response_count": 10,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 10,
+          "response_count": 10,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 10
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "MS MARCO",
+      "split": "validation",
+      "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+      "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836"
+    },
+    "resolved_document_id": 6,
+    "source_sample_ids": [
+      "ms_marco:validation:query-1102432",
+      "ms_marco:validation:query-39449"
+    ]
+  }
+}

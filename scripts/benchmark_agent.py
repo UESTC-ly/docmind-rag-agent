@@ -176,20 +176,42 @@ def load_suite(path: Path) -> dict[str, Any]:
                 f"scenario {fingerprint_field} must be a non-placeholder "
                 "SHA-256 hex value"
             )
+    transform_spec = provenance.get("transform_spec")
+    if (
+        not isinstance(transform_spec, dict)
+        or not str(transform_spec.get("contract") or "").strip()
+    ):
+        raise ValueError(
+            "scenario transform_spec must be an object with a contract"
+        )
     selector = _document_selector(payload, provenance)
 
     rows = payload.get("cases")
     if not isinstance(rows, list) or not rows:
         raise ValueError("scenario file must contain a non-empty cases list")
     cases: list[dict[str, Any]] = []
+    case_ids: set[str] = set()
+    source_sample_ids: set[str] = set()
     for index, row in enumerate(rows, start=1):
         if not isinstance(row, dict):
             raise ValueError(f"case {index} must be an object")
+        case_id = str(row.get("id") or "").strip()
+        if not case_id:
+            raise ValueError(f"case {index} requires id")
+        if case_id in case_ids:
+            raise ValueError(f"case {index} duplicates id: {case_id}")
+        case_ids.add(case_id)
         request = row.get("request")
         if not isinstance(request, dict) or not str(request.get("message") or "").strip():
             raise ValueError(f"case {index} requires request.message")
-        if not str(row.get("source_sample_id") or "").strip():
+        source_sample_id = str(row.get("source_sample_id") or "").strip()
+        if not source_sample_id:
             raise ValueError(f"case {index} requires source_sample_id")
+        if source_sample_id in source_sample_ids:
+            raise ValueError(
+                f"case {index} duplicates source_sample_id: {source_sample_id}"
+            )
+        source_sample_ids.add(source_sample_id)
         if "document_id" in request:
             raise ValueError(
                 f"case {index} must not hardcode document_id; "
@@ -456,6 +478,7 @@ def run_cases(
             else 0.0,
             "provider_usage": metrics["provider_usage"],
             "provider_cost": metrics["provider_cost"],
+            "provider_model": metrics["provider_model"],
         },
         "evidence": evidence,
     }
@@ -466,6 +489,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     performance = report.get("performance") or {}
     usage = performance.get("provider_usage") or {}
     cost = performance.get("provider_cost") or {}
+    model = performance.get("provider_model") or {}
     lines = [
         "# DocMind Agent 任务评测报告",
         "",
@@ -488,6 +512,32 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"| 端到端吞吐 | {performance.get('throughput_cases_per_second', 0):.4f} cases/s |",
         f"| Provider Token Usage | {usage.get('status', 'unavailable')} |",
         f"| Provider Cost | {cost.get('status', 'unavailable')} |",
+        (
+            "| Failure Classes | "
+            + ", ".join(
+                f"{name}={count}"
+                for name, count in (
+                    metrics.get("failure_class_counts") or {}
+                ).items()
+            )
+            + " |"
+        ),
+        (
+            "| Provider Model | "
+            + (
+                ", ".join(model.get("provider_reported_models") or [])
+                or "provider-unavailable"
+            )
+            + " |"
+        ),
+        (
+            "| Configured Request Model | "
+            + (
+                ", ".join(model.get("configured_request_models") or [])
+                or "unavailable"
+            )
+            + " |"
+        ),
         f"| 公开证据来源合格 | {'是' if report.get('release_evidence_eligible') else '否'} |",
         f"| Agent 发布门禁 | {'通过' if report.get('release_gate_passed') else '未通过'} |",
         "",
@@ -499,7 +549,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     for row in metrics.get("cases") or []:
         state = "通过" if row["task_success"] else "失败"
-        lines.append(f"- **{row['case_id']}**：{state}")
+        lines.append(
+            f"- **{row['case_id']}**：{state}"
+            f"（`{row.get('failure_class', 'unknown')}`）"
+        )
         for reason in row.get("failure_reasons") or []:
             lines.append(f"  - {reason}")
     return "\n".join(lines) + "\n"

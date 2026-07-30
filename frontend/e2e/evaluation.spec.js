@@ -141,6 +141,13 @@ test("异步评估从 pending、running 轮询到 completed", async ({ page }) =
   await app.goto();
   await app.login();
   await app.openView("EvalOps 实验室");
+  const overview = page.getByLabel("EvalOps 发布概览");
+  await expect(overview.getByRole("heading", { name: "公开回归与门禁证据" })).toBeVisible();
+  await expect(overview.locator(".eval-overview__stat", { hasText: "公开数据集" })).toContainText("1");
+  await expect(overview.locator(".eval-overview__stat", { hasText: "人工标注样本" })).toContainText("12");
+  await expect(overview.locator(".eval-overview__stat", { hasText: "管线目录" })).toContainText("2");
+  await expect(overview.locator(".eval-overview__stat", { hasText: "数据证据资格" })).toContainText("1/1");
+  await expect(overview).toContainText("非结果门禁");
   await expect(page.getByRole("heading", { name: dataset.name })).toBeVisible();
 
   await page.getByRole("button", { name: "运行评估" }).click();

@@ -35,6 +35,7 @@ Qdrant Server、uv 或系统 Python。
 - [快速启动](#快速启动)
 - [桌面 App（v3.1）](#桌面-appv31)
 - [Web 开发启动](#web-开发启动)
+- [生产 Compose 部署](#生产-compose-部署)
 - [使用流程](#使用流程)
 - [API 一览](#api-一览)
 - [Skills 技能系统](#skills-技能系统)
@@ -384,6 +385,36 @@ FastAPI lifespan 会在接受请求前再次幂等执行 Alembic upgrade；schem
 | Linux Docker 权限不足 | 将用户加入 docker 组后重新登录，或手动用 sudo 启动依赖服务 |
 | Windows 脚本执行策略阻止 | 使用 `powershell -ExecutionPolicy Bypass -File .\start.ps1` |
 | macOS Colima 端口转发异常 | `scripts/start-macos-colima.sh` 会尝试自愈；仍失败时重启 Colima/Docker |
+
+## 生产 Compose 部署
+
+`docker-compose.production.yml` 提供单机自托管候选拓扑：Alembic migration gate、
+FastAPI、Celery、PostgreSQL、Redis 与 Qdrant。应用容器以 UID 10001 运行，根文件系统
+只读；数据库服务只加入内部网络，不向宿主机发布端口。API 默认仅绑定
+`127.0.0.1:8000`，公网部署必须在前方配置 TLS 反向代理。
+
+```bash
+cp .env.production.example .env.production
+# 修改 .env.production：至少替换数据库密码、SECRET_KEY、模型与 embedding 凭据。
+
+docker compose --env-file .env.production \
+  -f docker-compose.production.yml up -d --build
+# 没有 Compose plugin 时，将上面的 `docker compose` 换成 `docker-compose`。
+```
+
+确认 migration 已成功退出，且 API、worker 和依赖服务处于预期状态：
+
+```bash
+docker compose --env-file .env.production \
+  -f docker-compose.production.yml ps -a
+curl --fail http://127.0.0.1:8000/health
+```
+
+停止服务使用 `docker compose ... down`；不要在需要保留业务数据时添加 `-v`。
+当前本地 Colima arm64 发布 smoke 的 16 项原始验收凭据位于
+[`benchmarks/results/release/production-compose-smoke-20260730/`](benchmarks/results/release/production-compose-smoke-20260730/)。
+该凭据不证明 TLS、secret manager、备份恢复、多机容灾或外部模型服务可用，正式上线前
+仍需按目标环境补齐这些能力。
 
 ## 使用流程
 

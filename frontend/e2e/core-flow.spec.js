@@ -65,6 +65,25 @@ test.describe("核心用户流程", () => {
         thread_id: "run-weekly",
         status: "completed",
         answer: "周报已生成。",
+        provider_usage: {
+          status: "observed",
+          input_tokens: 1200,
+          output_tokens: 300,
+          total_tokens: 1500,
+          request_count: 3,
+          retry_count: 1,
+        },
+        provider_cost: {
+          status: "unavailable",
+          reason: "Provider did not return currency cost.",
+        },
+        provider_model: {
+          status: "observed",
+          configured_request_models: ["gpt-5.6-terra"],
+          provider_reported_models: ["gpt-5.6-terra"],
+          request_count: 3,
+          response_count: 3,
+        },
         plan: {
           contract: "agent_plan_v1",
           objective: "生成经过验证的项目周报",
@@ -147,6 +166,9 @@ test.describe("核心用户流程", () => {
 
     await page.locator("#skill-agent-submit").click();
     await expect(page.locator(".agent-answer")).toContainText("周报已生成");
+    await expect(page.locator(".agent-telemetry")).toContainText("gpt-5.6-terra");
+    await expect(page.locator(".agent-telemetry")).toContainText("1,500");
+    await expect(page.locator(".agent-telemetry")).toContainText("不使用模型定价进行推算");
     await expect(page.locator(".agent-plan")).toContainText("生成经过验证的项目周报");
     await expect(page.locator(".trace__quality")).toContainText("切换已评测管线");
     await expect(page.locator(".trace__quality")).toContainText("弱检索");

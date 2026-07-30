@@ -1,0 +1,109 @@
+{
+  "contract": "production_compose_smoke_v2",
+  "run_id": "production-compose-smoke-20260730",
+  "completed_at": "2026-07-30T07:38:45.090948+00:00",
+  "source": {
+    "branch": "feature/agentic-rag-evalops-evidence",
+    "git_revision": "b4b1b654d231e3d5d9574af0590b11ca96cbfbe8",
+    "dirty_worktree": true,
+    "release_source_fingerprint": "d78636ddb25d47d02c7fe5e34c15f6230a4fac69d6c95a811567361c70084cec"
+  },
+  "runtime": {
+    "name": "local Colima Docker",
+    "platform": "aarch64/linux",
+    "compose_project": "docmindreleasefinal20260730b",
+    "image_id": "sha256:6443c241164af4af72e10f80a60ef837f6f380c8fe44e89633cab733efc8104b"
+  },
+  "result": {
+    "passed": true,
+    "passed_count": 16,
+    "check_count": 16
+  },
+  "checks": [
+    {
+      "name": "migration_completed",
+      "passed": true,
+      "evidence": "status=exited; exit_code=0"
+    },
+    {
+      "name": "api_healthy",
+      "passed": true,
+      "evidence": "status=running; health=healthy"
+    },
+    {
+      "name": "api_non_root",
+      "passed": true,
+      "evidence": "uid=10001"
+    },
+    {
+      "name": "api_readonly_rootfs",
+      "passed": true,
+      "evidence": "ReadonlyRootfs=true"
+    },
+    {
+      "name": "api_write_boundaries",
+      "passed": true,
+      "evidence": "app_root=read-only; data=writable; tmp=writable"
+    },
+    {
+      "name": "worker_healthy",
+      "passed": true,
+      "evidence": "status=running; health=healthy"
+    },
+    {
+      "name": "worker_non_root",
+      "passed": true,
+      "evidence": "uid=10001"
+    },
+    {
+      "name": "worker_readonly_rootfs",
+      "passed": true,
+      "evidence": "ReadonlyRootfs=true"
+    },
+    {
+      "name": "worker_write_boundaries",
+      "passed": true,
+      "evidence": "app_root=read-only; data=writable; tmp=writable"
+    },
+    {
+      "name": "postgres_not_host_published",
+      "passed": true,
+      "evidence": "host_ports=none"
+    },
+    {
+      "name": "redis_not_host_published",
+      "passed": true,
+      "evidence": "host_ports=none"
+    },
+    {
+      "name": "qdrant_not_host_published",
+      "passed": true,
+      "evidence": "host_ports=none"
+    },
+    {
+      "name": "health_endpoint",
+      "passed": true,
+      "evidence": "http_status=200; payload_status=ok"
+    },
+    {
+      "name": "product_ui_served",
+      "passed": true,
+      "evidence": "http_status=200; agent_workspace_marker=true"
+    },
+    {
+      "name": "registration_flow",
+      "passed": true,
+      "evidence": "http_status=201; id_present=True; password_fields_absent=True"
+    },
+    {
+      "name": "login_flow",
+      "passed": true,
+      "evidence": "http_status=200; jwt_present=True; token_type=bearer"
+    }
+  ],
+  "evidence_boundary": [
+    "Proves migration gating, API/worker health, non-root execution, read-only application roots, private infrastructure ports, frontend serving, registration, and JWT login in the local Compose topology.",
+    "Generated credentials and JWTs were not printed or persisted.",
+    "Does not prove TLS/domain configuration, secret-manager integration, backup/restore, multi-host failover, or external model-provider availability."
+  ]
+}

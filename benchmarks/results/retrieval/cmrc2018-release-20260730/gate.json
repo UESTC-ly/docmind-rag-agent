@@ -1,0 +1,161 @@
+{
+  "contract": "docmind_retrieval_release_gate_v1",
+  "benchmark_fingerprint": "0df13dc770fe7c4d73dbbbb1397839f1d187652ad64f1f6a4920e05daa1a3528",
+  "dataset": {
+    "source_name": "CMRC 2018",
+    "source_version": "2018",
+    "split": "validation",
+    "corpus_fingerprint": "f3563fb04a1f1aec86c9452ae3e63dd789ec83650b15e5e842246d4f1612f077",
+    "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126",
+    "sample_count": 100
+  },
+  "baseline_pipeline": "dense",
+  "baseline_fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+  "minimum_samples": 100,
+  "gate_policy": [
+    {
+      "metric": "hit_rate",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "recall",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "map_at_k",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "ndcg_at_k",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "badcase_count",
+      "comparison": "max_increase",
+      "threshold": 5.0
+    }
+  ],
+  "candidates": [
+    {
+      "pipeline_id": "hybrid",
+      "pipeline_fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "passed": true,
+      "gates": [
+        {
+          "metric": "hit_rate",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "recall",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "map_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "ndcg_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "badcase_count",
+          "comparison": "max_increase",
+          "threshold": 5.0,
+          "baseline": 0.0,
+          "candidate": 0.0,
+          "delta": 0.0,
+          "passed": true
+        }
+      ],
+      "badcase_diff": {
+        "newly_introduced": [],
+        "fixed": [],
+        "persistent": [],
+        "unchanged_passed_count": 100
+      }
+    },
+    {
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "passed": true,
+      "gates": [
+        {
+          "metric": "hit_rate",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "recall",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "map_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "ndcg_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 1.0,
+          "candidate": 1.0,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "badcase_count",
+          "comparison": "max_increase",
+          "threshold": 5.0,
+          "baseline": 0.0,
+          "candidate": 0.0,
+          "delta": 0.0,
+          "passed": true
+        }
+      ],
+      "badcase_diff": {
+        "newly_introduced": [],
+        "fixed": [],
+        "persistent": [],
+        "unchanged_passed_count": 100
+      }
+    }
+  ],
+  "gate_fingerprint": "1a613345c8efe185e686ce9a2c792587f488b143ee39ee80d59e2630aea2af31"
+}

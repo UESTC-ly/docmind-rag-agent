@@ -132,6 +132,86 @@ def test_public_scenario_suite_requires_auditable_provenance(tmp_path):
     assert len(suite["suite_fingerprint"]) == 64
 
 
+@pytest.mark.parametrize(
+    ("filename", "source_name", "case_count"),
+    [
+        ("scenarios.ms_marco_v21.json", "MS MARCO", 2),
+        ("scenarios.cmrc2018.json", "CMRC 2018", 2),
+    ],
+)
+def test_checked_in_public_agent_suites_are_fully_auditable(
+    filename,
+    source_name,
+    case_count,
+):
+    benchmark = _module()
+    suite = benchmark.load_suite(
+        Path(__file__).parents[1] / "benchmarks" / "agent" / filename
+    )
+
+    assert suite["provenance"]["source_name"] == source_name
+    assert len(suite["cases"]) == case_count
+    assert len({item["id"] for item in suite["cases"]}) == case_count
+    assert len(
+        {item["source_sample_id"] for item in suite["cases"]}
+    ) == case_count
+    assert all(
+        item["expected"]["answer_contains_any"] for item in suite["cases"]
+    )
+    assert all(
+        item["expected"]["required_skill_order"]
+        == [
+            "select_evaluated_rag_pipeline",
+            "generate_verified_research_report",
+        ]
+        for item in suite["cases"]
+    )
+    assert all(
+        item["expected"]["require_evidence_gate"] is True
+        and item["expected"]["require_verified_artifact"] is True
+        and item["expected"]["max_interventions"] == 0
+        for item in suite["cases"]
+    )
+
+
+def test_public_scenario_suite_rejects_duplicate_case_or_sample_ids(tmp_path):
+    benchmark = _module()
+    suite_path = tmp_path / "suite.json"
+    suite_path.write_text(
+        json.dumps(
+            {
+                "contract": "public_agent_scenarios_v2",
+                "provenance": {
+                    "source_name": "public",
+                    "source_uri": "https://example.test/public",
+                    "source_version": "v1",
+                    "license_name": "CC0",
+                    "split": "test",
+                    "corpus_fingerprint": "a" * 64,
+                    "source_snapshot_fingerprint": "b" * 64,
+                    "transform_spec": {"contract": "fixture_v1"},
+                },
+                "cases": [
+                    {
+                        "id": "same",
+                        "source_sample_id": "sample-1",
+                        "request": {"message": "task"},
+                    },
+                    {
+                        "id": "same",
+                        "source_sample_id": "sample-2",
+                        "request": {"message": "task"},
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicates id"):
+        benchmark.load_suite(suite_path)
+
+
 def test_public_scenario_suite_rejects_placeholder_fingerprint(tmp_path):
     benchmark = _module()
     suite_path = tmp_path / "suite.json"

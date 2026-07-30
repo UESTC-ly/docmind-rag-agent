@@ -363,6 +363,53 @@ function pipelinePicker(pipelines) {
   ]);
 }
 
+function evalOverview(datasets, pipelines) {
+  const publicDatasets = datasets.filter((dataset) => dataset.release_eligible);
+  const publicSamples = publicDatasets.reduce(
+    (total, dataset) => total + Number(dataset.sample_count || 0),
+    0,
+  );
+  const sources = new Set(
+    publicDatasets
+      .map((dataset) => dataset.source_name)
+      .filter(Boolean),
+  );
+  const stat = (label, value, hint) =>
+    el("div", { class: "eval-overview__stat" }, [
+      el("span", { text: label }),
+      el("strong", { text: String(value) }),
+      el("small", { text: hint }),
+    ]);
+
+  return el("section", {
+    class: "eval-overview",
+    "aria-label": "EvalOps 发布概览",
+  }, [
+    el("div", { class: "eval-overview__head" }, [
+      el("div", {}, [
+        el("p", { class: "section-kicker", text: "Release evidence" }),
+        el("h2", { text: "公开回归与门禁证据" }),
+      ]),
+      el("span", {
+        class: publicDatasets.length
+          ? "eval-overview__state eval-overview__state--ready"
+          : "eval-overview__state",
+        text: publicDatasets.length ? "公开数据已接入" : "等待公开数据",
+      }),
+    ]),
+    el("div", { class: "eval-overview__grid" }, [
+      stat("公开数据集", publicDatasets.length, `${sources.size} 个权威来源`),
+      stat("人工标注样本", publicSamples, "用于可重复回归"),
+      stat("管线目录", pipelines.length, "需在同一数据集运行后比较"),
+      stat(
+        "数据证据资格",
+        `${publicDatasets.length}/${datasets.length}`,
+        "来源与指纹合格；非结果门禁",
+      ),
+    ]),
+  ]);
+}
+
 function datasetBlock(ds, pipelines) {
   const runBtn = el("button", {
     class: "btn btn--accent",
@@ -458,11 +505,15 @@ export async function refreshEval() {
     ]);
     if (!datasets.length) {
       root.replaceChildren(
+        evalOverview(datasets, pipelines),
         el("p", { class: "empty", text: "还没有评估数据集。可在后端生成或导入基准后在此运行。" })
       );
       return;
     }
-    root.replaceChildren(...datasets.map((dataset) => datasetBlock(dataset, pipelines)));
+    root.replaceChildren(
+      evalOverview(datasets, pipelines),
+      ...datasets.map((dataset) => datasetBlock(dataset, pipelines)),
+    );
   } catch (e) {
     toast(e.message);
   }

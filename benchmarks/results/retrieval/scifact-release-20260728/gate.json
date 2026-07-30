@@ -1,0 +1,857 @@
+{
+  "contract": "docmind_retrieval_release_gate_v1",
+  "benchmark_fingerprint": "86c011a475722b0a34f843b58f43b04ddde6ab8b3a0b48fd257ea0d744a33324",
+  "dataset": {
+    "source_name": "SciFact",
+    "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+    "split": "test",
+    "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+    "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d",
+    "sample_count": 100
+  },
+  "baseline_pipeline": "dense",
+  "baseline_fingerprint": "b24832f8557e1106585fcec33370eb0c15ee0c42af01698d016b5a25d1c2252e",
+  "minimum_samples": 100,
+  "gate_policy": [
+    {
+      "metric": "hit_rate",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "recall",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "map_at_k",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "ndcg_at_k",
+      "comparison": "max_drop",
+      "threshold": 0.02
+    },
+    {
+      "metric": "badcase_count",
+      "comparison": "max_increase",
+      "threshold": 5.0
+    }
+  ],
+  "candidates": [
+    {
+      "pipeline_id": "hybrid",
+      "pipeline_fingerprint": "e8aaa35bcde035197ad1ea7b6495ade353c954993508cc35a194130d3c521a66",
+      "passed": true,
+      "gates": [
+        {
+          "metric": "hit_rate",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.89,
+          "candidate": 0.89,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "recall",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.867667,
+          "candidate": 0.867667,
+          "delta": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "map_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.708639,
+          "candidate": 0.703639,
+          "delta": -0.005,
+          "passed": true
+        },
+        {
+          "metric": "ndcg_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.753448,
+          "candidate": 0.749757,
+          "delta": -0.003691,
+          "passed": true
+        },
+        {
+          "metric": "badcase_count",
+          "comparison": "max_increase",
+          "threshold": 5.0,
+          "baseline": 24.0,
+          "candidate": 24.0,
+          "delta": 0.0,
+          "passed": true
+        }
+      ],
+      "badcase_diff": {
+        "newly_introduced": [],
+        "fixed": [],
+        "persistent": [
+          {
+            "sample_id": "1",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "128",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "13",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "132",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "133",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "185",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "213",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "261",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "275",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "294",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "295",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "303",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "312",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "314",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "324",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "36",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "384",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "415",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "421",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "431",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "437",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "452",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "475",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "70",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          }
+        ],
+        "unchanged_passed_count": 76
+      }
+    },
+    {
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "a3038d7e2a5e7daa3cfface7b12b936bbb85f4421027bf145864c7ed9e525349",
+      "passed": false,
+      "gates": [
+        {
+          "metric": "hit_rate",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.89,
+          "candidate": 0.87,
+          "delta": -0.02,
+          "passed": false
+        },
+        {
+          "metric": "recall",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.867667,
+          "candidate": 0.845167,
+          "delta": -0.0225,
+          "passed": false
+        },
+        {
+          "metric": "map_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.708639,
+          "candidate": 0.708139,
+          "delta": -0.0005,
+          "passed": true
+        },
+        {
+          "metric": "ndcg_at_k",
+          "comparison": "max_drop",
+          "threshold": 0.02,
+          "baseline": 0.753448,
+          "candidate": 0.74833,
+          "delta": -0.005118,
+          "passed": true
+        },
+        {
+          "metric": "badcase_count",
+          "comparison": "max_increase",
+          "threshold": 5.0,
+          "baseline": 24.0,
+          "candidate": 25.0,
+          "delta": 1.0,
+          "passed": true
+        }
+      ],
+      "badcase_diff": {
+        "newly_introduced": [
+          {
+            "sample_id": "179",
+            "baseline_reasons": [],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [
+              "incomplete_recall"
+            ],
+            "fixed_reasons": []
+          }
+        ],
+        "fixed": [],
+        "persistent": [
+          {
+            "sample_id": "1",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "retrieval_miss"
+            ],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "128",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "13",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "132",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "133",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "185",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "213",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "261",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "275",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "294",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "295",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "303",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "312",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "314",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "324",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "36",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "384",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "415",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "poor_ranking"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "421",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "431",
+            "baseline_reasons": [
+              "poor_ranking"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "retrieval_miss"
+            ],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "437",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "452",
+            "baseline_reasons": [
+              "incomplete_recall"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "475",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          },
+          {
+            "sample_id": "70",
+            "baseline_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "candidate_reasons": [
+              "incomplete_recall",
+              "low_precision",
+              "poor_ranking",
+              "retrieval_miss"
+            ],
+            "introduced_reasons": [],
+            "fixed_reasons": []
+          }
+        ],
+        "unchanged_passed_count": 75
+      }
+    }
+  ],
+  "gate_fingerprint": "103a8e379593dd8fdcd657f443f94e19f8676663d61dff85306819df2039e3b1"
+}

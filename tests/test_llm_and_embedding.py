@@ -8,6 +8,7 @@ import httpx
 import pytest
 
 from app.services import embedding_service, llm_service
+from app.services.provider_telemetry import capture_provider_telemetry
 
 
 # ── 假流式 chunk 构造 ────────────────────────────────────────
@@ -392,6 +393,66 @@ class TestChatCompletionUsesStream:
             [{"role": "user", "content": "retry"}]
         ).content == "back"
         assert calls == 2
+
+    def test_non_stream_reports_only_explicit_provider_metering(self, monkeypatch):
+        monkeypatch.setattr(
+            llm_service.httpx,
+            "post",
+            lambda *_args, **_kwargs: _HttpResponse(
+                {
+                    "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                    "usage": {
+                        "prompt_tokens": 13,
+                        "completion_tokens": 8,
+                    },
+                    "cost": {"amount": 0.004, "currency": "usd"},
+                }
+            ),
+        )
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+
+        with capture_provider_telemetry() as telemetry:
+            message = llm_service.chat_completion(
+                [{"role": "user", "content": "metered"}]
+            )
+
+        assert message.content == "ok"
+        assert telemetry.usage_public()["total_tokens"] == 21.0
+        assert telemetry.usage_public()["request_count"] == 1
+        assert telemetry.cost_public()["amount"] == 0.004
+
+    def test_non_stream_records_retry_count_without_estimating_missing_usage(
+        self, monkeypatch
+    ):
+        calls = 0
+        request = httpx.Request("POST", "https://relay.test/v1/chat/completions")
+
+        def _fake_post(*_args, **_kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                response = httpx.Response(503, request=request)
+                raise httpx.HTTPStatusError(
+                    "temporarily unavailable",
+                    request=request,
+                    response=response,
+                )
+            return _HttpResponse(
+                {"choices": [{"message": {"role": "assistant", "content": "ok"}}]}
+            )
+
+        monkeypatch.setattr(llm_service.httpx, "post", _fake_post)
+        monkeypatch.setattr(llm_service.time, "sleep", lambda _seconds: None)
+        monkeypatch.setattr(llm_service.settings, "openai_stream", False)
+        monkeypatch.setattr(llm_service.settings, "openai_max_retries", 1)
+
+        with capture_provider_telemetry() as telemetry:
+            llm_service.chat_completion([{"role": "user", "content": "retry"}])
+
+        usage = telemetry.usage_public()
+        assert usage["status"] == "unavailable"
+        assert usage["request_count"] == 2
+        assert usage["retry_count"] == 1
 
     def test_non_stream_does_not_retry_non_transient_http_error(
         self, monkeypatch

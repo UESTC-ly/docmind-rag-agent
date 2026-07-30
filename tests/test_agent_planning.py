@@ -54,7 +54,33 @@ class _PipelineAdvisorSkill(BaseSkill):
         return {
             "contract": "evaluated_pipeline_selection_v1",
             "status": "selected",
-            "selected": {"pipeline_id": "hybrid"},
+            "target": "retrieval",
+            "selection_policy": "same_public_snapshot_v1",
+            "dataset": {
+                "id": 3,
+                "name": "Public fixture",
+                "source_name": "Public fixture",
+                "source_version": "v1",
+                "split": "test",
+                "corpus_fingerprint": "a" * 64,
+                "source_snapshot_fingerprint": "b" * 64,
+            },
+            "selected": {
+                "run_id": 8,
+                "dataset_id": 3,
+                "pipeline_id": "hybrid",
+                "pipeline_fingerprint": "c" * 64,
+                "comparison_role": "candidate",
+                "release_status": "approved",
+                "regression_gates": [
+                    {
+                        "severity": "error",
+                        "applicable": True,
+                        "passed": True,
+                    }
+                ],
+            },
+            "candidates": [{"pipeline_id": "hybrid"}],
         }
 
 
@@ -181,6 +207,161 @@ def test_evidence_delivery_plan_injects_public_eval_pipeline_selection():
         "generate_verified_research_report",
     ]
     assert [step["id"] for step in plan["steps"]] == ["step-1", "step-2"]
+
+
+def test_explicit_grounded_research_report_enforces_delivery_when_planner_omits_it():
+    response = _FakeMsg(
+        content=json.dumps(
+            {
+                "objective": "先做普通检索",
+                "steps": [
+                    {
+                        "title": "检索知识库",
+                        "skill": "search_knowledge_base",
+                        "success_criteria": "找到相关片段",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    plan = create_task_plan(
+        question="生成逐结论有依据的研究报告，并在证据不足时明确拒答",
+        available_skills=[
+            {
+                "name": "search_knowledge_base",
+                "description": "检索知识库",
+            },
+            {
+                "name": "select_evaluated_rag_pipeline",
+                "description": "根据公开评测选择管线",
+            },
+            {
+                "name": "generate_verified_research_report",
+                "description": "生成证据闭环报告",
+            },
+        ],
+        llm=lambda *args, **kwargs: response,
+        max_steps=4,
+    )
+
+    assert [step["skill"] for step in plan["steps"]] == [
+        "search_knowledge_base",
+        "select_evaluated_rag_pipeline",
+        "generate_verified_research_report",
+    ]
+
+
+def test_public_benchmark_grounded_report_wording_enforces_delivery():
+    response = _FakeMsg(
+        content=json.dumps(
+            {
+                "objective": "只检索公开语料",
+                "steps": [
+                    {
+                        "title": "检索知识库",
+                        "skill": "search_knowledge_base",
+                        "success_criteria": "找到相关片段",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    plan = create_task_plan(
+        question=(
+            "核验公开问题并生成简短的逐结论有依据报告。"
+            "自主选择已评测管线；证据不足时明确拒答。"
+        ),
+        available_skills=[
+            {
+                "name": "search_knowledge_base",
+                "description": "检索知识库",
+            },
+            {
+                "name": "select_evaluated_rag_pipeline",
+                "description": "根据公开评测选择管线",
+            },
+            {
+                "name": "generate_verified_research_report",
+                "description": "生成证据闭环报告",
+            },
+        ],
+        llm=lambda *args, **kwargs: response,
+        max_steps=4,
+    )
+
+    assert [step["skill"] for step in plan["steps"]] == [
+        "search_knowledge_base",
+        "select_evaluated_rag_pipeline",
+        "generate_verified_research_report",
+    ]
+
+
+def test_generic_report_is_not_promoted_to_verified_delivery():
+    response = _FakeMsg(
+        content=json.dumps(
+            {
+                "objective": "生成普通报告",
+                "steps": [
+                    {
+                        "title": "生成报告",
+                        "skill": "generate_report",
+                        "success_criteria": "返回报告",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    plan = create_task_plan(
+        question="整理这份文档并生成报告",
+        available_skills=[
+            {
+                "name": "generate_report",
+                "description": "生成普通报告",
+            },
+            {
+                "name": "select_evaluated_rag_pipeline",
+                "description": "根据公开评测选择管线",
+            },
+            {
+                "name": "generate_verified_research_report",
+                "description": "生成证据闭环报告",
+            },
+        ],
+        llm=lambda *args, **kwargs: response,
+        max_steps=4,
+    )
+
+    assert [step["skill"] for step in plan["steps"]] == ["generate_report"]
+
+
+def test_grounded_research_report_survives_invalid_planner_output():
+    plan = create_task_plan(
+        question="请生成有依据的研究报告，并逐结论核验引用",
+        available_skills=[
+            {
+                "name": "select_evaluated_rag_pipeline",
+                "description": "根据公开评测选择管线",
+            },
+            {
+                "name": "generate_verified_research_report",
+                "description": "生成证据闭环报告",
+            },
+        ],
+        llm=lambda *args, **kwargs: _FakeMsg(content="not-json"),
+        max_steps=4,
+    )
+
+    assert plan["mode"] == "explicit"
+    assert [step["skill"] for step in plan["steps"]] == [
+        "select_evaluated_rag_pipeline",
+        "generate_verified_research_report",
+    ]
 
 
 def test_evidence_delivery_plan_runs_complete_report_workflow_once():
@@ -423,6 +604,22 @@ def test_agent_feeds_evaluation_selection_into_evidence_delivery(monkeypatch):
         assert _VerifiedDeliverySkill.last_pipeline_id == "hybrid"
         assert result["plan"]["status"] == "completed"
         assert result["artifacts"][0]["verification"]["passed"] is True
+        selection = result["trace"][0]["pipeline_selection"]
+        assert selection["dataset"]["source_snapshot_fingerprint"] == "b" * 64
+        assert selection["selected"] == {
+            "run_id": 8,
+            "dataset_id": 3,
+            "pipeline_id": "hybrid",
+            "pipeline_fingerprint": "c" * 64,
+            "comparison_role": "candidate",
+            "release_status": "approved",
+            "error_gate_summary": {
+                "total": 1,
+                "passed": 1,
+                "failed": 0,
+                "unavailable": 0,
+            },
+        }
     finally:
         registry._REGISTRY.clear()
         registry._REGISTRY.update(saved)

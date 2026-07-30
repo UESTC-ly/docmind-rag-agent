@@ -49,10 +49,24 @@ def _provider_usage(result: Mapping[str, Any]) -> dict[str, Any]:
                 observed[target] = value
                 break
     if not observed:
-        return {
+        payload: dict[str, Any] = {
             "status": "unavailable",
-            "reason": "Agent API usage payload did not contain token counts.",
+            "reason": (
+                str(raw.get("reason"))
+                if raw.get("reason")
+                else "Agent API usage payload did not contain token counts."
+            ),
         }
+        for key in (
+            "request_count",
+            "retry_count",
+            "response_count",
+            "observed_response_count",
+        ):
+            value = _non_negative_number(raw.get(key))
+            if value is not None:
+                payload[key] = value
+        return payload
     if "total_tokens" not in observed and {
         "input_tokens",
         "output_tokens",
@@ -60,7 +74,24 @@ def _provider_usage(result: Mapping[str, Any]) -> dict[str, Any]:
         observed["total_tokens"] = (
             observed["input_tokens"] + observed["output_tokens"]
         )
-    return {"status": "observed", **observed}
+    payload: dict[str, Any] = {
+        "status": str(raw.get("status") or "observed"),
+        **observed,
+    }
+    for key in (
+        "request_count",
+        "retry_count",
+        "response_count",
+        "observed_response_count",
+    ):
+        value = _non_negative_number(raw.get(key))
+        if value is not None:
+            payload[key] = value
+    if payload["status"] not in {"observed", "partial"}:
+        payload["status"] = "observed"
+    if payload["status"] == "partial" and raw.get("reason"):
+        payload["reason"] = str(raw["reason"])
+    return payload
 
 
 def _provider_cost(result: Mapping[str, Any]) -> dict[str, Any]:
@@ -78,19 +109,103 @@ def _provider_cost(result: Mapping[str, Any]) -> dict[str, Any]:
     amount = _non_negative_number(raw.get("amount"))
     currency = str(raw.get("currency") or "").strip().upper()
     if amount is None or not currency:
-        return {
+        payload: dict[str, Any] = {
             "status": "unavailable",
-            "reason": (
+            "reason": str(raw.get("reason"))
+            if raw.get("reason")
+            else (
                 "Agent API did not expose provider cost with an explicit "
                 "currency."
             ),
         }
-    return {"status": "observed", "amount": amount, "currency": currency}
+        for key in (
+            "request_count",
+            "retry_count",
+            "response_count",
+            "observed_response_count",
+        ):
+            value = _non_negative_number(raw.get(key))
+            if value is not None:
+                payload[key] = value
+        return payload
+    payload: dict[str, Any] = {
+        "status": str(raw.get("status") or "observed"),
+        "amount": amount,
+        "currency": currency,
+    }
+    for key in (
+        "request_count",
+        "retry_count",
+        "response_count",
+        "observed_response_count",
+    ):
+        value = _non_negative_number(raw.get(key))
+        if value is not None:
+            payload[key] = value
+    if payload["status"] not in {"observed", "partial"}:
+        payload["status"] = "observed"
+    if payload["status"] == "partial" and raw.get("reason"):
+        payload["reason"] = str(raw["reason"])
+    return payload
+
+
+def _provider_model(result: Mapping[str, Any]) -> dict[str, Any]:
+    """Preserve requested and provider-reported model names without guessing."""
+
+    raw = result.get("provider_model")
+    if not isinstance(raw, Mapping):
+        return {
+            "status": "unavailable",
+            "reason": "Agent API did not expose provider model telemetry.",
+        }
+
+    def names(key: str) -> list[str]:
+        value = raw.get(key)
+        if not isinstance(value, list):
+            return []
+        return sorted(
+            {
+                item.strip()
+                for item in value
+                if isinstance(item, str) and item.strip()
+            }
+        )
+
+    payload: dict[str, Any] = {
+        "status": str(raw.get("status") or "unavailable"),
+        "configured_request_models": names("configured_request_models"),
+        "provider_reported_models": names("provider_reported_models"),
+    }
+    for key in ("request_count", "response_count", "observed_response_count"):
+        value = _non_negative_number(raw.get(key))
+        if value is not None:
+            payload[key] = value
+    if payload["status"] not in {"observed", "partial"}:
+        payload["status"] = "unavailable"
+    if raw.get("reason"):
+        payload["reason"] = str(raw["reason"])
+    elif payload["status"] == "unavailable":
+        payload["reason"] = "Agent API model telemetry did not include a provider model."
+    return payload
 
 
 def _artifact_verified(artifact: Mapping[str, Any]) -> bool:
     verification = artifact.get("verification")
     return isinstance(verification, Mapping) and bool(verification.get("passed"))
+
+
+def _answer_and_verified_artifact_text(result: Mapping[str, Any]) -> str:
+    """Combine the chat summary with only quality-approved artifact content."""
+
+    parts = [str(result.get("answer") or "")]
+    for artifact in result.get("artifacts") or []:
+        if not isinstance(artifact, Mapping) or not _artifact_verified(artifact):
+            continue
+        for key in ("content", "text", "markdown"):
+            value = artifact.get(key)
+            if isinstance(value, str) and value:
+                parts.append(value)
+    return "\n".join(parts)
 
 
 def _ordered_subsequence(required: list[str], observed: list[str]) -> bool:
@@ -197,12 +312,20 @@ def score_agent_case(
         else (0.0 if plan.get("status") == "failed" or response_failed else 1.0)
     )
 
-    answer = str(result.get("answer") or "")
+    answer = _answer_and_verified_artifact_text(result)
     expected_fragments = [
         str(item) for item in expected.get("answer_contains") or [] if str(item)
     ]
     missing_fragments = [
         fragment for fragment in expected_fragments if fragment not in answer
+    ]
+    expected_term_groups = [
+        [str(term) for term in group if str(term)]
+        for group in expected.get("answer_contains_any") or []
+        if isinstance(group, list)
+    ]
+    missing_term_groups = [
+        group for group in expected_term_groups if not any(term in answer for term in group)
     ]
     expected_status = str(expected.get("expected_status") or "completed")
     status_ok = str(result.get("status") or "") == expected_status
@@ -254,6 +377,11 @@ def score_agent_case(
         )
     if missing_fragments:
         failure_reasons.append("回答缺少：" + "、".join(missing_fragments))
+    if missing_term_groups:
+        failure_reasons.append(
+            "回答未覆盖公开标注答案关键词组："
+            + "；".join(" / ".join(group) for group in missing_term_groups)
+        )
     max_interventions = expected.get("max_interventions")
     if max_interventions is not None and intervention_count > int(max_interventions):
         failure_reasons.append(
@@ -276,12 +404,32 @@ def score_agent_case(
             )
         )
 
+    if not failure_reasons:
+        failure_class = "passed"
+    elif any(
+        item.get("failure_code") == "provider_unavailable"
+        for item in trace
+    ):
+        # This class is intentionally narrower than a generic 5xx/timeout from
+        # the benchmark client: it is emitted only when the Agent itself
+        # reached the configured model boundary and failed closed there.
+        failure_class = "provider_failure"
+    elif isinstance(benchmark_error, Mapping) and benchmark_error.get(
+        "kind"
+    ) in {"timeout", "transport_error"}:
+        failure_class = "benchmark_transport_failure"
+    elif isinstance(benchmark_error, Mapping):
+        failure_class = "benchmark_api_failure"
+    else:
+        failure_class = "agent_outcome_failure"
+
     return {
         "case_id": str(expected.get("id") or ""),
         "task_success": not failure_reasons,
         "verified_task_completion": not failure_reasons
         and (not require_evidence_gate or evidence_gate_passed),
         "failure_reasons": failure_reasons,
+        "failure_class": failure_class,
         "plan_completion_rate": plan_completion,
         "tool_selection_recall": tool_recall,
         "tool_selection_precision": tool_precision,
@@ -297,8 +445,10 @@ def score_agent_case(
         "recovery_event_count": recovery_count,
         "receipt_reuse_count": receipt_reuse_count,
         "latency_seconds": round(max(0.0, float(latency_seconds)), 6),
+        "reference_answer_terms_passed": not missing_term_groups,
         "provider_usage": _provider_usage(result),
         "provider_cost": _provider_cost(result),
+        "provider_model": _provider_model(result),
     }
 
 
@@ -310,33 +460,68 @@ def _percentile(values: list[float], percentile: float) -> float:
     return round(ordered[rank], 6)
 
 
+def _aggregate_explicit_counts(
+    items: list[Mapping[str, Any]],
+    keys: tuple[str, ...],
+) -> dict[str, float]:
+    """Sum observed counters while preserving an explicitly reported zero."""
+
+    totals: dict[str, float] = {}
+    for key in keys:
+        values = [
+            float(item[key])
+            for item in items
+            if _non_negative_number(item.get(key)) is not None
+        ]
+        if values:
+            totals[key] = sum(values)
+    return totals
+
+
 def _aggregate_provider_usage(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    observed = [
+    reported = [
         row["provider_usage"]
         for row in rows
         if isinstance(row.get("provider_usage"), Mapping)
-        and row["provider_usage"].get("status") == "observed"
     ]
-    if not observed:
-        return {
+    metered = [
+        row["provider_usage"]
+        for row in rows
+        if isinstance(row.get("provider_usage"), Mapping)
+        and row["provider_usage"].get("status") in {"observed", "partial"}
+    ]
+    if not metered:
+        payload: dict[str, Any] = {
             "status": "unavailable",
             "observed_case_count": 0,
             "case_count": len(rows),
             "reason": "No Agent case exposed provider token usage.",
         }
+        payload.update(
+            _aggregate_explicit_counts(
+                reported,
+                ("request_count", "retry_count", "response_count"),
+            )
+        )
+        return payload
     fields = ("input_tokens", "output_tokens", "total_tokens")
     totals = {
         field: sum(
             float(item.get(field) or 0.0)
-            for item in observed
+            for item in metered
             if _non_negative_number(item.get(field)) is not None
         )
         for field in fields
     }
-    status = "observed" if len(observed) == len(rows) else "partial"
+    status = (
+        "observed"
+        if len(metered) == len(rows)
+        and all(item.get("status") == "observed" for item in metered)
+        else "partial"
+    )
     payload: dict[str, Any] = {
         "status": status,
-        "observed_case_count": len(observed),
+        "observed_case_count": len(metered),
         "case_count": len(rows),
         **{
             field: round(value, 6)
@@ -349,46 +534,142 @@ def _aggregate_provider_usage(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "Some Agent cases did not expose provider token usage; totals are "
             "not a complete-suite usage claim."
         )
+    payload.update(
+        _aggregate_explicit_counts(
+            reported,
+            ("request_count", "retry_count", "response_count"),
+        )
+    )
     return payload
 
 
 def _aggregate_provider_cost(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    observed = [
+    reported = [
         row["provider_cost"]
         for row in rows
         if isinstance(row.get("provider_cost"), Mapping)
-        and row["provider_cost"].get("status") == "observed"
     ]
-    if not observed:
-        return {
+    metered = [
+        row["provider_cost"]
+        for row in rows
+        if isinstance(row.get("provider_cost"), Mapping)
+        and row["provider_cost"].get("status") in {"observed", "partial"}
+        and _non_negative_number(row["provider_cost"].get("amount")) is not None
+        and str(row["provider_cost"].get("currency") or "").strip()
+    ]
+    if not metered:
+        payload: dict[str, Any] = {
             "status": "unavailable",
             "observed_case_count": 0,
             "case_count": len(rows),
             "reason": "No Agent case exposed provider cost with a currency.",
         }
-    currencies = {str(item.get("currency")) for item in observed}
+        payload.update(
+            _aggregate_explicit_counts(
+                reported,
+                ("request_count", "retry_count", "response_count"),
+            )
+        )
+        return payload
+    currencies = {str(item.get("currency")) for item in metered}
     if len(currencies) != 1:
-        return {
+        payload: dict[str, Any] = {
             "status": "partial",
-            "observed_case_count": len(observed),
+            "observed_case_count": len(metered),
             "case_count": len(rows),
+            "currencies": sorted(currencies),
             "reason": (
                 "Observed provider costs use multiple currencies and cannot be "
                 "summed without an external exchange-rate policy."
             ),
         }
-    status = "observed" if len(observed) == len(rows) else "partial"
+        payload.update(
+            _aggregate_explicit_counts(
+                reported,
+                ("request_count", "retry_count", "response_count"),
+            )
+        )
+        return payload
+    status = (
+        "observed"
+        if len(metered) == len(rows)
+        and all(item.get("status") == "observed" for item in metered)
+        else "partial"
+    )
     payload: dict[str, Any] = {
         "status": status,
-        "observed_case_count": len(observed),
+        "observed_case_count": len(metered),
         "case_count": len(rows),
         "currency": next(iter(currencies)),
-        "amount": round(sum(float(item["amount"]) for item in observed), 6),
+        "amount": round(sum(float(item["amount"]) for item in metered), 6),
     }
     if status == "partial":
         payload["reason"] = (
             "Some Agent cases did not expose provider cost; the amount is not "
             "a complete-suite cost claim."
+        )
+    payload.update(
+        _aggregate_explicit_counts(
+            reported,
+            ("request_count", "retry_count", "response_count"),
+        )
+    )
+    return payload
+
+
+def _aggregate_provider_model(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    reported = [
+        row["provider_model"]
+        for row in rows
+        if isinstance(row.get("provider_model"), Mapping)
+    ]
+    observed = [
+        item
+        for item in reported
+        if item.get("status") in {"observed", "partial"}
+    ]
+    configured_models = sorted(
+        {
+            model
+            for item in reported
+            for model in item.get("configured_request_models") or []
+            if isinstance(model, str) and model
+        }
+    )
+    provider_models = sorted(
+        {
+            model
+            for item in reported
+            for model in item.get("provider_reported_models") or []
+            if isinstance(model, str) and model
+        }
+    )
+    payload: dict[str, Any] = {
+        "status": (
+            "observed"
+            if observed
+            and len(observed) == len(rows)
+            and all(item.get("status") == "observed" for item in observed)
+            else "partial"
+            if observed
+            else "unavailable"
+        ),
+        "observed_case_count": len(observed),
+        "case_count": len(rows),
+        "configured_request_models": configured_models,
+        "provider_reported_models": provider_models,
+    }
+    payload.update(
+        _aggregate_explicit_counts(
+            reported,
+            ("request_count", "response_count"),
+        )
+    )
+    if payload["status"] == "unavailable":
+        payload["reason"] = "No Agent case exposed provider model telemetry."
+    elif payload["status"] == "partial":
+        payload["reason"] = (
+            "Some Agent cases did not expose a provider-reported model name."
         )
     return payload
 
@@ -408,6 +689,15 @@ def aggregate_agent_metrics(
         return round(mean(float(row.get(key) or 0.0) for row in rows), 6)
 
     latencies = [float(row.get("latency_seconds") or 0.0) for row in rows]
+    failure_class_counts: dict[str, int] = {}
+    for row in rows:
+        failure_class = str(
+            row.get("failure_class")
+            or ("passed" if row.get("task_success") else "agent_outcome_failure")
+        )
+        failure_class_counts[failure_class] = (
+            failure_class_counts.get(failure_class, 0) + 1
+        )
     return {
         "contract": "agent_eval_v1",
         "case_count": len(rows),
@@ -437,6 +727,8 @@ def aggregate_agent_metrics(
         "p95_latency_seconds": _percentile(latencies, 0.95),
         "provider_usage": _aggregate_provider_usage(rows),
         "provider_cost": _aggregate_provider_cost(rows),
+        "provider_model": _aggregate_provider_model(rows),
+        "failure_class_counts": dict(sorted(failure_class_counts.items())),
         "failed_case_ids": [
             row.get("case_id") for row in rows if not row.get("task_success")
         ],

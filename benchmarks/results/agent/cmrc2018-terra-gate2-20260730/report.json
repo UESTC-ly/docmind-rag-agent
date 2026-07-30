@@ -1,0 +1,623 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": false,
+  "release_evidence_eligible": true,
+  "release_gate_passed": false,
+  "provenance": {
+    "source_name": "CMRC 2018",
+    "source_uri": "https://ymcui.com/cmrc2018/",
+    "source_version": "2018",
+    "license_name": "CC BY-SA 4.0",
+    "split": "validation",
+    "corpus_fingerprint": "f3563fb04a1f1aec86c9452ae3e63dd789ec83650b15e5e842246d4f1612f077",
+    "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126",
+    "transform_spec": {
+      "contract": "cmrc_context_dedupe_v1",
+      "corpus_items": 28,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "1097bbc820b1f8e90f72535856881d1f190434048b79e59e6fbe6c41811e21f2",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 0.0,
+    "verified_task_completion_rate": 0.0,
+    "mean_plan_completion_rate": 0.166666,
+    "mean_tool_selection_recall": 0.0,
+    "mean_tool_selection_precision": 0.0,
+    "mean_artifact_completion_rate": 0.0,
+    "mean_verified_artifact_rate": 0.0,
+    "mean_quality_adaptation_count": 0.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 16.2878,
+    "p95_latency_seconds": 23.497278,
+    "provider_usage": {
+      "status": "partial",
+      "observed_case_count": 1,
+      "case_count": 2,
+      "input_tokens": 2732.0,
+      "output_tokens": 362.0,
+      "total_tokens": 3094.0,
+      "reason": "Some Agent cases did not expose provider token usage; totals are not a complete-suite usage claim.",
+      "request_count": 10.0,
+      "retry_count": 6.0,
+      "response_count": 2.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 10.0,
+      "retry_count": 6.0,
+      "response_count": 2.0
+    },
+    "provider_model": {
+      "status": "partial",
+      "observed_case_count": 1,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 10.0,
+      "response_count": 2.0,
+      "reason": "Some Agent cases did not expose a provider-reported model name."
+    },
+    "failure_class_counts": {
+      "agent_outcome_failure": 2
+    },
+    "failed_case_ids": [
+      "cmrc-sengoku-musou-verified-report",
+      "cmrc-gongchepu-verified-report"
+    ],
+    "cases": [
+      {
+        "case_id": "cmrc-sengoku-musou-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report、select_evaluated_rag_pipeline",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：光荣 / Koei；ω-force / ω-Force / Omega Force"
+        ],
+        "plan_completion_rate": 0.333333,
+        "tool_selection_recall": 0.0,
+        "tool_selection_precision": 0.0,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 23.497278,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 2732.0,
+          "output_tokens": 362.0,
+          "total_tokens": 3094.0,
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 2
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 6,
+          "response_count": 2,
+          "observed_response_count": 2
+        }
+      },
+      {
+        "case_id": "cmrc-gongchepu-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report、select_evaluated_rag_pipeline",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：打击乐 / percussion；记谱 / notation"
+        ],
+        "plan_completion_rate": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_precision": 0.0,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 9.078321,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "unavailable",
+          "reason": "No provider response was received for this Agent run.",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "No provider response was received for this Agent run.",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "unavailable",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [],
+          "request_count": 4,
+          "response_count": 0,
+          "observed_response_count": 0,
+          "reason": "No provider response was received for this Agent run."
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 32.576187,
+    "throughput_cases_per_second": 0.061395,
+    "provider_usage": {
+      "status": "partial",
+      "observed_case_count": 1,
+      "case_count": 2,
+      "input_tokens": 2732.0,
+      "output_tokens": 362.0,
+      "total_tokens": 3094.0,
+      "reason": "Some Agent cases did not expose provider token usage; totals are not a complete-suite usage claim.",
+      "request_count": 10.0,
+      "retry_count": 6.0,
+      "response_count": 2.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 10.0,
+      "retry_count": 6.0,
+      "response_count": 2.0
+    },
+    "provider_model": {
+      "status": "partial",
+      "observed_case_count": 1,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 10.0,
+      "response_count": 2.0,
+      "reason": "Some Agent cases did not expose a provider-reported model name."
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "cmrc-sengoku-musou-verified-report",
+      "source_sample_id": "cmrc2018:validation:DEV_0_QUERY_0",
+      "request": {
+        "message": "基于当前 CMRC 2018 validation 公开语料，核验“《战国无双3》是由哪两个公司合作开发的？”并生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 7,
+        "run_id": "agent-eval-cmrc-sengoku-musou-verified-report-2fb0379aa8"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "光荣",
+            "Koei"
+          ],
+          [
+            "ω-force",
+            "ω-Force",
+            "Omega Force"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "cmrc-sengoku-musou-verified-report"
+      },
+      "score": {
+        "case_id": "cmrc-sengoku-musou-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report、select_evaluated_rag_pipeline",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：光荣 / Koei；ω-force / ω-Force / Omega Force"
+        ],
+        "plan_completion_rate": 0.333333,
+        "tool_selection_recall": 0.0,
+        "tool_selection_precision": 0.0,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 23.497278,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 2732.0,
+          "output_tokens": 362.0,
+          "total_tokens": 3094.0,
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 2
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 6,
+          "response_count": 2,
+          "observed_response_count": 2
+        }
+      },
+      "result": {
+        "conversation_id": 47,
+        "run_id": "agent-eval-cmrc-sengoku-musou-verified-report-2fb0379aa8",
+        "thread_id": "agent-eval-cmrc-sengoku-musou-verified-report-2fb0379aa8",
+        "status": "failed",
+        "recoverable": false,
+        "answer": "模型服务暂不可用，本次任务未完成。请稍后重试。",
+        "artifacts": [],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 7,
+              "query": "《战国无双3》由哪两个公司合作开发？请检索原文中关于开发公司、合作开发的证据。"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D7:C0",
+                  "document_id": 7,
+                  "chunk_index": 0,
+                  "score": 0.8308
+                },
+                {
+                  "citation_id": "D7:C24",
+                  "document_id": 7,
+                  "chunk_index": 24,
+                  "score": 0.5392
+                },
+                {
+                  "citation_id": "D7:C8",
+                  "document_id": 7,
+                  "chunk_index": 8,
+                  "score": 0.5353
+                },
+                {
+                  "citation_id": "D7:C2",
+                  "document_id": 7,
+                  "chunk_index": 2,
+                  "score": 0.4819
+                },
+                {
+                  "citation_id": "D7:C12",
+                  "document_id": 7,
+                  "chunk_index": 12,
+                  "score": 0.4603
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "model_provider",
+            "ok": false,
+            "graph_node": "supervisor",
+            "failure_code": "provider_unavailable"
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 CMRC 2018 validation 公开语料，使用同数据集回归评测通过的 RAG 管线核验《战国无双3》的合作开发公司，并交付证据不足时明确拒答的简短逐结论依据报告。",
+          "mode": "explicit",
+          "status": "failed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过 CMRC 2018 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集为当前 CMRC 2018 validation，不跨数据集比较分数。",
+              "status": "failed",
+              "attempts": 0,
+              "result": "模型服务暂不可用，未执行或伪造后续 Agent 操作。"
+            },
+            {
+              "id": "step-2",
+              "title": "生成《战国无双3》合作开发公司核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id 针对文档 ID 7 检索并生成简短报告；报告逐项给出“由哪两个公司合作开发”的结论及对应语料证据引用，完成引用校验与自动修复；如无法由语料充分支持两个公司名称，则明确输出证据不足并拒答。",
+              "status": "failed",
+              "attempts": 0,
+              "result": "模型服务暂不可用，未执行或伪造后续 Agent 操作。"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 2,
+          "input_tokens": 2732.0,
+          "output_tokens": 362.0,
+          "total_tokens": 3094.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 6,
+          "retry_count": 3,
+          "response_count": 2,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 6,
+          "response_count": 2,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 2
+        }
+      }
+    },
+    {
+      "case_id": "cmrc-gongchepu-verified-report",
+      "source_sample_id": "cmrc2018:validation:DEV_1_QUERY_0",
+      "request": {
+        "message": "基于当前 CMRC 2018 validation 公开语料，核验“锣鼓经是什么？”并生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 7,
+        "run_id": "agent-eval-cmrc-gongchepu-verified-report-767f8bbb83"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "打击乐",
+            "percussion"
+          ],
+          [
+            "记谱",
+            "notation"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "cmrc-gongchepu-verified-report"
+      },
+      "score": {
+        "case_id": "cmrc-gongchepu-verified-report",
+        "task_success": false,
+        "verified_task_completion": false,
+        "failure_reasons": [
+          "模型服务不可用，Agent 已安全终止",
+          "status=failed，期望 completed",
+          "缺少成功 Skill：generate_verified_research_report、select_evaluated_rag_pipeline",
+          "缺少产物：verified_research_report",
+          "必需产物未通过质量门",
+          "任务没有通过证据闭环质量门",
+          "Skill 执行顺序不符合要求：select_evaluated_rag_pipeline → generate_verified_research_report",
+          "回答未覆盖公开标注答案关键词组：打击乐 / percussion；记谱 / notation"
+        ],
+        "plan_completion_rate": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_precision": 0.0,
+        "artifact_completion_rate": 0.0,
+        "verified_artifact_rate": 0.0,
+        "evidence_gate_passed": false,
+        "trajectory_order_ok": false,
+        "quality_adaptation_count": 0,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 9.078321,
+        "reference_answer_terms_passed": false,
+        "provider_usage": {
+          "status": "unavailable",
+          "reason": "No provider response was received for this Agent run.",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "No provider response was received for this Agent run.",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "unavailable",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [],
+          "request_count": 4,
+          "response_count": 0,
+          "observed_response_count": 0,
+          "reason": "No provider response was received for this Agent run."
+        }
+      },
+      "result": {
+        "conversation_id": 48,
+        "run_id": "agent-eval-cmrc-gongchepu-verified-report-767f8bbb83",
+        "thread_id": "agent-eval-cmrc-gongchepu-verified-report-767f8bbb83",
+        "status": "failed",
+        "recoverable": false,
+        "answer": "模型服务暂不可用，本次任务未完成。请稍后重试。",
+        "artifacts": [],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "model_provider",
+            "ok": false,
+            "graph_node": "planner",
+            "failure_code": "provider_unavailable"
+          }
+        ],
+        "plan": null,
+        "approval": null,
+        "provider_usage": {
+          "status": "unavailable",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0,
+          "reason": "No provider response was received for this Agent run."
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 4,
+          "retry_count": 3,
+          "response_count": 0,
+          "observed_response_count": 0,
+          "reason": "No provider response was received for this Agent run."
+        },
+        "provider_model": {
+          "status": "unavailable",
+          "request_count": 4,
+          "response_count": 0,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [],
+          "observed_response_count": 0,
+          "reason": "No provider response was received for this Agent run."
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "CMRC 2018",
+      "split": "validation",
+      "corpus_fingerprint": "f3563fb04a1f1aec86c9452ae3e63dd789ec83650b15e5e842246d4f1612f077",
+      "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126"
+    },
+    "resolved_document_id": 7,
+    "source_sample_ids": [
+      "cmrc2018:validation:DEV_0_QUERY_0",
+      "cmrc2018:validation:DEV_1_QUERY_0"
+    ]
+  }
+}

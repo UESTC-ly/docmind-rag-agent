@@ -1,0 +1,2484 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": true,
+  "release_evidence_eligible": true,
+  "release_gate_passed": true,
+  "provenance": {
+    "source_name": "MS MARCO",
+    "source_uri": "https://microsoft.github.io/msmarco/",
+    "source_version": "2.1",
+    "license_name": "MS MARCO non-commercial research terms",
+    "split": "validation",
+    "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+    "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+    "transform_spec": {
+      "contract": "ms_marco_passages_v1",
+      "corpus_items": 998,
+      "sample_count": 100,
+      "note": "公开 validation 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "41cfafe957bb3bc0e777fb77bd1c1c544c4862072e39e489ef25023fa11c7ea5",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 1.0,
+    "verified_task_completion_rate": 1.0,
+    "mean_plan_completion_rate": 1.0,
+    "mean_tool_selection_recall": 1.0,
+    "mean_tool_selection_precision": 0.666667,
+    "mean_artifact_completion_rate": 1.0,
+    "mean_verified_artifact_rate": 1.0,
+    "mean_quality_adaptation_count": 2.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 181.300251,
+    "p95_latency_seconds": 185.607038,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 56221.0,
+      "output_tokens": 14624.0,
+      "total_tokens": 70845.0,
+      "request_count": 24.0,
+      "retry_count": 0.0,
+      "response_count": 24.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 24.0,
+      "retry_count": 0.0,
+      "response_count": 24.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 24.0,
+      "response_count": 24.0
+    },
+    "failure_class_counts": {
+      "passed": 2
+    },
+    "failed_case_ids": [],
+    "cases": [
+      {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 176.993463,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 27956.0,
+          "output_tokens": 7349.0,
+          "total_tokens": 35305.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      {
+        "case_id": "ms-marco-bradford-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 185.607038,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 28265.0,
+          "output_tokens": 7275.0,
+          "total_tokens": 35540.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 362.601033,
+    "throughput_cases_per_second": 0.005516,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 56221.0,
+      "output_tokens": 14624.0,
+      "total_tokens": 70845.0,
+      "request_count": 24.0,
+      "retry_count": 0.0,
+      "response_count": 24.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 24.0,
+      "retry_count": 0.0,
+      "response_count": 24.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 24.0,
+      "response_count": 24.0
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "ms-marco-corporation-verified-report",
+      "source_sample_id": "ms_marco:validation:query-1102432",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验问题“what is a corporation?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-3c4660ffe0"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "company",
+            "公司"
+          ],
+          [
+            "single entity",
+            "单一实体"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-corporation-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-corporation-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 176.993463,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 27956.0,
+          "output_tokens": 7349.0,
+          "total_tokens": 35305.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      "result": {
+        "conversation_id": 56,
+        "run_id": "agent-eval-ms-marco-corporation-verified-report-3c4660ffe0",
+        "thread_id": "agent-eval-ms-marco-corporation-verified-report-3c4660ffe0",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**简短逐结论证据核验报告**，正文与下载文件已在产出物中。\n\n- 已自主选用通过同一 **MS MARCO v2.1 validation** 公开回归评测及 badcase 门禁的 `hybrid-rerank` 管线。\n- 核验结论：corporation 可被描述为依法设立或获法律承认、能作为独立单一实体行动的组织；材料还支持其具有独立的法律存在，可持有财产、订立合同、起诉及被起诉。[D6:C2][D6:C5][D6:C6]\n- 对“有限责任是否为其必然核心特征”、特定法域的权威定义及未被材料直接陈述的法律规则，报告已明确标注为**证据不足，拒绝确认**。\n- 报告已完成逐句引用校验与自动修复；最终 9/9 条事实性内容均获证据支持。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "基于 MS MARCO v2.1 validation 公开语料核验问题“what is a corporation?”的简短逐结论证据报告；证据不足时明确拒答",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "公司定义与核心法律特征",
+                "query": "what is a corporation legal definition separate legal entity shareholders limited liability"
+              },
+              {
+                "title": "证据边界与拒答条件",
+                "query": "what is a corporation authoritative definition legal entity evidence source"
+              }
+            ],
+            "content": "# 报告标题\n\n## 公司定义与核心法律特征\n\n- 摘录中的一种定义将公司（corporation）描述为：由法律或依法律授权设立的个人联合体，具有独立于成员的持续存在，并拥有区别于成员的权力和责任。[D6:C2]\n- 另一摘录将公司描述为获准作为单一实体行动、且在法律上被承认为“人”的公司或人群。[D6:C5]\n- 公司具有法律存在，能够购买、出售和拥有财产，订立合同，起诉他人或企业，并可被他人或企业起诉。[D6:C6]\n- 公司由其股东所有，股东分享企业经营产生的利润和损失。[D6:C6]\n- 如果公司发行股票，其通常会由股东直接或间接治理。[D6:C0]\n- 推测：因此，不能确认有限责任是本题材料支持的公司核心法律特征。[D6:C2]\n\n## 证据边界与拒答条件\n\n- 所给摘录将公司与法律设立、法律承认及独立法律存在联系起来。[D6:C2][D6:C5][D6:C6]\n- 所给摘录本身未提供发布机构、具体法律辖区或权威定义来源的信息。[D6:C2][D6:C5][D6:C6]\n- 推测：因此，无法依据现有证据确认上述表述中哪一条构成特定法域的权威法律定义，也不能补充材料未陈述的法律规则。[D6:C2][D6:C5]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "公司定义与核心法律特征",
+                  "query": "what is a corporation legal definition separate legal entity shareholders limited liability",
+                  "original_query": "what is a corporation legal definition separate legal entity shareholders limited liability",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "证据边界与拒答条件",
+                  "query": "what is a corporation authoritative definition legal entity evidence source",
+                  "original_query": "what is a corporation authoritative definition legal entity evidence source",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 489
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 0,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 1.0,
+                  "citation_correctness": 0.909091
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 2
+                },
+                {
+                  "step": "mark_supported_inferences",
+                  "status": "failed",
+                  "marked_inference_count": 2
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "9/9 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 9,
+                "supported_claim_count": 9,
+                "unsupported_claim_count": 0,
+                "citation_count": 14,
+                "valid_citation_count": 14,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "摘录中的一种定义将公司（corporation）描述为：由法律或依法律授权设立的个人联合体，具有独立于成员的持续存在，并拥有区别于成员的权力和责任。[D6:C2]",
+                    "citations": [
+                      "D6:C2"
+                    ],
+                    "valid_citations": [
+                      "D6:C2"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.021277,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文直接将公司定义为依法设立的个人联合体，具有独立于成员的持续存在以及区别于成员的权力和责任。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "另一摘录将公司描述为获准作为单一实体行动、且在法律上被承认为“人”的公司或人群。[D6:C5]",
+                    "citations": [
+                      "D6:C5"
+                    ],
+                    "valid_citations": [
+                      "D6:C5"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文直接称公司是获授权作为单一实体行动、在法律上为人的公司或人群，并受法律承认。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司具有法律存在，能够购买、出售和拥有财产，订立合同，起诉他人或企业，并可被他人或企业起诉。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文直接列明法律存在以及买卖和拥有财产、订约、起诉和被起诉的能力。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "公司由其股东所有，股东分享企业经营产生的利润和损失。[D6:C6]",
+                    "citations": [
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文直接说明公司由股东所有，且股东分享经营产生的利润和损失。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "如果公司发行股票，其通常会由股东直接或间接治理。[D6:C0]",
+                    "citations": [
+                      "D6:C0"
+                    ],
+                    "valid_citations": [
+                      "D6:C0"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C0",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文直接说明若发行股票，公司通常由股东直接或间接治理。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：因此，不能确认有限责任是本题材料支持的公司核心法律特征。[D6:C2]",
+                    "citations": [
+                      "D6:C2"
+                    ],
+                    "valid_citations": [
+                      "D6:C2"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "引文列举的定义要素未包括有限责任；据此可合理推断仅凭该材料不能确认有限责任是其支持的核心法律特征，但该否定性结论并非引文直接明述。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "所给摘录将公司与法律设立、法律承认及独立法律存在联系起来。[D6:C2][D6:C5][D6:C6]",
+                    "citations": [
+                      "D6:C2",
+                      "D6:C5",
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C2",
+                      "D6:C5",
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "三则引文分别直接涉及依法设立、法律承认的法人/单一实体地位，以及法律存在。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "所给摘录本身未提供发布机构、具体法律辖区或权威定义来源的信息。[D6:C2][D6:C5][D6:C6]",
+                    "citations": [
+                      "D6:C2",
+                      "D6:C5",
+                      "D6:C6"
+                    ],
+                    "valid_citations": [
+                      "D6:C2",
+                      "D6:C5",
+                      "D6:C6"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C6",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "所给引文文本均未载明发布机构、具体法律辖区或权威定义来源。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：因此，无法依据现有证据确认上述表述中哪一条构成特定法域的权威法律定义，也不能补充材料未陈述的法律规则。[D6:C2][D6:C5]",
+                    "citations": [
+                      "D6:C2",
+                      "D6:C5"
+                    ],
+                    "valid_citations": [
+                      "D6:C2",
+                      "D6:C5"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C2",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C5",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两则引文未标示特定法域或权威法律定义来源，也未陈述其他法律规则；因此无法据其确认特定法域的权威定义或补充未载明规则。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "689e3aae2d5e1ae29732ccf1d0dbedfec17a046bab78a639d3777c3a4dbc6073",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 7,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 2
+                }
+              },
+              "claim_count": 9,
+              "supported_claim_count": 9,
+              "unsupported_claim_count": 0,
+              "citation_count": 14,
+              "valid_citation_count": 14,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "689e3aae2d5e1ae29732ccf1d0dbedfec17a046bab78a639d3777c3a4dbc6073",
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              },
+              "claims": [
+                {
+                  "text": "摘录中的一种定义将公司（corporation）描述为：由法律或依法律授权设立的个人联合体，具有独立于成员的持续存在，并拥有区别于成员的权力和责任。[D6:C2]",
+                  "citations": [
+                    "D6:C2"
+                  ],
+                  "valid_citations": [
+                    "D6:C2"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.021277,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文直接将公司定义为依法设立的个人联合体，具有独立于成员的持续存在以及区别于成员的权力和责任。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "另一摘录将公司描述为获准作为单一实体行动、且在法律上被承认为“人”的公司或人群。[D6:C5]",
+                  "citations": [
+                    "D6:C5"
+                  ],
+                  "valid_citations": [
+                    "D6:C5"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文直接称公司是获授权作为单一实体行动、在法律上为人的公司或人群，并受法律承认。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司具有法律存在，能够购买、出售和拥有财产，订立合同，起诉他人或企业，并可被他人或企业起诉。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文直接列明法律存在以及买卖和拥有财产、订约、起诉和被起诉的能力。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "公司由其股东所有，股东分享企业经营产生的利润和损失。[D6:C6]",
+                  "citations": [
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文直接说明公司由股东所有，且股东分享经营产生的利润和损失。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "如果公司发行股票，其通常会由股东直接或间接治理。[D6:C0]",
+                  "citations": [
+                    "D6:C0"
+                  ],
+                  "valid_citations": [
+                    "D6:C0"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C0",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文直接说明若发行股票，公司通常由股东直接或间接治理。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：因此，不能确认有限责任是本题材料支持的公司核心法律特征。[D6:C2]",
+                  "citations": [
+                    "D6:C2"
+                  ],
+                  "valid_citations": [
+                    "D6:C2"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "引文列举的定义要素未包括有限责任；据此可合理推断仅凭该材料不能确认有限责任是其支持的核心法律特征，但该否定性结论并非引文直接明述。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "所给摘录将公司与法律设立、法律承认及独立法律存在联系起来。[D6:C2][D6:C5][D6:C6]",
+                  "citations": [
+                    "D6:C2",
+                    "D6:C5",
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C2",
+                    "D6:C5",
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "三则引文分别直接涉及依法设立、法律承认的法人/单一实体地位，以及法律存在。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "所给摘录本身未提供发布机构、具体法律辖区或权威定义来源的信息。[D6:C2][D6:C5][D6:C6]",
+                  "citations": [
+                    "D6:C2",
+                    "D6:C5",
+                    "D6:C6"
+                  ],
+                  "valid_citations": [
+                    "D6:C2",
+                    "D6:C5",
+                    "D6:C6"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C6",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "所给引文文本均未载明发布机构、具体法律辖区或权威定义来源。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：因此，无法依据现有证据确认上述表述中哪一条构成特定法域的权威法律定义，也不能补充材料未陈述的法律规则。[D6:C2][D6:C5]",
+                  "citations": [
+                    "D6:C2",
+                    "D6:C5"
+                  ],
+                  "valid_citations": [
+                    "D6:C2",
+                    "D6:C5"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C2",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C5",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两则引文未标示特定法域或权威法律定义来源，也未陈述其他法律规则；因此无法据其确认特定法域的权威定义或补充未载明规则。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.75454545,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/2",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.69454647,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/6",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.63350269,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/0",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.59960466,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/5",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.50131591,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/4",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1324,
+              "content_sha256": "aa8e905b748042779ee8b42a58068e48713913039585d7ba7c371f822c6fcfc0"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "what is a corporation? MS MARCO v2.1 validation 公开语料 核验"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.7267
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.6939
+                },
+                {
+                  "citation_id": "D6:C3",
+                  "document_id": 6,
+                  "chunk_index": 3,
+                  "score": 0.6388
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.6018
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.5357
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "基于 MS MARCO v2.1 validation 公开语料核验问题“what is a corporation?”的简短逐结论证据报告；证据不足时明确拒答"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C2",
+                  "document_id": 6,
+                  "chunk_index": 2,
+                  "score": 0.75454545
+                },
+                {
+                  "citation_id": "D6:C6",
+                  "document_id": 6,
+                  "chunk_index": 6,
+                  "score": 0.69454647
+                },
+                {
+                  "citation_id": "D6:C0",
+                  "document_id": 6,
+                  "chunk_index": 0,
+                  "score": 0.63350269
+                },
+                {
+                  "citation_id": "D6:C5",
+                  "document_id": 6,
+                  "chunk_index": 5,
+                  "score": 0.59960466
+                },
+                {
+                  "citation_id": "D6:C4",
+                  "document_id": 6,
+                  "chunk_index": 4,
+                  "score": 0.50131591
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 9,
+              "supported_claim_count": 9,
+              "unsupported_claim_count": 0,
+              "citation_count": 14,
+              "valid_citation_count": 14,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "689e3aae2d5e1ae29732ccf1d0dbedfec17a046bab78a639d3777c3a4dbc6073",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 7,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于 MS MARCO v2.1 validation 公开语料核验“what is a corporation?”的答案，并生成简短、逐结论附证据且证据不足时明确拒答的报告。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一 MS MARCO v2.1 validation 公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回可复现评测与 badcase 回归门禁均通过的 selected.pipeline_id，且评测数据集明确为 MS MARCO v2.1 validation。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "生成逐结论证据核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，在 MS MARCO v2.1 validation 公开语料中检索并核验该问题；输出简短报告，每项结论附可追溯证据与引用，完成引用校验和自动修复；如语料无法充分支持关键结论，明确标注拒答及证据不足原因。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 27956.0,
+          "output_tokens": 7349.0,
+          "total_tokens": 35305.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 12,
+          "response_count": 12,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 12
+        }
+      }
+    },
+    {
+      "case_id": "ms-marco-bradford-verified-report",
+      "source_sample_id": "ms_marco:validation:query-300674",
+      "request": {
+        "message": "基于当前 MS MARCO v2.1 validation 公开语料，核验“how many years did William Bradford serve as governor of Plymouth Colony?”的答案，生成简短的逐结论有依据报告。自主选择同一公开回归评测通过的 RAG 管线；证据不足时明确拒答。",
+        "document_id": 6,
+        "run_id": "agent-eval-ms-marco-bradford-verified-report-828d76ff19"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "answer_contains_any": [
+          [
+            "thirty years",
+            "30 years",
+            "三十年",
+            "30 年"
+          ]
+        ],
+        "max_interventions": 0,
+        "id": "ms-marco-bradford-verified-report"
+      },
+      "score": {
+        "case_id": "ms-marco-bradford-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 185.607038,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 28265.0,
+          "output_tokens": 7275.0,
+          "total_tokens": 35540.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      "result": {
+        "conversation_id": 57,
+        "run_id": "agent-eval-ms-marco-bradford-verified-report-828d76ff19",
+        "thread_id": "agent-eval-ms-marco-bradford-verified-report-828d76ff19",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**逐结论、引用校验通过**的简短核验报告，产出文件中可查看完整正文与引文。\n\n**结论：拒绝给出精确整数年数。**  \n当前 MS MARCO v2.1 validation 语料中的两条直接证据一致表述：William Bradford 五次担任普利茅斯殖民地总督，任期“**约三十年**”，覆盖 1621—1657 年间。[D6:C84][D6:C81]\n\n但语料没有列出五段任期各自的明确起止时间或直接给出准确累计整数，因此不能把 1621—1657 的跨度误算为连续任职 36 年，也不能据此确认一个精确年数。\n\n本次使用了经同一公开语料回归评测并通过 badcase 门禁的 **`hybrid-rerank`** 检索管线；报告已完成逐句证据校验。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "核验“how many years did William Bradford serve as governor of Plymouth Colony?”：基于 MS MARCO v2.1 validation 的简短逐结论可追溯证据报告；若无法由证据支持准确年数，明确拒答并说明缺口。",
+            "document_id": 6,
+            "outline": [
+              {
+                "title": "任期起止时间证据",
+                "query": "William Bradford governor of Plymouth Colony years served start end dates"
+              },
+              {
+                "title": "累计任职年数核验",
+                "query": "How many years did William Bradford serve as governor of Plymouth Colony total years"
+              }
+            ],
+            "content": "# William Bradford 任职年数核验报告\n\n## 任期起止时间证据：William Bradford governor of Plymouth Colony years served start end dates\n\n- 证据称，William Bradford 曾五次担任普利茅斯殖民地总督，任期覆盖约三十年，时间介于1621年至1657年之间。[D6:C84]\n- 另一条证据同样称，他五次出任总督，覆盖约三十年，时间介于1621年至1657年之间。[D6:C81]\n- 证据称，Bradford 于1657年5月9日在普利茅斯去世。[D6:C87]\n\n## 累计任职年数核验：How many years did William Bradford serve as governor of Plymouth Colony total years\n\n- 证据对累计任职时长的直接表述是“约三十年”。[D6:C84][D6:C81]\n- 拒答：给定证据未提供可直接引用的准确整数任职年数。[D6:C84][D6:C81]\n- 推测：由于证据只说明其五次任职、覆盖约三十年及1621年至1657年的总体范围，而未列出每次任期的具体起止日期，因此不能仅凭这些证据计算或确认准确的累计任职年数。[D6:C84][D6:C81]\n- 推测：结合“约三十年”的表述，不能将该范围直接当作连续任职36年。[D6:C84][D6:C81]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 2
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "任期起止时间证据",
+                  "query": "William Bradford governor of Plymouth Colony years served start end dates",
+                  "original_query": "William Bradford governor of Plymouth Colony years served start end dates",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "累计任职年数核验",
+                  "query": "How many years did William Bradford serve as governor of Plymouth Colony total years",
+                  "original_query": "How many years did William Bradford serve as governor of Plymouth Colony total years",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 607
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 3,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.571429,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 1
+                },
+                {
+                  "step": "mark_supported_inferences",
+                  "status": "failed",
+                  "marked_inference_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "7/7 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 7,
+                "supported_claim_count": 7,
+                "unsupported_claim_count": 0,
+                "citation_count": 11,
+                "valid_citation_count": 11,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "证据称，William Bradford 曾五次担任普利茅斯殖民地总督，任期覆盖约三十年，时间介于1621年至1657年之间。[D6:C84]",
+                    "citations": [
+                      "D6:C84"
+                    ],
+                    "valid_citations": [
+                      "D6:C84"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.117647,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C84",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "该证据直接称 Bradford 五次担任普利茅斯殖民地总督，覆盖约三十年，时间在1621年至1657年之间。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "另一条证据同样称，他五次出任总督，覆盖约三十年，时间介于1621年至1657年之间。[D6:C81]",
+                    "citations": [
+                      "D6:C81"
+                    ],
+                    "valid_citations": [
+                      "D6:C81"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.068966,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C81",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "该证据直接称他五次担任总督，覆盖约三十年，时间在1621年至1657年之间。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据称，Bradford 于1657年5月9日在普利茅斯去世。[D6:C87]",
+                    "citations": [
+                      "D6:C87"
+                    ],
+                    "valid_citations": [
+                      "D6:C87"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.166667,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C87",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "该证据明确列出其死亡日期为1657年5月9日，死亡地点为Plymouth。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "证据对累计任职时长的直接表述是“约三十年”。[D6:C84][D6:C81]",
+                    "citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "valid_citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C84",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C81",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两条证据均直接使用“covering about thirty years”这一表述。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "拒答：给定证据未提供可直接引用的准确整数任职年数。[D6:C84][D6:C81]",
+                    "citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "valid_citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C84",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C81",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两条证据仅给出“约三十年”，未给出可直接引用的准确整数累计任职年数。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：由于证据只说明其五次任职、覆盖约三十年及1621年至1657年的总体范围，而未列出每次任期的具体起止日期，因此不能仅凭这些证据计算或确认准确的累计任职年数。[D6:C84][D6:C81]",
+                    "citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "valid_citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.036364,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C84",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C81",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据未列出五次任期各自的起止日期，只给出约数和总体时间范围；据此不能确认准确累计年数是合理推断。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：结合“约三十年”的表述，不能将该范围直接当作连续任职36年。[D6:C84][D6:C81]",
+                    "citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "valid_citations": [
+                      "D6:C84",
+                      "D6:C81"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D6:C84",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D6:C81",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据称其五次任职且累计约三十年，因此将1621年至1657年的总体范围直接视作连续任职36年并无直接依据。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "55f2b885237d20c3aee3145fe4313dbc71d09498c1320e8c19d08b079e36ba78",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 5,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 2
+                }
+              },
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 11,
+              "valid_citation_count": 11,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "55f2b885237d20c3aee3145fe4313dbc71d09498c1320e8c19d08b079e36ba78",
+              "claim_state_counts": {
+                "supported": 5,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              },
+              "claims": [
+                {
+                  "text": "证据称，William Bradford 曾五次担任普利茅斯殖民地总督，任期覆盖约三十年，时间介于1621年至1657年之间。[D6:C84]",
+                  "citations": [
+                    "D6:C84"
+                  ],
+                  "valid_citations": [
+                    "D6:C84"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.117647,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C84",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "该证据直接称 Bradford 五次担任普利茅斯殖民地总督，覆盖约三十年，时间在1621年至1657年之间。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "另一条证据同样称，他五次出任总督，覆盖约三十年，时间介于1621年至1657年之间。[D6:C81]",
+                  "citations": [
+                    "D6:C81"
+                  ],
+                  "valid_citations": [
+                    "D6:C81"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.068966,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C81",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "该证据直接称他五次担任总督，覆盖约三十年，时间在1621年至1657年之间。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据称，Bradford 于1657年5月9日在普利茅斯去世。[D6:C87]",
+                  "citations": [
+                    "D6:C87"
+                  ],
+                  "valid_citations": [
+                    "D6:C87"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.166667,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C87",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "该证据明确列出其死亡日期为1657年5月9日，死亡地点为Plymouth。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "证据对累计任职时长的直接表述是“约三十年”。[D6:C84][D6:C81]",
+                  "citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "valid_citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C84",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C81",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两条证据均直接使用“covering about thirty years”这一表述。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "拒答：给定证据未提供可直接引用的准确整数任职年数。[D6:C84][D6:C81]",
+                  "citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "valid_citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C84",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C81",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两条证据仅给出“约三十年”，未给出可直接引用的准确整数累计任职年数。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：由于证据只说明其五次任职、覆盖约三十年及1621年至1657年的总体范围，而未列出每次任期的具体起止日期，因此不能仅凭这些证据计算或确认准确的累计任职年数。[D6:C84][D6:C81]",
+                  "citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "valid_citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.036364,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C84",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C81",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据未列出五次任期各自的起止日期，只给出约数和总体时间范围；据此不能确认准确累计年数是合理推断。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：结合“约三十年”的表述，不能将该范围直接当作连续任职36年。[D6:C84][D6:C81]",
+                  "citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "valid_citations": [
+                    "D6:C84",
+                    "D6:C81"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D6:C84",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D6:C81",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据称其五次任职且累计约三十年，因此将1621年至1657年的总体范围直接视作连续任职36年并无直接依据。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D6:C84",
+                  "document_id": 6,
+                  "chunk_index": 84,
+                  "score": 0.82727273,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/84",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C81",
+                  "document_id": 6,
+                  "chunk_index": 81,
+                  "score": 0.77115678,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/81",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C87",
+                  "document_id": 6,
+                  "chunk_index": 87,
+                  "score": 0.70383355,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/87",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C86",
+                  "document_id": 6,
+                  "chunk_index": 86,
+                  "score": 0.67922738,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/86",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D6:C89",
+                  "document_id": 6,
+                  "chunk_index": 89,
+                  "score": 0.67299406,
+                  "document_name": "MS MARCO v2.1",
+                  "source_uri": "https://microsoft.github.io/msmarco/",
+                  "source_version": "2.1",
+                  "source_status": "current",
+                  "jump_url": "/documents/6/chunks/89",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1220,
+              "content_sha256": "5b5dd8358d29a5b1eedee9ef13d2aee25ca99899883a79f392973690b3202296"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 6,
+              "query": "how many years did William Bradford serve as governor of Plymouth Colony? William Bradford governor years"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C84",
+                  "document_id": 6,
+                  "chunk_index": 84,
+                  "score": 0.8167
+                },
+                {
+                  "citation_id": "D6:C81",
+                  "document_id": 6,
+                  "chunk_index": 81,
+                  "score": 0.7781
+                },
+                {
+                  "citation_id": "D6:C89",
+                  "document_id": 6,
+                  "chunk_index": 89,
+                  "score": 0.7327
+                },
+                {
+                  "citation_id": "D6:C86",
+                  "document_id": 6,
+                  "chunk_index": 86,
+                  "score": 0.6637
+                },
+                {
+                  "citation_id": "D6:C87",
+                  "document_id": 6,
+                  "chunk_index": 87,
+                  "score": 0.661
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 4,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 6,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 2,
+              "topic": "核验“how many years did William Bradford serve as governor of Plymouth Colony?”：基于 MS MARCO v2.1 validation 的简短逐结论可追溯证据报告；若无法由证据支持准确年数，明确拒答并说明缺口。"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D6:C84",
+                  "document_id": 6,
+                  "chunk_index": 84,
+                  "score": 0.82727273
+                },
+                {
+                  "citation_id": "D6:C81",
+                  "document_id": 6,
+                  "chunk_index": 81,
+                  "score": 0.77115678
+                },
+                {
+                  "citation_id": "D6:C87",
+                  "document_id": 6,
+                  "chunk_index": 87,
+                  "score": 0.70383355
+                },
+                {
+                  "citation_id": "D6:C86",
+                  "document_id": 6,
+                  "chunk_index": 86,
+                  "score": 0.67922738
+                },
+                {
+                  "citation_id": "D6:C89",
+                  "document_id": 6,
+                  "chunk_index": 89,
+                  "score": 0.67299406
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 7,
+              "supported_claim_count": 7,
+              "unsupported_claim_count": 0,
+              "citation_count": 11,
+              "valid_citation_count": 11,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "55f2b885237d20c3aee3145fe4313dbc71d09498c1320e8c19d08b079e36ba78",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 5,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 MS MARCO v2.1 validation 公开语料，核验 William Bradford 担任普利茅斯殖民地总督的年数，并产出简短、逐结论可追溯证据的报告；证据不足时明确拒答。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择通过同一公开语料回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回适用于 MS MARCO v2.1 validation 的 selected.pipeline_id，且其评测与 badcase 回归门禁信息满足可复现使用要求。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "检索证据并生成逐结论核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "使用上一步的 selected.pipeline_id，围绕指定问题在当前公开语料中检索并核验证据，生成简短报告；每项结论附可校验引用，并在证据无法支持准确年数时明确输出拒答及证据缺口。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 28265.0,
+          "output_tokens": 7275.0,
+          "total_tokens": 35540.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 12,
+          "response_count": 12,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 12
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "MS MARCO",
+      "split": "validation",
+      "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+      "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836"
+    },
+    "resolved_document_id": 6,
+    "source_sample_ids": [
+      "ms_marco:validation:query-1102432",
+      "ms_marco:validation:query-300674"
+    ]
+  }
+}

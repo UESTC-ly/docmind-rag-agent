@@ -1,0 +1,18 @@
+{
+  "contract": "persisted_retrieval_evidence_v1",
+  "dataset_id": 4,
+  "benchmark_fingerprint": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+  "release_gate_fingerprint": "e2a2798d52dda2670e735a14a83a6ad639a00464237a8a8ce3f6c541342b44ec",
+  "run_ids": {
+    "dense": 37,
+    "hybrid": 38,
+    "hybrid-rerank": 39
+  },
+  "regression_gate_ids": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ]
+}

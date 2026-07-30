@@ -1,0 +1,391 @@
+{
+  "contract": "agent_pipeline_selection_audit_v1",
+  "generated_at": "2026-07-30T07:06:20.442149+00:00",
+  "agent_report": {
+    "path": "benchmarks/results/agent/scifact-terra-final-20260730/report.json",
+    "sha256": "9f5704e8f8cc978b16e0f8d2cf2753eaee1d562bafe7f81d7bae52c985b1849b",
+    "suite_fingerprint": "6bfec5888d5471dfc1a500ad3711ad67368d66cc04eacdf10b3c2c182e0f11c7",
+    "release_gate_passed": true
+  },
+  "retrieval_report_reference": "benchmarks/results/retrieval/scifact-release-20260728/report.json",
+  "decision_snapshot": {
+    "contract": "evaluated_pipeline_selection_v1",
+    "status": "selected",
+    "target": "retrieval",
+    "selection_policy": "latest_public_dataset_then_approved_lexicographic_v1",
+    "reason": "先锁定同一公开语料快照，再按 release 状态、nDCG、MAP、Recall、MRR、延迟和运行 ID 依次排序",
+    "dataset": {
+      "id": 1,
+      "name": "SciFact",
+      "source_name": "SciFact",
+      "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+      "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+      "license_name": "CC BY-SA 4.0",
+      "split": "test",
+      "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+      "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d",
+      "language": "en",
+      "task_type": "retrieval"
+    },
+    "selected": {
+      "run_id": 36,
+      "dataset_id": 1,
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "run_label": "scifact-terra-public-baseline-20260729:hybrid-rerank",
+      "comparison_role": "candidate",
+      "release_status": "approved",
+      "metrics": {
+        "ndcg_at_k": 0.7521983304867393,
+        "map_at_k": 0.7101388888888889,
+        "recall_at_k": 0.8551666666666666,
+        "mrr": 0.7304999999999999
+      },
+      "metric_versions": {
+        "ndcg_at_k": "retrieval_v1",
+        "map_at_k": "retrieval_v1",
+        "recall_at_k": "retrieval_v1",
+        "mrr": "retrieval_v1"
+      },
+      "latency_ms": 22577.321333000327,
+      "regression_gates": [
+        {
+          "gate_id": 1,
+          "name": "scifact-hit-no-regression",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "hit_rate",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta -0.010000 >= -0.020000"
+        },
+        {
+          "gate_id": 2,
+          "name": "scifact-recall-no-regression",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "recall_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta -0.012500 >= -0.020000"
+        },
+        {
+          "gate_id": 3,
+          "name": "scifact-map-no-regression",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "map_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.001000 >= -0.020000"
+        },
+        {
+          "gate_id": 4,
+          "name": "scifact-ndcg-no-regression",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "ndcg_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta -0.001688 >= -0.020000"
+        },
+        {
+          "gate_id": 5,
+          "name": "scifact-mrr-no-regression",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "mrr",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.003000 >= -0.020000"
+        }
+      ]
+    },
+    "candidates": [
+      {
+        "run_id": 36,
+        "dataset_id": 1,
+        "pipeline_id": "hybrid-rerank",
+        "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+        "run_label": "scifact-terra-public-baseline-20260729:hybrid-rerank",
+        "comparison_role": "candidate",
+        "release_status": "approved",
+        "metrics": {
+          "ndcg_at_k": 0.7521983304867393,
+          "map_at_k": 0.7101388888888889,
+          "recall_at_k": 0.8551666666666666,
+          "mrr": 0.7304999999999999
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 22577.321333000327,
+        "regression_gates": [
+          {
+            "gate_id": 1,
+            "name": "scifact-hit-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.010000 >= -0.020000"
+          },
+          {
+            "gate_id": 2,
+            "name": "scifact-recall-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.012500 >= -0.020000"
+          },
+          {
+            "gate_id": 3,
+            "name": "scifact-map-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.001000 >= -0.020000"
+          },
+          {
+            "gate_id": 4,
+            "name": "scifact-ndcg-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.001688 >= -0.020000"
+          },
+          {
+            "gate_id": 5,
+            "name": "scifact-mrr-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "mrr",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.003000 >= -0.020000"
+          }
+        ]
+      },
+      {
+        "run_id": 35,
+        "dataset_id": 1,
+        "pipeline_id": "hybrid",
+        "pipeline_fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+        "run_label": "scifact-terra-public-baseline-20260729:hybrid",
+        "comparison_role": "candidate",
+        "release_status": "approved",
+        "metrics": {
+          "ndcg_at_k": 0.7501956498127919,
+          "map_at_k": 0.7041388888888889,
+          "recall_at_k": 0.8676666666666667,
+          "mrr": 0.7225
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 22503.16708399987,
+        "regression_gates": [
+          {
+            "gate_id": 1,
+            "name": "scifact-hit-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.000000 >= -0.020000"
+          },
+          {
+            "gate_id": 2,
+            "name": "scifact-recall-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.000000 >= -0.020000"
+          },
+          {
+            "gate_id": 3,
+            "name": "scifact-map-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.005000 >= -0.020000"
+          },
+          {
+            "gate_id": 4,
+            "name": "scifact-ndcg-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.003691 >= -0.020000"
+          },
+          {
+            "gate_id": 5,
+            "name": "scifact-mrr-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "mrr",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -0.005000 >= -0.020000"
+          }
+        ]
+      },
+      {
+        "run_id": 34,
+        "dataset_id": 1,
+        "pipeline_id": "dense",
+        "pipeline_fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+        "run_label": "scifact-terra-public-baseline-20260729:dense",
+        "comparison_role": "baseline",
+        "release_status": "observational",
+        "metrics": {
+          "ndcg_at_k": 0.7538863522770773,
+          "map_at_k": 0.7091388888888889,
+          "recall_at_k": 0.8676666666666667,
+          "mrr": 0.7275
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 23627.77724999978,
+        "regression_gates": [
+          {
+            "gate_id": 1,
+            "name": "scifact-hit-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 2,
+            "name": "scifact-recall-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 3,
+            "name": "scifact-map-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 4,
+            "name": "scifact-ndcg-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 5,
+            "name": "scifact-mrr-no-regression",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "mrr",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          }
+        ]
+      }
+    ]
+  },
+  "run_manifests": [
+    {
+      "run_id": 36,
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "code_revision": null,
+      "environment_fingerprint": "edcc553d72fda641362eb58686920b94894ba817b21b3d766fbc7ea487663cf6",
+      "experiment_key": "914cfd64491f4ce09966bb097cf75813",
+      "completed_at": "2026-07-29T13:28:29.895176+00:00"
+    },
+    {
+      "run_id": 35,
+      "pipeline_id": "hybrid",
+      "pipeline_fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "code_revision": null,
+      "environment_fingerprint": "ca3afd50db02a3440d8b224654e5d9ab6cdf1db3824094d8064ff22293789b1a",
+      "experiment_key": "914cfd64491f4ce09966bb097cf75813",
+      "completed_at": "2026-07-29T13:28:07.203091+00:00"
+    },
+    {
+      "run_id": 34,
+      "pipeline_id": "dense",
+      "pipeline_fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "code_revision": null,
+      "environment_fingerprint": "e5a1488999bacb593c2a2aa13dbf8cb44d0d8a16cddb48d802cc007324d5febc",
+      "experiment_key": "914cfd64491f4ce09966bb097cf75813",
+      "completed_at": "2026-07-29T13:27:44.588425+00:00"
+    }
+  ],
+  "cross_checks": {
+    "dataset_provenance_matched": true,
+    "agent_pipeline_fingerprints": [
+      "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8"
+    ],
+    "selected_pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+    "selected_pipeline_matched_agent_evidence": true
+  },
+  "evidence_boundary": {
+    "post_run_snapshot": true,
+    "note": "The Agent report predates embedded selection receipts. This audit re-resolved the same frozen public dataset and verified that every reported Agent pipeline fingerprint equals the current selected evaluation run.",
+    "product_release_approval": false
+  }
+}

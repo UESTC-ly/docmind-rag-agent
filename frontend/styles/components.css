@@ -271,6 +271,68 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+.agent-telemetry {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-alt);
+}
+.agent-telemetry__head,
+.eval-overview__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.agent-telemetry__grid,
+.eval-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.telemetry-card,
+.eval-overview__stat {
+  min-width: 0;
+  padding: var(--space-3);
+  border-left: 2px solid var(--color-line-strong);
+  background: var(--color-surface);
+}
+.telemetry-card span,
+.eval-overview__stat span {
+  display: block;
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+}
+.telemetry-card strong,
+.eval-overview__stat strong {
+  display: block;
+  margin: var(--space-1) 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.telemetry-card small,
+.eval-overview__stat small {
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+}
+.telemetry-status,
+.eval-overview__state {
+  padding: var(--space-1) var(--space-2);
+  border: var(--border);
+  border-radius: 999px;
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.telemetry-status--observed,
+.eval-overview__state--ready {
+  border-color: color-mix(in srgb, var(--color-focus) 55%, var(--color-line));
+  color: var(--color-text);
+}
 .agent-answer .msg__body {
   font-family: var(--font-serif);
   font-size: 1.05rem;
@@ -635,6 +697,18 @@
 }
 
 /* ── 评估看板 ───────────────────────────── */
+.eval-overview {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+}
+.eval-overview h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

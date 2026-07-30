@@ -1,0 +1,2518 @@
+{
+  "contract": "docmind_retrieval_benchmark_v2",
+  "generated_at": "2026-07-30T03:08:37.854508+00:00",
+  "benchmark_fingerprint": "38803ae514f6f7be5a197dcf63546498efcb16560cfeeee72e906fde7dec8cb2",
+  "manifest": {
+    "contract": "docmind_retrieval_benchmark_manifest_v2",
+    "dataset_id": 3,
+    "corpus_fingerprint": "9588f1f3a236b3497c736fcd540d45d64222c87290341511b94ae28b6d7bdb3a",
+    "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126",
+    "source_version": "2018",
+    "split": "validation",
+    "sample_ids": [
+      "DEV_0_QUERY_0",
+      "DEV_0_QUERY_1",
+      "DEV_0_QUERY_2",
+      "DEV_1_QUERY_0",
+      "DEV_1_QUERY_1",
+      "DEV_1_QUERY_2",
+      "DEV_1_QUERY_3",
+      "DEV_2_QUERY_0",
+      "DEV_2_QUERY_1",
+      "DEV_2_QUERY_2",
+      "DEV_3_QUERY_0",
+      "DEV_3_QUERY_1",
+      "DEV_3_QUERY_2",
+      "DEV_3_QUERY_3",
+      "DEV_4_QUERY_0",
+      "DEV_4_QUERY_1",
+      "DEV_4_QUERY_2",
+      "DEV_5_QUERY_0",
+      "DEV_5_QUERY_1",
+      "DEV_5_QUERY_2",
+      "DEV_6_QUERY_0",
+      "DEV_6_QUERY_1",
+      "DEV_6_QUERY_2",
+      "DEV_6_QUERY_3",
+      "DEV_7_QUERY_0",
+      "DEV_7_QUERY_1",
+      "DEV_7_QUERY_2",
+      "DEV_8_QUERY_0",
+      "DEV_8_QUERY_1",
+      "DEV_8_QUERY_2"
+    ],
+    "pipelines": {
+      "dense": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "hybrid": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "hybrid-rerank": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8"
+    },
+    "embedding_model": "qwen3.7-text-embedding",
+    "embedding_dim": 1024,
+    "code_revision": null
+  },
+  "dataset": {
+    "id": 3,
+    "name": "CMRC 2018",
+    "document_id": 5,
+    "sample_count": 30,
+    "source_name": "CMRC 2018",
+    "source_uri": "https://ymcui.com/cmrc2018/",
+    "source_version": "2018",
+    "license_name": "CC BY-SA 4.0",
+    "split": "validation",
+    "corpus_fingerprint": "9588f1f3a236b3497c736fcd540d45d64222c87290341511b94ae28b6d7bdb3a",
+    "source_snapshot_fingerprint": "e9ff283c71fc931ac492317c0b04002194ae0662d112eda9f008e05271c72126",
+    "language": "zh",
+    "domain": "Wikipedia",
+    "task_type": "rag_qa",
+    "label_source": "public_ground_truth",
+    "transform_spec": "{\"contract\":\"cmrc_context_dedupe_v1\",\"corpus_items\":9,\"sample_count\":30}"
+  },
+  "metric_scope": "chunk_retrieval",
+  "metric_scope_note": "该报告只发布 passage/chunk 检索指标；单一虚拟文档语料不会被伪装成 document retrieval 指标。",
+  "pipelines": [
+    {
+      "id": "dense",
+      "fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 1.0,
+      "mrr": 1.0,
+      "recall": 1.0,
+      "precision": 0.2,
+      "map_at_k": 1.0,
+      "ndcg_at_k": 1.0,
+      "badcase_count": 0,
+      "latency_ms": {
+        "mean": 250.285,
+        "p50": 229.448,
+        "p95": 294.826
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 1.0,
+          "mrr": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "map_at_k": 1.0,
+          "ndcg_at_k": 1.0
+        }
+      }
+    },
+    {
+      "id": "hybrid",
+      "fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 1.0,
+      "mrr": 1.0,
+      "recall": 1.0,
+      "precision": 0.2,
+      "map_at_k": 1.0,
+      "ndcg_at_k": 1.0,
+      "badcase_count": 0,
+      "latency_ms": {
+        "mean": 242.172,
+        "p50": 239.678,
+        "p95": 312.269
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 1.0,
+          "mrr": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "map_at_k": 1.0,
+          "ndcg_at_k": 1.0
+        }
+      }
+    },
+    {
+      "id": "hybrid-rerank",
+      "fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "sample_count": 30,
+      "top_k": 5,
+      "hit_rate": 1.0,
+      "mrr": 1.0,
+      "recall": 1.0,
+      "precision": 0.2,
+      "map_at_k": 1.0,
+      "ndcg_at_k": 1.0,
+      "badcase_count": 0,
+      "latency_ms": {
+        "mean": 240.176,
+        "p50": 238.052,
+        "p95": 267.718
+      },
+      "aggregate_verification": {
+        "contract": "retrieval_aggregate_recompute_v1",
+        "passed": true,
+        "recomputed": {
+          "hit_rate": 1.0,
+          "mrr": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "map_at_k": 1.0,
+          "ndcg_at_k": 1.0
+        }
+      }
+    }
+  ],
+  "sample_results": {
+    "dense": [
+      {
+        "sample_id": 131,
+        "external_id": "DEV_0_QUERY_0",
+        "question": "《战国无双3》是由哪两个公司合作开发的？",
+        "retrieved_chunk_ids": [
+          0,
+          8,
+          2,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 698.94,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 132,
+        "external_id": "DEV_0_QUERY_1",
+        "question": "男女主角亦有专属声优这一模式是由谁改编的？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 244.573,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 133,
+        "external_id": "DEV_0_QUERY_2",
+        "question": "战国史模式主打哪两个模式？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 251.094,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 134,
+        "external_id": "DEV_1_QUERY_0",
+        "question": "锣鼓经是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          4,
+          0,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 210.621,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 135,
+        "external_id": "DEV_1_QUERY_1",
+        "question": "锣鼓经常用的节奏型称为什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          6,
+          0,
+          2
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 222.19,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 136,
+        "external_id": "DEV_1_QUERY_2",
+        "question": "锣鼓经运用的程式是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          0,
+          8,
+          4,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 199.687,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 137,
+        "external_id": "DEV_1_QUERY_3",
+        "question": "戏曲锣鼓所运用的敲击乐器主要有什么类型？",
+        "retrieved_chunk_ids": [
+          1,
+          3,
+          8,
+          2,
+          0
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 237.9,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 138,
+        "external_id": "DEV_2_QUERY_0",
+        "question": "广茂铁路全长多少公里？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          5,
+          7,
+          1
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 194.763,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 139,
+        "external_id": "DEV_2_QUERY_1",
+        "question": "广茂铁路由哪家公司管理运营？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          7,
+          5,
+          6
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 234.439,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 140,
+        "external_id": "DEV_2_QUERY_2",
+        "question": "广三铁路在哪年建成？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          0,
+          7,
+          5
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 227.333,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 141,
+        "external_id": "DEV_3_QUERY_0",
+        "question": "大莱龙铁路位于哪里？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 215.356,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 142,
+        "external_id": "DEV_3_QUERY_1",
+        "question": "大莱龙铁路一共投资多少亿元？",
+        "retrieved_chunk_ids": [
+          3,
+          8,
+          2,
+          4,
+          6
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 247.578,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 143,
+        "external_id": "DEV_3_QUERY_2",
+        "question": "大莱龙铁路有什么重要作用？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          1,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 219.272,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 144,
+        "external_id": "DEV_3_QUERY_3",
+        "question": "铁路沿线设有哪些站点？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          7,
+          8,
+          1
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 241.281,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 145,
+        "external_id": "DEV_4_QUERY_0",
+        "question": "莱昂德罗·内托的国籍是哪个国家？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 212.456,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 146,
+        "external_id": "DEV_4_QUERY_1",
+        "question": "莱昂德罗·内托的职业是什么？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 294.826,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 147,
+        "external_id": "DEV_4_QUERY_2",
+        "question": "莱昂德罗·内托曾效力过哪些球队？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 253.958,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 148,
+        "external_id": "DEV_5_QUERY_0",
+        "question": "赵鹏的职业是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 233.365,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 149,
+        "external_id": "DEV_5_QUERY_1",
+        "question": "赵鹏在2014年下半赛季没有出场的原因是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 222.669,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 150,
+        "external_id": "DEV_5_QUERY_2",
+        "question": "赵鹏在哪年入选国家队？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          8,
+          7,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 206.703,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 151,
+        "external_id": "DEV_6_QUERY_0",
+        "question": "邹游的职业是什么？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 215.351,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 152,
+        "external_id": "DEV_6_QUERY_1",
+        "question": "他司职什么位置？",
+        "retrieved_chunk_ids": [
+          6,
+          4,
+          5,
+          7,
+          8
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 225.822,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 153,
+        "external_id": "DEV_6_QUERY_2",
+        "question": "邹游为什么被河南建业挂牌？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          4,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 288.846,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 154,
+        "external_id": "DEV_6_QUERY_3",
+        "question": "邹游效力抚顺新野球队期间身披几号球衣？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 262.973,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 155,
+        "external_id": "DEV_7_QUERY_0",
+        "question": "张世昌的职业是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          6
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 212.82,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 156,
+        "external_id": "DEV_7_QUERY_1",
+        "question": "张世昌出名的原因是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 283.308,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 157,
+        "external_id": "DEV_7_QUERY_2",
+        "question": "张世昌为什么能在2009年中超最后一轮做客深圳时出场？",
+        "retrieved_chunk_ids": [
+          7,
+          8,
+          5,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 262.288,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 158,
+        "external_id": "DEV_8_QUERY_0",
+        "question": "于乐的职业是什么？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 229.448,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 159,
+        "external_id": "DEV_8_QUERY_1",
+        "question": "于乐在哪里出身？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 234.872,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 160,
+        "external_id": "DEV_8_QUERY_2",
+        "question": "于乐在哪一场比赛中一战成名？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 223.813,
+        "badcase_reasons": []
+      }
+    ],
+    "hybrid": [
+      {
+        "sample_id": 131,
+        "external_id": "DEV_0_QUERY_0",
+        "question": "《战国无双3》是由哪两个公司合作开发的？",
+        "retrieved_chunk_ids": [
+          0,
+          8,
+          2,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 217.497,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 132,
+        "external_id": "DEV_0_QUERY_1",
+        "question": "男女主角亦有专属声优这一模式是由谁改编的？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 211.8,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 133,
+        "external_id": "DEV_0_QUERY_2",
+        "question": "战国史模式主打哪两个模式？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 242.399,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 134,
+        "external_id": "DEV_1_QUERY_0",
+        "question": "锣鼓经是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          4,
+          0,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 234.123,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 135,
+        "external_id": "DEV_1_QUERY_1",
+        "question": "锣鼓经常用的节奏型称为什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          6,
+          0,
+          2
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 208.192,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 136,
+        "external_id": "DEV_1_QUERY_2",
+        "question": "锣鼓经运用的程式是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          0,
+          8,
+          4,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 239.678,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 137,
+        "external_id": "DEV_1_QUERY_3",
+        "question": "戏曲锣鼓所运用的敲击乐器主要有什么类型？",
+        "retrieved_chunk_ids": [
+          1,
+          3,
+          8,
+          2,
+          0
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 249.791,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 138,
+        "external_id": "DEV_2_QUERY_0",
+        "question": "广茂铁路全长多少公里？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          5,
+          7,
+          1
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 246.187,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 139,
+        "external_id": "DEV_2_QUERY_1",
+        "question": "广茂铁路由哪家公司管理运营？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          7,
+          5,
+          6
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 250.904,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 140,
+        "external_id": "DEV_2_QUERY_2",
+        "question": "广三铁路在哪年建成？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          0,
+          7,
+          5
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 210.691,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 141,
+        "external_id": "DEV_3_QUERY_0",
+        "question": "大莱龙铁路位于哪里？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 212.664,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 142,
+        "external_id": "DEV_3_QUERY_1",
+        "question": "大莱龙铁路一共投资多少亿元？",
+        "retrieved_chunk_ids": [
+          3,
+          8,
+          2,
+          4,
+          6
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 219.633,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 143,
+        "external_id": "DEV_3_QUERY_2",
+        "question": "大莱龙铁路有什么重要作用？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          1,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 217.405,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 144,
+        "external_id": "DEV_3_QUERY_3",
+        "question": "铁路沿线设有哪些站点？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          7,
+          8,
+          1
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 248.863,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 145,
+        "external_id": "DEV_4_QUERY_0",
+        "question": "莱昂德罗·内托的国籍是哪个国家？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 218.76,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 146,
+        "external_id": "DEV_4_QUERY_1",
+        "question": "莱昂德罗·内托的职业是什么？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 217.036,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 147,
+        "external_id": "DEV_4_QUERY_2",
+        "question": "莱昂德罗·内托曾效力过哪些球队？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 209.513,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 148,
+        "external_id": "DEV_5_QUERY_0",
+        "question": "赵鹏的职业是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 436.93,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 149,
+        "external_id": "DEV_5_QUERY_1",
+        "question": "赵鹏在2014年下半赛季没有出场的原因是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 241.45,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 150,
+        "external_id": "DEV_5_QUERY_2",
+        "question": "赵鹏在哪年入选国家队？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          8,
+          7,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 205.611,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 151,
+        "external_id": "DEV_6_QUERY_0",
+        "question": "邹游的职业是什么？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 263.646,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 152,
+        "external_id": "DEV_6_QUERY_1",
+        "question": "他司职什么位置？",
+        "retrieved_chunk_ids": [
+          6,
+          4,
+          5,
+          7,
+          8
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 241.393,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 153,
+        "external_id": "DEV_6_QUERY_2",
+        "question": "邹游为什么被河南建业挂牌？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          4,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 269.877,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 154,
+        "external_id": "DEV_6_QUERY_3",
+        "question": "邹游效力抚顺新野球队期间身披几号球衣？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 312.269,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 155,
+        "external_id": "DEV_7_QUERY_0",
+        "question": "张世昌的职业是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          6
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 244.112,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 156,
+        "external_id": "DEV_7_QUERY_1",
+        "question": "张世昌出名的原因是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 229.936,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 157,
+        "external_id": "DEV_7_QUERY_2",
+        "question": "张世昌为什么能在2009年中超最后一轮做客深圳时出场？",
+        "retrieved_chunk_ids": [
+          7,
+          8,
+          5,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 224.188,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 158,
+        "external_id": "DEV_8_QUERY_0",
+        "question": "于乐的职业是什么？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 239.891,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 159,
+        "external_id": "DEV_8_QUERY_1",
+        "question": "于乐在哪里出身？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 253.337,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 160,
+        "external_id": "DEV_8_QUERY_2",
+        "question": "于乐在哪一场比赛中一战成名？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 247.385,
+        "badcase_reasons": []
+      }
+    ],
+    "hybrid-rerank": [
+      {
+        "sample_id": 131,
+        "external_id": "DEV_0_QUERY_0",
+        "question": "《战国无双3》是由哪两个公司合作开发的？",
+        "retrieved_chunk_ids": [
+          0,
+          8,
+          2,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 220.125,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 132,
+        "external_id": "DEV_0_QUERY_1",
+        "question": "男女主角亦有专属声优这一模式是由谁改编的？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 257.638,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 133,
+        "external_id": "DEV_0_QUERY_2",
+        "question": "战国史模式主打哪两个模式？",
+        "retrieved_chunk_ids": [
+          0,
+          1,
+          8,
+          6,
+          7
+        ],
+        "relevant_chunk_ids": [
+          0
+        ],
+        "chunk_qrels": {
+          "0": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 233.906,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 134,
+        "external_id": "DEV_1_QUERY_0",
+        "question": "锣鼓经是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          4,
+          0,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 238.052,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 135,
+        "external_id": "DEV_1_QUERY_1",
+        "question": "锣鼓经常用的节奏型称为什么？",
+        "retrieved_chunk_ids": [
+          1,
+          8,
+          6,
+          0,
+          2
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 260.49,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 136,
+        "external_id": "DEV_1_QUERY_2",
+        "question": "锣鼓经运用的程式是什么？",
+        "retrieved_chunk_ids": [
+          1,
+          0,
+          8,
+          4,
+          3
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 210.498,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 137,
+        "external_id": "DEV_1_QUERY_3",
+        "question": "戏曲锣鼓所运用的敲击乐器主要有什么类型？",
+        "retrieved_chunk_ids": [
+          1,
+          3,
+          8,
+          2,
+          0
+        ],
+        "relevant_chunk_ids": [
+          1
+        ],
+        "chunk_qrels": {
+          "1": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 227.941,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 138,
+        "external_id": "DEV_2_QUERY_0",
+        "question": "广茂铁路全长多少公里？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          5,
+          7,
+          1
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 252.914,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 139,
+        "external_id": "DEV_2_QUERY_1",
+        "question": "广茂铁路由哪家公司管理运营？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          7,
+          5,
+          6
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 251.508,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 140,
+        "external_id": "DEV_2_QUERY_2",
+        "question": "广三铁路在哪年建成？",
+        "retrieved_chunk_ids": [
+          2,
+          3,
+          0,
+          7,
+          5
+        ],
+        "relevant_chunk_ids": [
+          2
+        ],
+        "chunk_qrels": {
+          "2": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 229.976,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 141,
+        "external_id": "DEV_3_QUERY_0",
+        "question": "大莱龙铁路位于哪里？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 219.119,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 142,
+        "external_id": "DEV_3_QUERY_1",
+        "question": "大莱龙铁路一共投资多少亿元？",
+        "retrieved_chunk_ids": [
+          3,
+          8,
+          2,
+          4,
+          6
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 240.857,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 143,
+        "external_id": "DEV_3_QUERY_2",
+        "question": "大莱龙铁路有什么重要作用？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          8,
+          1,
+          4
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 241.818,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 144,
+        "external_id": "DEV_3_QUERY_3",
+        "question": "铁路沿线设有哪些站点？",
+        "retrieved_chunk_ids": [
+          3,
+          2,
+          7,
+          8,
+          1
+        ],
+        "relevant_chunk_ids": [
+          3
+        ],
+        "chunk_qrels": {
+          "3": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 225.054,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 145,
+        "external_id": "DEV_4_QUERY_0",
+        "question": "莱昂德罗·内托的国籍是哪个国家？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 239.122,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 146,
+        "external_id": "DEV_4_QUERY_1",
+        "question": "莱昂德罗·内托的职业是什么？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 252.306,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 147,
+        "external_id": "DEV_4_QUERY_2",
+        "question": "莱昂德罗·内托曾效力过哪些球队？",
+        "retrieved_chunk_ids": [
+          4,
+          8,
+          6,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          4
+        ],
+        "chunk_qrels": {
+          "4": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 259.887,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 148,
+        "external_id": "DEV_5_QUERY_0",
+        "question": "赵鹏的职业是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 230.858,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 149,
+        "external_id": "DEV_5_QUERY_1",
+        "question": "赵鹏在2014年下半赛季没有出场的原因是什么？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          7,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 276.051,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 150,
+        "external_id": "DEV_5_QUERY_2",
+        "question": "赵鹏在哪年入选国家队？",
+        "retrieved_chunk_ids": [
+          5,
+          6,
+          8,
+          7,
+          4
+        ],
+        "relevant_chunk_ids": [
+          5
+        ],
+        "chunk_qrels": {
+          "5": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 221.792,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 151,
+        "external_id": "DEV_6_QUERY_0",
+        "question": "邹游的职业是什么？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 260.455,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 152,
+        "external_id": "DEV_6_QUERY_1",
+        "question": "他司职什么位置？",
+        "retrieved_chunk_ids": [
+          6,
+          4,
+          5,
+          7,
+          8
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 237.872,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 153,
+        "external_id": "DEV_6_QUERY_2",
+        "question": "邹游为什么被河南建业挂牌？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          4,
+          5,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 212.561,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 154,
+        "external_id": "DEV_6_QUERY_3",
+        "question": "邹游效力抚顺新野球队期间身披几号球衣？",
+        "retrieved_chunk_ids": [
+          6,
+          8,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          6
+        ],
+        "chunk_qrels": {
+          "6": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 248.86,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 155,
+        "external_id": "DEV_7_QUERY_0",
+        "question": "张世昌的职业是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          6
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 267.718,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 156,
+        "external_id": "DEV_7_QUERY_1",
+        "question": "张世昌出名的原因是什么？",
+        "retrieved_chunk_ids": [
+          7,
+          1,
+          0,
+          8,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 228.696,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 157,
+        "external_id": "DEV_7_QUERY_2",
+        "question": "张世昌为什么能在2009年中超最后一轮做客深圳时出场？",
+        "retrieved_chunk_ids": [
+          7,
+          8,
+          5,
+          6,
+          4
+        ],
+        "relevant_chunk_ids": [
+          7
+        ],
+        "chunk_qrels": {
+          "7": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 220.024,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 158,
+        "external_id": "DEV_8_QUERY_0",
+        "question": "于乐的职业是什么？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 264.623,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 159,
+        "external_id": "DEV_8_QUERY_1",
+        "question": "于乐在哪里出身？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 231.654,
+        "badcase_reasons": []
+      },
+      {
+        "sample_id": 160,
+        "external_id": "DEV_8_QUERY_2",
+        "question": "于乐在哪一场比赛中一战成名？",
+        "retrieved_chunk_ids": [
+          8,
+          6,
+          5,
+          4,
+          7
+        ],
+        "relevant_chunk_ids": [
+          8
+        ],
+        "chunk_qrels": {
+          "8": 1
+        },
+        "hit": 1,
+        "reciprocal_rank": 1.0,
+        "recall_at_k": 1.0,
+        "precision_at_k": 0.2,
+        "average_precision_at_k": 1.0,
+        "ndcg_at_k": 1.0,
+        "latency_ms": 242.897,
+        "badcase_reasons": []
+      }
+    ]
+  },
+  "badcases": {
+    "dense": [],
+    "hybrid": [],
+    "hybrid-rerank": []
+  }
+}

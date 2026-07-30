@@ -19,6 +19,10 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 
 from app.config import settings
+from app.services.provider_telemetry import (
+    record_provider_attempt,
+    record_provider_response,
+)
 
 _client = OpenAI(
     api_key=settings.openai_api_key,
@@ -61,8 +65,19 @@ def _aggregate_stream(stream) -> ChatCompletionMessage:
     content_parts: list[str] = []
     # index -> {"id", "name", "arguments"}
     tool_calls: dict[int, dict] = {}
+    usage: dict[str, Any] | None = None
+    model: str | None = None
 
     for chunk in stream:
+        raw_model = getattr(chunk, "model", None)
+        if isinstance(raw_model, str) and raw_model.strip():
+            model = raw_model.strip()
+        raw_usage = getattr(chunk, "usage", None)
+        if raw_usage is not None:
+            if hasattr(raw_usage, "model_dump"):
+                usage = raw_usage.model_dump(exclude_none=True)
+            elif isinstance(raw_usage, dict):
+                usage = raw_usage
         if not chunk.choices:
             continue
         delta = chunk.choices[0].delta
@@ -79,6 +94,12 @@ def _aggregate_stream(stream) -> ChatCompletionMessage:
             if tc.function and tc.function.arguments:
                 slot["arguments"] += tc.function.arguments
 
+    telemetry_payload: dict[str, Any] = {}
+    if usage is not None:
+        telemetry_payload["usage"] = usage
+    if model is not None:
+        telemetry_payload["model"] = model
+    record_provider_response(telemetry_payload)
     return _build_message(
         "".join(content_parts) or None,
         [
@@ -116,6 +137,10 @@ def _post_nonstream_with_retries(payload: dict[str, Any]) -> httpx.Response:
 
     retry_count = max(0, int(settings.openai_max_retries))
     for attempt in range(retry_count + 1):
+        record_provider_attempt(
+            retry=attempt > 0,
+            model=str(payload.get("model") or ""),
+        )
         try:
             response = httpx.post(
                 _chat_completion_endpoint(),
@@ -155,6 +180,9 @@ def _nonstream_chat_completion(
 
     response = _post_nonstream_with_retries(payload)
     body = response.json()
+    if not isinstance(body, dict):
+        raise ValueError("OpenAI-compatible response must be a JSON object")
+    record_provider_response(body)
     try:
         message = body["choices"][0]["message"]
     except (IndexError, KeyError, TypeError) as exc:
@@ -218,6 +246,7 @@ def chat_completion(
         kwargs["tools"] = tools
         kwargs["tool_choice"] = tool_choice
 
+    record_provider_attempt(model=settings.chat_model)
     response = _client.chat.completions.create(**kwargs)
     return _aggregate_stream(response)
 
@@ -242,12 +271,32 @@ def chat_completion_stream(messages: list[dict], temperature: float = 0.3):
     }
     if settings.openai_send_temperature:
         kwargs["temperature"] = temperature
+    record_provider_attempt(model=settings.chat_model)
     response = _client.chat.completions.create(
         **kwargs,
     )
-    for chunk in response:
-        if not chunk.choices:
-            continue
-        delta = chunk.choices[0].delta
-        if delta.content:
-            yield delta.content
+    usage: dict[str, Any] | None = None
+    model: str | None = None
+    try:
+        for chunk in response:
+            raw_model = getattr(chunk, "model", None)
+            if isinstance(raw_model, str) and raw_model.strip():
+                model = raw_model.strip()
+            raw_usage = getattr(chunk, "usage", None)
+            if raw_usage is not None:
+                if hasattr(raw_usage, "model_dump"):
+                    usage = raw_usage.model_dump(exclude_none=True)
+                elif isinstance(raw_usage, dict):
+                    usage = raw_usage
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+            if delta.content:
+                yield delta.content
+    finally:
+        telemetry_payload: dict[str, Any] = {}
+        if usage is not None:
+            telemetry_payload["usage"] = usage
+        if model is not None:
+            telemetry_payload["model"] = model
+        record_provider_response(telemetry_payload)

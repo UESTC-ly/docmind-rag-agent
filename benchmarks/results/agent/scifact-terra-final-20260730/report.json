@@ -1,0 +1,2953 @@
+{
+  "contract": "agent_benchmark_v3",
+  "release_eligible": true,
+  "release_evidence_eligible": true,
+  "release_gate_passed": true,
+  "provenance": {
+    "source_name": "SciFact",
+    "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+    "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+    "license_name": "CC BY-SA 4.0",
+    "split": "test",
+    "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+    "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d",
+    "transform_spec": {
+      "contract": "beir_standard_v1",
+      "corpus_items": 5183,
+      "sample_count": 100,
+      "note": "公开 SciFact 快照；运行时由 fingerprint 解析本机 document_id。"
+    }
+  },
+  "suite_fingerprint": "6bfec5888d5471dfc1a500ad3711ad67368d66cc04eacdf10b3c2c182e0f11c7",
+  "metrics": {
+    "contract": "agent_eval_v1",
+    "case_count": 2,
+    "task_success_rate": 1.0,
+    "verified_task_completion_rate": 1.0,
+    "mean_plan_completion_rate": 1.0,
+    "mean_tool_selection_recall": 1.0,
+    "mean_tool_selection_precision": 0.666667,
+    "mean_artifact_completion_rate": 1.0,
+    "mean_verified_artifact_rate": 1.0,
+    "mean_quality_adaptation_count": 2.0,
+    "mean_human_intervention_count": 0.0,
+    "mean_recovery_event_count": 0.0,
+    "mean_latency_seconds": 227.192005,
+    "p95_latency_seconds": 273.835706,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 101184.0,
+      "output_tokens": 20099.0,
+      "total_tokens": 121283.0,
+      "request_count": 23.0,
+      "retry_count": 0.0,
+      "response_count": 23.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 23.0,
+      "retry_count": 0.0,
+      "response_count": 23.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 23.0,
+      "response_count": 23.0
+    },
+    "failure_class_counts": {
+      "passed": 2
+    },
+    "failed_case_ids": [],
+    "cases": [
+      {
+        "case_id": "scifact-claim-5-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 273.835706,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 58307.0,
+          "output_tokens": 12178.0,
+          "total_tokens": 70485.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      {
+        "case_id": "scifact-claim-49-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 180.548305,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 42877.0,
+          "output_tokens": 7921.0,
+          "total_tokens": 50798.0,
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 11,
+          "response_count": 11,
+          "observed_response_count": 11
+        }
+      }
+    ]
+  },
+  "performance": {
+    "contract": "agent_performance_v1",
+    "configured_concurrency": 1,
+    "max_observed_in_flight": 1,
+    "wall_time_seconds": 454.384599,
+    "throughput_cases_per_second": 0.004402,
+    "provider_usage": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "input_tokens": 101184.0,
+      "output_tokens": 20099.0,
+      "total_tokens": 121283.0,
+      "request_count": 23.0,
+      "retry_count": 0.0,
+      "response_count": 23.0
+    },
+    "provider_cost": {
+      "status": "unavailable",
+      "observed_case_count": 0,
+      "case_count": 2,
+      "reason": "No Agent case exposed provider cost with a currency.",
+      "request_count": 23.0,
+      "retry_count": 0.0,
+      "response_count": 23.0
+    },
+    "provider_model": {
+      "status": "observed",
+      "observed_case_count": 2,
+      "case_count": 2,
+      "configured_request_models": [
+        "gpt-5.6-terra"
+      ],
+      "provider_reported_models": [
+        "gpt-5.6-terra"
+      ],
+      "request_count": 23.0,
+      "response_count": 23.0
+    }
+  },
+  "evidence": [
+    {
+      "case_id": "scifact-claim-5-verified-report",
+      "source_sample_id": "scifact:test:query-5",
+      "request": {
+        "message": "基于当前 SciFact 公开语料，围绕异常 PrP 阳性率生成逐结论有依据的研究报告。自主选择经过公开回归评测的 RAG 管线，不足时明确拒绝。",
+        "document_id": 3,
+        "run_id": "agent-eval-scifact-claim-5-verified-report-ae29fd5608"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "max_interventions": 0,
+        "id": "scifact-claim-5-verified-report"
+      },
+      "score": {
+        "case_id": "scifact-claim-5-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 273.835706,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 58307.0,
+          "output_tokens": 12178.0,
+          "total_tokens": 70485.0,
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 12,
+          "response_count": 12,
+          "observed_response_count": 12
+        }
+      },
+      "result": {
+        "conversation_id": 52,
+        "run_id": "agent-eval-scifact-claim-5-verified-report-ae29fd5608",
+        "thread_id": "agent-eval-scifact-claim-5-verified-report-ae29fd5608",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**《异常 PrP 阳性率：基于 SciFact 公开语料的逐结论证据研究报告》**，正文及可下载文件已在产出物中提供。\n\n本次报告使用经同一 SciFact 公开数据集评测并通过回归门禁的 **`hybrid-rerank`** RAG 管线（approved）。其公开评测指标包括：nDCG@k 0.7522、MAP@k 0.7101、Recall@k 0.8552、MRR 0.7305；命中率、召回率、MAP、nDCG、MRR 的回归门禁均已通过。\n\n报告已完成逐句引用校验和一次自动修复；缺乏有效证据支撑的表述已移除。核心证据包括：32,441 份英国阑尾标本中有 16 份异常 PrP 阳性，估计总体患病率为**每百万人 493 例**（95% CI：282–801）。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "异常 PrP 阳性率：基于 SciFact 公开语料的逐结论证据研究报告",
+            "document_id": 3,
+            "outline": [
+              {
+                "title": "异常 PrP 阳性率的定义、检测方法与判定标准",
+                "query": "What definitions, assays, and diagnostic thresholds are used to determine abnormal prion protein (PrP) positivity in human or animal samples?"
+              },
+              {
+                "title": "异常 PrP 阳性率的流行病学估计与人群差异",
+                "query": "What prevalence estimates have been reported for abnormal PrP positivity, and how do they vary by population, geography, tissue type, age, or exposure risk?"
+              },
+              {
+                "title": "异常 PrP 阳性结果的证据质量、局限性与临床公共卫生意义",
+                "query": "What evidence supports the validity and interpretation of abnormal PrP positive results, including false positives, assay limitations, infectivity implications, and public health relevance?"
+              }
+            ],
+            "content": "# 异常 PrP 阳性率：基于 SciFact 公开语料的逐结论证据研究报告\n\n## 异常 PrP 阳性率的定义、检测方法与判定标准\n\n- 朊病毒主要由错误折叠的朊蛋白 PrPSc 构成。 [D3:C3204]\n- RT-QuIC 可检出 CJD 患者脑脊液中的朊病毒种子。  [D3:C552]\n- 自动化 PMCA 经 140 个循环可使灵敏度较标准检测方法提高 6,600 倍。 [D3:C3204]\n- 两轮连续 PMCA 可使灵敏度提高 1,000 万倍，并可检出低至约 8,000 个 PrPSc 等效分子。 [D3:C3204]\n\n## 异常 PrP 阳性率的流行病学估计与人群差异\n\n- 英国41家医院及其他医院来源的32,441份福尔马林固定、石蜡包埋阑尾标本中，16份异常 PrP 阳性，对应总体患病率估计为每百万人493例（95%置信区间：282–801）。 [D3:C2232]\n- 两组差异未达到统计学显著性。 [D3:C2232]\n- 该阑尾调查中，异常 PrP 患病率在两性之间相近，并且在三个宽泛地理区域之间相近。 [D3:C2232]\n- 这与已确诊临床 vCJD 病例均为该位点蛋氨酸纯合的情况形成对比。 [D3:C2232]\n\n## 异常 PrP 阳性结果的证据质量、局限性与临床公共卫生意义\n\n- 该性能数据来自动物血液样本。 [D3:C3204]\n- 改良 RT-QuIC 在48份散发性 CJD 患者脑脊液样本中检出46份阳性，而39份非 CJD 患者样本均为阴性，诊断敏感度为95.8%、特异度为100%。 [D3:C552]\n- 该研究同时将这一结果与截至当时177例 vCJD 临床病例相比较。 [D3:C2232]\n- 该阑尾调查指出，其结果对血液及血液制品管理以及手术器械处理具有重要意义。 [D3:C2232]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 3
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "异常 PrP 阳性率的定义、检测方法与判定标准",
+                  "query": "What definitions, assays, and diagnostic thresholds are used to determine abnormal prion protein (PrP) positivity in human or animal samples?",
+                  "original_query": "What definitions, assays, and diagnostic thresholds are used to determine abnormal prion protein (PrP) positivity in human or animal samples?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 2
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 22
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "异常 PrP 阳性率的流行病学估计与人群差异",
+                  "query": "What prevalence estimates have been reported for abnormal PrP positivity, and how do they vary by population, geography, tissue type, age, or exposure risk?",
+                  "original_query": "What prevalence estimates have been reported for abnormal PrP positivity, and how do they vary by population, geography, tissue type, age, or exposure risk?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 20
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 39
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "异常 PrP 阳性结果的证据质量、局限性与临床公共卫生意义",
+                  "query": "What evidence supports the validity and interpretation of abnormal PrP positive results, including false positives, assay limitations, infectivity implications, and public health relevance?",
+                  "original_query": "What evidence supports the validity and interpretation of abnormal PrP positive results, including false positives, assay limitations, infectivity implications, and public health relevance?",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 1025
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 2,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.857143,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 6
+                },
+                {
+                  "step": "prune_irrelevant_citations",
+                  "status": "failed",
+                  "removed_link_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "12/12 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 12,
+                "supported_claim_count": 12,
+                "unsupported_claim_count": 0,
+                "citation_count": 12,
+                "valid_citation_count": 12,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "朊病毒主要由错误折叠的朊蛋白 PrPSc 构成。 [D3:C3204]",
+                    "citations": [
+                      "D3:C3204"
+                    ],
+                    "valid_citations": [
+                      "D3:C3204"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0625,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C3204",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接说明朊病毒主要由错误折叠的朊蛋白PrPSc构成。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "RT-QuIC 可检出 CJD 患者脑脊液中的朊病毒种子。  [D3:C552]",
+                    "citations": [
+                      "D3:C552"
+                    ],
+                    "valid_citations": [
+                      "D3:C552"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.166667,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C552",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确称RT-QuIC可检测CJD患者脑脊液标本中的朊病毒种子。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "自动化 PMCA 经 140 个循环可使灵敏度较标准检测方法提高 6,600 倍。 [D3:C3204]",
+                    "citations": [
+                      "D3:C3204"
+                    ],
+                    "valid_citations": [
+                      "D3:C3204"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.153846,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C3204",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接报告140个PMCA循环使灵敏度较标准检测方法提高6,600倍。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "两轮连续 PMCA 可使灵敏度提高 1,000 万倍，并可检出低至约 8,000 个 PrPSc 等效分子。 [D3:C3204]",
+                    "citations": [
+                      "D3:C3204"
+                    ],
+                    "valid_citations": [
+                      "D3:C3204"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.137931,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C3204",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接报告两轮连续PMCA使灵敏度提高1,000万倍，并可检出低至8,000个PrPSc等效分子。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "英国41家医院及其他医院来源的32,441份福尔马林固定、石蜡包埋阑尾标本中，16份异常 PrP 阳性，对应总体患病率估计为每百万人493例（95%置信区间：282–801）。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.152542,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接给出41家英国医院及其他医院来源、32,441份标本、16份阳性以及493/百万人和95%置信区间282–801的结果。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "两组差异未达到统计学显著性。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确称1941–60年出生组与1961–1985年出生组的患病率差异不显著。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "该阑尾调查中，异常 PrP 患病率在两性之间相近，并且在三个宽泛地理区域之间相近。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.034483,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确称患病率在两性及三个宽泛地理区域之间相近。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "这与已确诊临床 vCJD 病例均为该位点蛋氨酸纯合的情况形成对比。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.037037,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确指出，这与已确诊临床vCJD病例在PRNP密码子129位点均为蛋氨酸纯合形成鲜明对比。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "该性能数据来自动物血液样本。 [D3:C3204]",
+                    "citations": [
+                      "D3:C3204"
+                    ],
+                    "valid_citations": [
+                      "D3:C3204"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C3204",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据所报告的89%灵敏度和100%特异度检测结果来自患痒病仓鼠的血液样本。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "改良 RT-QuIC 在48份散发性 CJD 患者脑脊液样本中检出46份阳性，而39份非 CJD 患者样本均为阴性，诊断敏感度为95.8%、特异度为100%。 [D3:C552]",
+                    "citations": [
+                      "D3:C552"
+                    ],
+                    "valid_citations": [
+                      "D3:C552"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.230769,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C552",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接报告48份散发性CJD脑脊液中46份阳性、39份非CJD样本均阴性，以及95.8%敏感度和100%特异度。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "该研究同时将这一结果与截至当时177例 vCJD 临床病例相比较。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.086957,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据结论部分明确将异常PrP感染/携带者状态的估计与截至当时177例vCJD病例相比较。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "该阑尾调查指出，其结果对血液及血液制品管理以及手术器械处理具有重要意义。 [D3:C2232]",
+                    "citations": [
+                      "D3:C2232"
+                    ],
+                    "valid_citations": [
+                      "D3:C2232"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.0,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C2232",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确称这些发现对血液和血液制品管理及手术器械处理具有重要意义。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "979706338f049cd1f369bb04719c9d4ba26018fa2e7a44f5c0eb2e877b017910",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 12,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 0
+                }
+              },
+              "claim_count": 12,
+              "supported_claim_count": 12,
+              "unsupported_claim_count": 0,
+              "citation_count": 12,
+              "valid_citation_count": 12,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "979706338f049cd1f369bb04719c9d4ba26018fa2e7a44f5c0eb2e877b017910",
+              "claim_state_counts": {
+                "supported": 12,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              },
+              "claims": [
+                {
+                  "text": "朊病毒主要由错误折叠的朊蛋白 PrPSc 构成。 [D3:C3204]",
+                  "citations": [
+                    "D3:C3204"
+                  ],
+                  "valid_citations": [
+                    "D3:C3204"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0625,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C3204",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接说明朊病毒主要由错误折叠的朊蛋白PrPSc构成。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "RT-QuIC 可检出 CJD 患者脑脊液中的朊病毒种子。  [D3:C552]",
+                  "citations": [
+                    "D3:C552"
+                  ],
+                  "valid_citations": [
+                    "D3:C552"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.166667,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C552",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确称RT-QuIC可检测CJD患者脑脊液标本中的朊病毒种子。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "自动化 PMCA 经 140 个循环可使灵敏度较标准检测方法提高 6,600 倍。 [D3:C3204]",
+                  "citations": [
+                    "D3:C3204"
+                  ],
+                  "valid_citations": [
+                    "D3:C3204"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.153846,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C3204",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接报告140个PMCA循环使灵敏度较标准检测方法提高6,600倍。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "两轮连续 PMCA 可使灵敏度提高 1,000 万倍，并可检出低至约 8,000 个 PrPSc 等效分子。 [D3:C3204]",
+                  "citations": [
+                    "D3:C3204"
+                  ],
+                  "valid_citations": [
+                    "D3:C3204"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.137931,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C3204",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接报告两轮连续PMCA使灵敏度提高1,000万倍，并可检出低至8,000个PrPSc等效分子。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "英国41家医院及其他医院来源的32,441份福尔马林固定、石蜡包埋阑尾标本中，16份异常 PrP 阳性，对应总体患病率估计为每百万人493例（95%置信区间：282–801）。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.152542,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接给出41家英国医院及其他医院来源、32,441份标本、16份阳性以及493/百万人和95%置信区间282–801的结果。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "两组差异未达到统计学显著性。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确称1941–60年出生组与1961–1985年出生组的患病率差异不显著。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "该阑尾调查中，异常 PrP 患病率在两性之间相近，并且在三个宽泛地理区域之间相近。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.034483,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确称患病率在两性及三个宽泛地理区域之间相近。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "这与已确诊临床 vCJD 病例均为该位点蛋氨酸纯合的情况形成对比。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.037037,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确指出，这与已确诊临床vCJD病例在PRNP密码子129位点均为蛋氨酸纯合形成鲜明对比。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "该性能数据来自动物血液样本。 [D3:C3204]",
+                  "citations": [
+                    "D3:C3204"
+                  ],
+                  "valid_citations": [
+                    "D3:C3204"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C3204",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据所报告的89%灵敏度和100%特异度检测结果来自患痒病仓鼠的血液样本。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "改良 RT-QuIC 在48份散发性 CJD 患者脑脊液样本中检出46份阳性，而39份非 CJD 患者样本均为阴性，诊断敏感度为95.8%、特异度为100%。 [D3:C552]",
+                  "citations": [
+                    "D3:C552"
+                  ],
+                  "valid_citations": [
+                    "D3:C552"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.230769,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C552",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接报告48份散发性CJD脑脊液中46份阳性、39份非CJD样本均阴性，以及95.8%敏感度和100%特异度。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "该研究同时将这一结果与截至当时177例 vCJD 临床病例相比较。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.086957,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据结论部分明确将异常PrP感染/携带者状态的估计与截至当时177例vCJD病例相比较。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "该阑尾调查指出，其结果对血液及血液制品管理以及手术器械处理具有重要意义。 [D3:C2232]",
+                  "citations": [
+                    "D3:C2232"
+                  ],
+                  "valid_citations": [
+                    "D3:C2232"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.0,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C2232",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确称这些发现对血液和血液制品管理及手术器械处理具有重要意义。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D3:C3204",
+                  "document_id": 3,
+                  "chunk_index": 3204,
+                  "score": 0.78,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/3204",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C285",
+                  "document_id": 3,
+                  "chunk_index": 285,
+                  "score": 0.72903732,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/285",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C2232",
+                  "document_id": 3,
+                  "chunk_index": 2232,
+                  "score": 0.70725514,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/2232",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C552",
+                  "document_id": 3,
+                  "chunk_index": 552,
+                  "score": 0.68121267,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/552",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C1069",
+                  "document_id": 3,
+                  "chunk_index": 1069,
+                  "score": 0.64,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/1069",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C3416",
+                  "document_id": 3,
+                  "chunk_index": 3416,
+                  "score": 0.71458076,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/3416",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C2862",
+                  "document_id": 3,
+                  "chunk_index": 2862,
+                  "score": 0.35816766,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/2862",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C3949",
+                  "document_id": 3,
+                  "chunk_index": 3949,
+                  "score": 0.34165205,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/3949",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C3406",
+                  "document_id": 3,
+                  "chunk_index": 3406,
+                  "score": 0.54300415,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/3406",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1695,
+              "content_sha256": "f7ab21097c733ef75d55de226b8815ccfff60a72d6e0b78a08835278a68cdc4b"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 3,
+              "query": "异常 PrP 阳性率（abnormal PrP positivity rate）的研究结论、样本比例、证据来源及限定条件"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D3:C2232",
+                  "document_id": 3,
+                  "chunk_index": 2232,
+                  "score": 0.7148
+                },
+                {
+                  "citation_id": "D3:C2862",
+                  "document_id": 3,
+                  "chunk_index": 2862,
+                  "score": 0.5555
+                },
+                {
+                  "citation_id": "D3:C3204",
+                  "document_id": 3,
+                  "chunk_index": 3204,
+                  "score": 0.4931
+                },
+                {
+                  "citation_id": "D3:C285",
+                  "document_id": 3,
+                  "chunk_index": 285,
+                  "score": 0.4597
+                },
+                {
+                  "citation_id": "D3:C3406",
+                  "document_id": 3,
+                  "chunk_index": 3406,
+                  "score": 0.4374
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 1,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 3,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 3,
+              "topic": "异常 PrP 阳性率：基于 SciFact 公开语料的逐结论证据研究报告"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D3:C3204",
+                  "document_id": 3,
+                  "chunk_index": 3204,
+                  "score": 0.78
+                },
+                {
+                  "citation_id": "D3:C285",
+                  "document_id": 3,
+                  "chunk_index": 285,
+                  "score": 0.72903732
+                },
+                {
+                  "citation_id": "D3:C2232",
+                  "document_id": 3,
+                  "chunk_index": 2232,
+                  "score": 0.70725514
+                },
+                {
+                  "citation_id": "D3:C552",
+                  "document_id": 3,
+                  "chunk_index": 552,
+                  "score": 0.68121267
+                },
+                {
+                  "citation_id": "D3:C1069",
+                  "document_id": 3,
+                  "chunk_index": 1069,
+                  "score": 0.64
+                },
+                {
+                  "citation_id": "D3:C3416",
+                  "document_id": 3,
+                  "chunk_index": 3416,
+                  "score": 0.71458076
+                },
+                {
+                  "citation_id": "D3:C2862",
+                  "document_id": 3,
+                  "chunk_index": 2862,
+                  "score": 0.35816766
+                },
+                {
+                  "citation_id": "D3:C3949",
+                  "document_id": 3,
+                  "chunk_index": 3949,
+                  "score": 0.34165205
+                },
+                {
+                  "citation_id": "D3:C3406",
+                  "document_id": 3,
+                  "chunk_index": 3406,
+                  "score": 0.54300415
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 12,
+              "supported_claim_count": 12,
+              "unsupported_claim_count": 0,
+              "citation_count": 12,
+              "valid_citation_count": 12,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "979706338f049cd1f369bb04719c9d4ba26018fa2e7a44f5c0eb2e877b017910",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 12,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 0
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 SciFact 公开语料，围绕异常 PrP 阳性率生成一份逐结论具备可核验证据的研究报告，并仅使用通过同数据集公开回归评测门禁的 RAG 管线。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择并验证适用于 SciFact 的经过公开回归评测的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回与当前 SciFact 语料及管线指纹匹配的 selected.pipeline_id，并提供可复现公开评测与 badcase 回归门禁依据；若不存在满足条件的管线，则明确拒绝生成报告且不进入后续步骤。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "生成异常 PrP 阳性率的逐结论证据研究报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "仅在上一步获得合格 selected.pipeline_id 时执行，并将该 pipeline_id 传入；报告基于当前文档 ID 3 所在 SciFact 知识库，覆盖异常 PrP 阳性率相关结论、证据来源与限定条件，逐句引用经过校验并完成一次自动修复。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 12,
+          "input_tokens": 58307.0,
+          "output_tokens": 12178.0,
+          "total_tokens": 70485.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 12,
+          "retry_count": 0,
+          "response_count": 12,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 12,
+          "response_count": 12,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 12
+        }
+      }
+    },
+    {
+      "case_id": "scifact-claim-49-verified-report",
+      "source_sample_id": "scifact:test:query-49",
+      "request": {
+        "message": "基于当前 SciFact 公开语料，核验 ADAR1 与 Dicer、pre-miRNA 切割之间的关系，并生成逐结论有依据的研究报告。自主选择经过公开回归评测的 RAG 管线，不足时明确拒绝。",
+        "document_id": 3,
+        "run_id": "agent-eval-scifact-claim-49-verified-report-e613c9324e"
+      },
+      "expected": {
+        "required_skills": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_skill_order": [
+          "select_evaluated_rag_pipeline",
+          "generate_verified_research_report"
+        ],
+        "required_artifact_types": [
+          "verified_research_report"
+        ],
+        "require_verified_artifact": true,
+        "require_evidence_gate": true,
+        "max_interventions": 0,
+        "id": "scifact-claim-49-verified-report"
+      },
+      "score": {
+        "case_id": "scifact-claim-49-verified-report",
+        "task_success": true,
+        "verified_task_completion": true,
+        "failure_reasons": [],
+        "failure_class": "passed",
+        "plan_completion_rate": 1.0,
+        "tool_selection_recall": 1.0,
+        "tool_selection_precision": 0.666667,
+        "artifact_completion_rate": 1.0,
+        "verified_artifact_rate": 1.0,
+        "evidence_gate_passed": true,
+        "trajectory_order_ok": true,
+        "quality_adaptation_count": 2,
+        "human_intervention_count": 0,
+        "recovery_event_count": 0,
+        "receipt_reuse_count": 0,
+        "latency_seconds": 180.548305,
+        "reference_answer_terms_passed": true,
+        "provider_usage": {
+          "status": "observed",
+          "input_tokens": 42877.0,
+          "output_tokens": 7921.0,
+          "total_tokens": 50798.0,
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "reason": "Provider responses did not include explicit currency cost.",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0
+        },
+        "provider_model": {
+          "status": "observed",
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "request_count": 11,
+          "response_count": 11,
+          "observed_response_count": 11
+        }
+      },
+      "result": {
+        "conversation_id": 53,
+        "run_id": "agent-eval-scifact-claim-49-verified-report-e613c9324e",
+        "thread_id": "agent-eval-scifact-claim-49-verified-report-e613c9324e",
+        "status": "completed",
+        "recoverable": false,
+        "answer": "已生成**逐结论可追溯证据研究报告**，正文与下载文件已在产出物中。\n\n**采用的经评测 RAG 管线**\n- 管线：`hybrid-rerank`\n- 公开语料：SciFact（BEIR SciFact test）\n- 状态：已批准；具备可复现评测记录、当前管线指纹及全部坏例回归门禁通过。\n- 检索指标：nDCG@k 0.7522、MAP@k 0.7101、Recall@k 0.8552、MRR 0.7305。\n\n**报告核心结论**\n1. **支持**：ADAR1 可与 Dicer 直接形成蛋白复合物，并提高 Dicer 对 pre-miRNA 切割的最大反应速率（Vmax）。【D3:C1100】\n2. **支持**：ADAR1 还可促进 miRNA 装载至 RNA 诱导沉默复合体，提示其参与 miRNA 加工与 RNAi 功能。【D3:C1100】\n3. **证据不足**：当前语料未直接证明 ADAR1 改变 Dicer 的表达量或蛋白稳定性。【D3:C1100】\n4. **证据不足**：虽有 ADAR 家族执行 A-to-I RNA 编辑的证据，但当前材料不能直接证明 ADAR1 对某一特定 pre-miRNA 的编辑会改变其 Dicer 切割效率或成熟 miRNA 产量。【D3:C1100】【D3:C1287】\n5. **支持但需谨慎解释**：ADAR1 缺失小鼠胚胎中 miRNA 表达整体受抑；但胚胎广泛凋亡不能仅据此完全归因于 miRNA 变化。【D3:C1100】【D3:C1287】\n\n报告已完成逐句引用校验，并对证据不足或引用无效的表述进行了自动剔除。",
+        "artifacts": [
+          {
+            "type": "verified_research_report",
+            "artifact_kind": "file",
+            "topic": "核验 ADAR1 与 Dicer、pre-miRNA 切割之间的关系：逐结论可追溯证据报告",
+            "document_id": 3,
+            "outline": [
+              {
+                "title": "ADAR1 是否直接调控 Dicer 的表达、稳定性或酶活性",
+                "query": "ADAR1 direct interaction regulation Dicer expression protein stability enzymatic activity evidence"
+              },
+              {
+                "title": "ADAR1 编辑 pre-miRNA 对 Dicer 切割与成熟 miRNA 生成的影响",
+                "query": "ADAR1 A-to-I editing pre-miRNA Dicer cleavage processing mature miRNA evidence"
+              },
+              {
+                "title": "区分 ADAR1、Dicer 与 pre-miRNA 切割关系的机制和实验验证",
+                "query": "ADAR1 Dicer pre-miRNA cleavage mechanism experimental evidence knockdown knockout rescue in vitro processing"
+              }
+            ],
+            "content": "# 核验 ADAR1 与 Dicer、pre-miRNA 切割之间的关系：逐结论可追溯证据报告\n\n## ADAR1 是否直接调控 Dicer 的表达、稳定性或酶活性\n\n- ADAR1 可通过直接蛋白—蛋白相互作用与 Dicer 形成复合物。 [D3:C1100]\n- ADAR1 可提高 Dicer 切割 pre-miRNA 的最大反应速率（Vmax）。 [D3:C1100]\n- 给定证据未直接报告 ADAR1 改变 Dicer 的表达量或蛋白稳定性。 [D3:C1100]\n\n## ADAR1 编辑 pre-miRNA 对 Dicer 切割与成熟 miRNA 生成的影响\n\n- ADAR 家族参与 RNA 编辑，可将双链 RNA 中的腺苷残基转化为肌苷。 [D3:C1100] [D3:C1287]\n- 前者与 RNA 编辑功能相关，后者与 miRNA 加工及 RNAi 功能相关。 [D3:C1100]\n- 给定证据未直接证明 ADAR1 对特定 pre-miRNA 的 A-to-I 编辑会改变其被 Dicer 切割的效率或成熟 miRNA 的产量。 [D3:C1100]\n- ADAR1 缺失小鼠胚胎中，miRNA 表达整体受到抑制。 [D3:C1100]\n\n## 区分 ADAR1、Dicer 与 pre-miRNA 切割关系的机制和实验验证\n\n- 研究报告 ADAR1 与 Dicer 直接相互作用、提高 Dicer 对 pre-miRNA 切割的 Vmax，并促进 miRNA 装载至 RNA 诱导沉默复合体。 [D3:C1100]\n- ADAR1 缺失小鼠胚胎在 E11.5 前仍可回收具有正常整体外观的存活胚胎，但多个组织中可检测到广泛凋亡。 [D3:C1287]\n- 推测：ADAR1 缺失胚胎中观察到的全局 miRNA 抑制与广泛凋亡同时存在，因此仅凭现有证据不能将胚胎表型完全归因于 miRNA 表达变化。 [D3:C1100] [D3:C1287]\n- 推测：若要严格区分 ADAR1 的 RNA 编辑作用与其结合 Dicer、促进 pre-miRNA 切割的作用，可分别在编辑缺陷和 Dicer 结合缺陷条件下检测 pre-miRNA 切割及成熟 miRNA 生成。 [D3:C1100]\n\n> 证据不足或引用无效的句子已由验证器自动移除。",
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "pipeline_selection": {
+                "contract": "evaluated_pipeline_selection_v1",
+                "status": "explicit",
+                "reason": "调用方显式指定 pipeline_id",
+                "selected": {
+                  "pipeline_id": "hybrid-rerank"
+                },
+                "candidates": [],
+                "dataset": null
+              },
+              "steps": [
+                {
+                  "step": "select_pipeline",
+                  "status": "explicit",
+                  "pipeline_id": "hybrid-rerank",
+                  "dataset_id": null,
+                  "run_id": null,
+                  "release_status": null,
+                  "reason": "调用方显式指定 pipeline_id"
+                },
+                {
+                  "step": "plan",
+                  "status": "completed",
+                  "section_count": 3
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "ADAR1 是否直接调控 Dicer 的表达、稳定性或酶活性",
+                  "query": "ADAR1 direct interaction regulation Dicer expression protein stability enzymatic activity evidence",
+                  "original_query": "ADAR1 direct interaction regulation Dicer expression protein stability enzymatic activity evidence",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "ADAR1 编辑 pre-miRNA 对 Dicer 切割与成熟 miRNA 生成的影响",
+                  "query": "ADAR1 A-to-I editing pre-miRNA Dicer cleavage processing mature miRNA evidence",
+                  "original_query": "ADAR1 A-to-I editing pre-miRNA Dicer cleavage processing mature miRNA evidence",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "retrieve",
+                  "status": "completed",
+                  "section": "区分 ADAR1、Dicer 与 pre-miRNA 切割关系的机制和实验验证",
+                  "query": "ADAR1 Dicer pre-miRNA cleavage mechanism experimental evidence knockdown knockout rescue in vitro processing",
+                  "original_query": "ADAR1 Dicer pre-miRNA cleavage mechanism experimental evidence knockdown knockout rescue in vitro processing",
+                  "adapted": false,
+                  "hit_count": 5,
+                  "pipeline_trace": [
+                    {
+                      "stage": "retrieve",
+                      "component": "hybrid",
+                      "dense_candidates": 20,
+                      "keyword_candidates": 0
+                    },
+                    {
+                      "stage": "fuse",
+                      "component": "rrf",
+                      "output_candidates": 20
+                    },
+                    {
+                      "stage": "rerank",
+                      "component": "local",
+                      "output_candidates": 5
+                    },
+                    {
+                      "stage": "context",
+                      "component": "evidence",
+                      "generation_prompt_version": "citation-v1"
+                    }
+                  ]
+                },
+                {
+                  "step": "draft",
+                  "status": "completed",
+                  "chars": 972
+                },
+                {
+                  "step": "verify",
+                  "status": "failed",
+                  "unsupported_claim_count": 3,
+                  "semantic_entailment_checked": true,
+                  "groundedness": 0.7,
+                  "citation_correctness": 1.0
+                },
+                {
+                  "step": "repair",
+                  "status": "failed",
+                  "unsupported_claim_count": 1
+                },
+                {
+                  "step": "fail_safe",
+                  "pass": 1,
+                  "status": "passed",
+                  "unsupported_claim_count": 0
+                }
+              ]
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true,
+                  "detail": "11/11 条事实性内容获得语义证据支持"
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true,
+                  "detail": "至少一条实质内容具有有效引用"
+                }
+              ],
+              "semantic_entailment_checked": true,
+              "citation": {
+                "contract": "claim_grounding_v1",
+                "semantic_entailment_checked": true,
+                "claim_count": 11,
+                "supported_claim_count": 11,
+                "unsupported_claim_count": 0,
+                "citation_count": 13,
+                "valid_citation_count": 13,
+                "citation_precision": 1.0,
+                "citation_recall": 1.0,
+                "unsupported_claim_rate": 0.0,
+                "passed": true,
+                "claims": [
+                  {
+                    "text": "ADAR1 可通过直接蛋白—蛋白相互作用与 Dicer 形成复合物。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.105263,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确指出 ADAR1 通过直接蛋白—蛋白相互作用与 Dicer 形成复合物。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "ADAR1 可提高 Dicer 切割 pre-miRNA 的最大反应速率（Vmax）。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.294118,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接陈述 ADAR1 提高 Dicer 切割 pre-miRNA 的最大反应速率（Vmax）。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "给定证据未直接报告 ADAR1 改变 Dicer 的表达量或蛋白稳定性。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.090909,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "该证据报告了 ADAR1 与 Dicer 的互作及对 Dicer 活性和 miRNA 装载的影响，未直接报告 Dicer 表达量或蛋白稳定性的改变。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "ADAR 家族参与 RNA 编辑，可将双链 RNA 中的腺苷残基转化为肌苷。 [D3:C1100] [D3:C1287]",
+                    "citations": [
+                      "D3:C1100",
+                      "D3:C1287"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100",
+                      "D3:C1287"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.090909,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D3:C1287",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "两条证据均明确说明 ADAR 参与 RNA 编辑，并将双链 RNA 中的腺苷转化为肌苷。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "前者与 RNA 编辑功能相关，后者与 miRNA 加工及 RNAi 功能相关。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.1875,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确将 ADAR1/ADAR1 同源二聚体关联于 RNA 编辑功能，将 Dicer/ADAR1 异源二聚体关联于 RNAi 功能，并报告其促进 miRNA 加工。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "给定证据未直接证明 ADAR1 对特定 pre-miRNA 的 A-to-I 编辑会改变其被 Dicer 切割的效率或成熟 miRNA 的产量。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.176471,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据虽报告 ADAR1 提高 pre-miRNA 切割 Vmax，但未直接证明特定 pre-miRNA 的 A-to-I 编辑导致切割效率或成熟 miRNA 产量改变。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "ADAR1 缺失小鼠胚胎中，miRNA 表达整体受到抑制。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.117647,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据直接陈述 ADAR1(-/-) 小鼠胚胎中 miRNA 表达在全局范围内受到抑制。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "研究报告 ADAR1 与 Dicer 直接相互作用、提高 Dicer 对 pre-miRNA 切割的 Vmax，并促进 miRNA 装载至 RNA 诱导沉默复合体。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.166667,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据逐项直接报告 ADAR1 与 Dicer 的直接相互作用、提高 pre-miRNA 切割 Vmax，以及促进 miRNA 装载至 RNA 诱导沉默复合体。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "ADAR1 缺失小鼠胚胎在 E11.5 前仍可回收具有正常整体外观的存活胚胎，但多个组织中可检测到广泛凋亡。 [D3:C1287]",
+                    "citations": [
+                      "D3:C1287"
+                    ],
+                    "valid_citations": [
+                      "D3:C1287"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.076923,
+                    "claim_type": "fact",
+                    "verdict": "entailed",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1287",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据明确指出，外观正常的存活 ADAR1-/- 胚胎可回收到 E11.5，且许多组织中检测到广泛凋亡。",
+                    "evidence_state": "supported",
+                    "explicit_inference": false,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：ADAR1 缺失胚胎中观察到的全局 miRNA 抑制与广泛凋亡同时存在，因此仅凭现有证据不能将胚胎表型完全归因于 miRNA 表达变化。 [D3:C1100] [D3:C1287]",
+                    "citations": [
+                      "D3:C1100",
+                      "D3:C1287"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100",
+                      "D3:C1287"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.044444,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      },
+                      {
+                        "citation_id": "D3:C1287",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "D3:C1100 报告 ADAR1 缺失胚胎中全局 miRNA 抑制，D3:C1287 报告 ADAR1 缺失相关的广泛凋亡；二者不足以直接证明胚胎表型完全由 miRNA 变化造成，因此该限制性结论属于合理推断。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  },
+                  {
+                    "text": "推测：若要严格区分 ADAR1 的 RNA 编辑作用与其结合 Dicer、促进 pre-miRNA 切割的作用，可分别在编辑缺陷和 Dicer 结合缺陷条件下检测 pre-miRNA 切割及成熟 miRNA 生成。 [D3:C1100]",
+                    "citations": [
+                      "D3:C1100"
+                    ],
+                    "valid_citations": [
+                      "D3:C1100"
+                    ],
+                    "invalid_citations": [],
+                    "supported": true,
+                    "lexical_overlap": 0.125,
+                    "claim_type": "inference",
+                    "verdict": "reasonable_inference",
+                    "citation_verdicts": [
+                      {
+                        "citation_id": "D3:C1100",
+                        "verdict": "supports"
+                      }
+                    ],
+                    "reason": "证据表明 ADAR1 的 RNA 编辑功能与其通过 Dicer/ADAR1 复合物参与 miRNA 加工的功能可区分；在不同功能缺陷条件下分别检测加工结果是合理的鉴别性实验推断，但非证据直接陈述。",
+                    "evidence_state": "inference",
+                    "explicit_inference": true,
+                    "semantically_supported": true
+                  }
+                ],
+                "structural_contract": "citation_presence_v1",
+                "structural_passed": true,
+                "judge_model": "gpt-5.6-terra",
+                "judge_rubric_version": "claim_grounding_v1",
+                "judge_input_fingerprint": "02eeae7e77f5e5ceb02df4e0fa91a96391b92833c8efa1b585cac27161b34d18",
+                "judge_status": "completed",
+                "groundedness": 1.0,
+                "faithfulness": 1.0,
+                "citation_correctness": 1.0,
+                "conflict_count": 0,
+                "conflicts": [],
+                "conflicts_disclosed": false,
+                "refused": true,
+                "claim_state_counts": {
+                  "supported": 9,
+                  "contradicted": 0,
+                  "mixed": 0,
+                  "insufficient": 0,
+                  "inference": 2
+                }
+              },
+              "claim_count": 11,
+              "supported_claim_count": 11,
+              "unsupported_claim_count": 0,
+              "citation_count": 13,
+              "valid_citation_count": 13,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "conflicts": [],
+              "conflicts_disclosed": false,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "02eeae7e77f5e5ceb02df4e0fa91a96391b92833c8efa1b585cac27161b34d18",
+              "claim_state_counts": {
+                "supported": 9,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              },
+              "claims": [
+                {
+                  "text": "ADAR1 可通过直接蛋白—蛋白相互作用与 Dicer 形成复合物。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.105263,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确指出 ADAR1 通过直接蛋白—蛋白相互作用与 Dicer 形成复合物。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "ADAR1 可提高 Dicer 切割 pre-miRNA 的最大反应速率（Vmax）。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.294118,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接陈述 ADAR1 提高 Dicer 切割 pre-miRNA 的最大反应速率（Vmax）。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "给定证据未直接报告 ADAR1 改变 Dicer 的表达量或蛋白稳定性。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.090909,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "该证据报告了 ADAR1 与 Dicer 的互作及对 Dicer 活性和 miRNA 装载的影响，未直接报告 Dicer 表达量或蛋白稳定性的改变。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "ADAR 家族参与 RNA 编辑，可将双链 RNA 中的腺苷残基转化为肌苷。 [D3:C1100] [D3:C1287]",
+                  "citations": [
+                    "D3:C1100",
+                    "D3:C1287"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100",
+                    "D3:C1287"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.090909,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D3:C1287",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "两条证据均明确说明 ADAR 参与 RNA 编辑，并将双链 RNA 中的腺苷转化为肌苷。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "前者与 RNA 编辑功能相关，后者与 miRNA 加工及 RNAi 功能相关。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.1875,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确将 ADAR1/ADAR1 同源二聚体关联于 RNA 编辑功能，将 Dicer/ADAR1 异源二聚体关联于 RNAi 功能，并报告其促进 miRNA 加工。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "给定证据未直接证明 ADAR1 对特定 pre-miRNA 的 A-to-I 编辑会改变其被 Dicer 切割的效率或成熟 miRNA 的产量。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.176471,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据虽报告 ADAR1 提高 pre-miRNA 切割 Vmax，但未直接证明特定 pre-miRNA 的 A-to-I 编辑导致切割效率或成熟 miRNA 产量改变。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "ADAR1 缺失小鼠胚胎中，miRNA 表达整体受到抑制。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.117647,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据直接陈述 ADAR1(-/-) 小鼠胚胎中 miRNA 表达在全局范围内受到抑制。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "研究报告 ADAR1 与 Dicer 直接相互作用、提高 Dicer 对 pre-miRNA 切割的 Vmax，并促进 miRNA 装载至 RNA 诱导沉默复合体。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.166667,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据逐项直接报告 ADAR1 与 Dicer 的直接相互作用、提高 pre-miRNA 切割 Vmax，以及促进 miRNA 装载至 RNA 诱导沉默复合体。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "ADAR1 缺失小鼠胚胎在 E11.5 前仍可回收具有正常整体外观的存活胚胎，但多个组织中可检测到广泛凋亡。 [D3:C1287]",
+                  "citations": [
+                    "D3:C1287"
+                  ],
+                  "valid_citations": [
+                    "D3:C1287"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.076923,
+                  "claim_type": "fact",
+                  "verdict": "entailed",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1287",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据明确指出，外观正常的存活 ADAR1-/- 胚胎可回收到 E11.5，且许多组织中检测到广泛凋亡。",
+                  "evidence_state": "supported",
+                  "explicit_inference": false,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：ADAR1 缺失胚胎中观察到的全局 miRNA 抑制与广泛凋亡同时存在，因此仅凭现有证据不能将胚胎表型完全归因于 miRNA 表达变化。 [D3:C1100] [D3:C1287]",
+                  "citations": [
+                    "D3:C1100",
+                    "D3:C1287"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100",
+                    "D3:C1287"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.044444,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    },
+                    {
+                      "citation_id": "D3:C1287",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "D3:C1100 报告 ADAR1 缺失胚胎中全局 miRNA 抑制，D3:C1287 报告 ADAR1 缺失相关的广泛凋亡；二者不足以直接证明胚胎表型完全由 miRNA 变化造成，因此该限制性结论属于合理推断。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                },
+                {
+                  "text": "推测：若要严格区分 ADAR1 的 RNA 编辑作用与其结合 Dicer、促进 pre-miRNA 切割的作用，可分别在编辑缺陷和 Dicer 结合缺陷条件下检测 pre-miRNA 切割及成熟 miRNA 生成。 [D3:C1100]",
+                  "citations": [
+                    "D3:C1100"
+                  ],
+                  "valid_citations": [
+                    "D3:C1100"
+                  ],
+                  "invalid_citations": [],
+                  "supported": true,
+                  "lexical_overlap": 0.125,
+                  "claim_type": "inference",
+                  "verdict": "reasonable_inference",
+                  "citation_verdicts": [
+                    {
+                      "citation_id": "D3:C1100",
+                      "verdict": "supports"
+                    }
+                  ],
+                  "reason": "证据表明 ADAR1 的 RNA 编辑功能与其通过 Dicer/ADAR1 复合物参与 miRNA 加工的功能可区分；在不同功能缺陷条件下分别检测加工结果是合理的鉴别性实验推断，但非证据直接陈述。",
+                  "evidence_state": "inference",
+                  "explicit_inference": true,
+                  "semantically_supported": true
+                }
+              ],
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "pipeline_spec": {
+                "id": "hybrid-rerank",
+                "label": "Hybrid + Rerank",
+                "description": "向量与关键词 RRF 融合，再使用本地确定性 reranker。",
+                "retriever": "hybrid",
+                "fusion": "rrf",
+                "reranker": "local",
+                "context_builder": "evidence",
+                "top_k": 5,
+                "dense_candidates": 20,
+                "keyword_candidates": 20,
+                "rrf_k": 60,
+                "reranker_candidate_limit": 40,
+                "reranker_rrf_weight": 0.45,
+                "reranker_dense_weight": 0.25,
+                "reranker_keyword_weight": 0.1,
+                "reranker_lexical_weight": 0.2,
+                "reranker_provider_fingerprint": null,
+                "reranker_model": null,
+                "embedding_model": "qwen3.7-text-embedding",
+                "embedding_dim": 1024,
+                "vector_collection": "docmind_chunks",
+                "generation_model": "gpt-5.6-terra",
+                "document_policy_version": "freshness_v1",
+                "generation_prompt_version": "citation-v1",
+                "schema_version": 1
+              },
+              "sources": [
+                {
+                  "citation_id": "D3:C1100",
+                  "document_id": 3,
+                  "chunk_index": 1100,
+                  "score": 0.80909091,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/1100",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C1287",
+                  "document_id": 3,
+                  "chunk_index": 1287,
+                  "score": 0.58640496,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/1287",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C2380",
+                  "document_id": 3,
+                  "chunk_index": 2380,
+                  "score": 0.47983467,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/2380",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C2076",
+                  "document_id": 3,
+                  "chunk_index": 2076,
+                  "score": 0.46481817,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/2076",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C4796",
+                  "document_id": 3,
+                  "chunk_index": 4796,
+                  "score": 0.42759131,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/4796",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C1599",
+                  "document_id": 3,
+                  "chunk_index": 1599,
+                  "score": 0.47469857,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/1599",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C1061",
+                  "document_id": 3,
+                  "chunk_index": 1061,
+                  "score": 0.44656312,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/1061",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                },
+                {
+                  "citation_id": "D3:C3518",
+                  "document_id": 3,
+                  "chunk_index": 3518,
+                  "score": 0.46747248,
+                  "document_name": "SciFact",
+                  "source_uri": "https://huggingface.co/datasets/BeIR/scifact",
+                  "source_version": "BEIR scifact md5:5f7d1de60b170fc8027bb7898e2efca1",
+                  "source_status": "current",
+                  "jump_url": "/documents/3/chunks/3518",
+                  "page_start": null,
+                  "page_end": null,
+                  "paragraph_start": null,
+                  "paragraph_end": null,
+                  "char_start": null,
+                  "char_end": null,
+                  "locator_version": null
+                }
+              ]
+            },
+            "download": {
+              "filename": "verified-research-report.md",
+              "mime_type": "text/markdown;charset=utf-8",
+              "encoding": "text",
+              "content_bytes_omitted": 1823,
+              "content_sha256": "44270ccad74c550ad59df0e7535bde0019419d0ba82f9c97fb1d834e2496ca0f"
+            }
+          }
+        ],
+        "trace": [
+          {
+            "step": 0,
+            "skill": "search_knowledge_base",
+            "args": {
+              "document_id": 3,
+              "query": "ADAR1 Dicer pre-miRNA 切割 关系 证据"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-3",
+            "grounding_mode": "hybrid_rag",
+            "grounding": {
+              "mode": "quality_adaptive_rag",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D3:C1100",
+                  "document_id": 3,
+                  "chunk_index": 1100,
+                  "score": 0.78
+                },
+                {
+                  "citation_id": "D3:C1287",
+                  "document_id": 3,
+                  "chunk_index": 1287,
+                  "score": 0.5527
+                },
+                {
+                  "citation_id": "D3:C2076",
+                  "document_id": 3,
+                  "chunk_index": 2076,
+                  "score": 0.4965
+                },
+                {
+                  "citation_id": "D3:C1061",
+                  "document_id": 3,
+                  "chunk_index": 1061,
+                  "score": 0.4948
+                },
+                {
+                  "citation_id": "D3:C3518",
+                  "document_id": 3,
+                  "chunk_index": 3518,
+                  "score": 0.4308
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "quality_adaptive_retrieval_v1",
+              "status": "completed"
+            }
+          },
+          {
+            "step": 1,
+            "skill": "select_evaluated_rag_pipeline",
+            "args": {
+              "target": "retrieval"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-1",
+            "grounding_mode": "public_evaluation_evidence",
+            "scope_resolution": {
+              "requested_dataset_id": null,
+              "resolved_dataset_id": 1,
+              "strategy": "current_document_public_dataset"
+            }
+          },
+          {
+            "step": 2,
+            "skill": "generate_verified_research_report",
+            "args": {
+              "document_id": 3,
+              "pipeline_id": "hybrid-rerank",
+              "section_count": 3,
+              "topic": "核验 ADAR1 与 Dicer、pre-miRNA 切割之间的关系：逐结论可追溯证据报告"
+            },
+            "ok": true,
+            "graph_node": "execute_tool",
+            "plan_step_id": "step-2",
+            "grounding_mode": "pipeline_rag_verified",
+            "grounding": {
+              "mode": "pipeline_rag_verified",
+              "pipeline_id": "hybrid-rerank",
+              "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+              "sources": [
+                {
+                  "citation_id": "D3:C1100",
+                  "document_id": 3,
+                  "chunk_index": 1100,
+                  "score": 0.80909091
+                },
+                {
+                  "citation_id": "D3:C1287",
+                  "document_id": 3,
+                  "chunk_index": 1287,
+                  "score": 0.58640496
+                },
+                {
+                  "citation_id": "D3:C2380",
+                  "document_id": 3,
+                  "chunk_index": 2380,
+                  "score": 0.47983467
+                },
+                {
+                  "citation_id": "D3:C2076",
+                  "document_id": 3,
+                  "chunk_index": 2076,
+                  "score": 0.46481817
+                },
+                {
+                  "citation_id": "D3:C4796",
+                  "document_id": 3,
+                  "chunk_index": 4796,
+                  "score": 0.42759131
+                },
+                {
+                  "citation_id": "D3:C1599",
+                  "document_id": 3,
+                  "chunk_index": 1599,
+                  "score": 0.47469857
+                },
+                {
+                  "citation_id": "D3:C1061",
+                  "document_id": 3,
+                  "chunk_index": 1061,
+                  "score": 0.44656312
+                },
+                {
+                  "citation_id": "D3:C3518",
+                  "document_id": 3,
+                  "chunk_index": 3518,
+                  "score": 0.46747248
+                }
+              ]
+            },
+            "workflow": {
+              "contract": "plan_select_retrieve_adapt_ground_repair_v3",
+              "status": "completed",
+              "repair_attempted": true,
+              "fail_safe_applied": true
+            },
+            "verification": {
+              "contract": "artifact_quality_v1",
+              "artifact_type": "verified_research_report",
+              "passed": true,
+              "score": 1.0,
+              "claim_count": 11,
+              "supported_claim_count": 11,
+              "unsupported_claim_count": 0,
+              "citation_count": 13,
+              "valid_citation_count": 13,
+              "citation_precision": 1.0,
+              "citation_recall": 1.0,
+              "unsupported_claim_rate": 0.0,
+              "semantic_entailment_checked": true,
+              "groundedness": 1.0,
+              "faithfulness": 1.0,
+              "citation_correctness": 1.0,
+              "conflict_count": 0,
+              "judge_status": "completed",
+              "judge_model": "gpt-5.6-terra",
+              "judge_rubric_version": "claim_grounding_v1",
+              "judge_input_fingerprint": "02eeae7e77f5e5ceb02df4e0fa91a96391b92833c8efa1b585cac27161b34d18",
+              "repair_attempted": true,
+              "fail_safe_applied": true,
+              "checks": [
+                {
+                  "id": "claim_grounding",
+                  "passed": true
+                },
+                {
+                  "id": "evidence_coverage",
+                  "passed": true
+                }
+              ],
+              "claim_state_counts": {
+                "supported": 9,
+                "contradicted": 0,
+                "mixed": 0,
+                "insufficient": 0,
+                "inference": 2
+              }
+            }
+          }
+        ],
+        "plan": {
+          "contract": "agent_plan_v1",
+          "objective": "基于当前 SciFact 公开语料，核验 ADAR1 与 Dicer 及 pre-miRNA 切割的关系，输出逐结论可追溯证据的研究报告；若不存在通过公开回归评测与坏例回归门禁的适用 RAG 管线，则明确拒绝生成结论性报告。",
+          "mode": "explicit",
+          "status": "completed",
+          "steps": [
+            {
+              "id": "step-1",
+              "title": "选择经 SciFact 公开回归评测验证的 RAG 管线",
+              "skill": "select_evaluated_rag_pipeline",
+              "success_criteria": "返回适用于当前 SciFact 语料的 selected.pipeline_id，并确认其具备可复现公开评测记录、坏例回归门禁和可识别的当前管线指纹；若无合格管线，返回明确拒绝依据并停止后续报告生成。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "成功"
+            },
+            {
+              "id": "step-2",
+              "title": "生成 ADAR1、Dicer 与 pre-miRNA 切割关系的证据核验报告",
+              "skill": "generate_verified_research_report",
+              "success_criteria": "仅在上一步获得合格 selected.pipeline_id 时，使用该 pipeline_id 检索当前知识库并生成报告；报告逐项说明 ADAR1 与 Dicer、pre-miRNA 切割之间支持、反驳或证据不足的关系结论，每项结论均附可校验的 SciFact 证据引用，并完成内置引用校验与自动修复。",
+              "status": "completed",
+              "attempts": 1,
+              "result": "verified_research_report"
+            },
+            {
+              "id": "step-3",
+              "title": "自适应调用 search_knowledge_base",
+              "skill": "search_knowledge_base",
+              "success_criteria": "Skill 成功返回",
+              "status": "completed",
+              "attempts": 1,
+              "adaptive": true,
+              "result": "已获得可用证据"
+            }
+          ]
+        },
+        "approval": null,
+        "provider_usage": {
+          "status": "observed",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 11,
+          "input_tokens": 42877.0,
+          "output_tokens": 7921.0,
+          "total_tokens": 50798.0
+        },
+        "provider_cost": {
+          "status": "unavailable",
+          "request_count": 11,
+          "retry_count": 0,
+          "response_count": 11,
+          "observed_response_count": 0,
+          "reason": "Provider responses did not include explicit currency cost."
+        },
+        "provider_model": {
+          "status": "observed",
+          "request_count": 11,
+          "response_count": 11,
+          "configured_request_models": [
+            "gpt-5.6-terra"
+          ],
+          "provider_reported_models": [
+            "gpt-5.6-terra"
+          ],
+          "observed_response_count": 11
+        }
+      }
+    }
+  ],
+  "public_demo": {
+    "document_selector": {
+      "source_name": "SciFact",
+      "split": "test",
+      "corpus_fingerprint": "556ea36c6e516071fb5851f44fe8e7a137dde697e0ddd8288bc44060a7db3771",
+      "source_snapshot_fingerprint": "b9faa9dabd9d6cd1a39196f90f4e1645e988ab9c68787006dbc8c970c884514d"
+    },
+    "resolved_document_id": 3,
+    "source_sample_ids": [
+      "scifact:test:query-5",
+      "scifact:test:query-49"
+    ]
+  }
+}

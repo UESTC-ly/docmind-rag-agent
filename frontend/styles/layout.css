@@ -195,4 +195,13 @@ body.is-app {
   .trace__item {
     grid-template-columns: 1fr;
   }
+  .agent-telemetry__grid,
+  .eval-overview__grid {
+    grid-template-columns: 1fr;
+  }
+  .agent-telemetry__head,
+  .eval-overview__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

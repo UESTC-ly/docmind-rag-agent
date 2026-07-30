@@ -51,6 +51,25 @@ _PLAN_PROMPT = """你是 DocMind 的任务规划器。把用户目标拆成少�
 
 _QUALITY_ADVISOR_SKILL = "select_evaluated_rag_pipeline"
 _EVIDENCE_DELIVERY_SKILLS = {"generate_verified_research_report"}
+_EVIDENCE_DELIVERY_INTENT_TERMS = (
+    "逐结论",
+    "逐句",
+    "有依据",
+    "有根据",
+    "证据校验",
+    "证据闭环",
+    "grounded",
+    "grounding",
+    "citation",
+    "引用正确",
+    "可追溯",
+)
+_RESEARCH_REPORT_TERMS = (
+    "研究报告",
+    "报告",
+    "research report",
+    "report",
+)
 
 
 def _normalize_step(
@@ -128,6 +147,67 @@ def _deduplicate_evidence_delivery_steps(
     return _reindex_steps(deduplicated)
 
 
+def _requires_verified_evidence_delivery(question: str) -> bool:
+    """Recognize an explicit evidence-grounded research-report request.
+
+    This intentionally does not promote every generic "报告" request. The
+    normal report Skill remains available for that case; only an explicit
+    research-report request coupled with a grounding requirement receives the
+    evaluated-pipeline delivery contract.
+    """
+
+    normalized = question.casefold()
+    return (
+        any(term in normalized for term in _RESEARCH_REPORT_TERMS)
+        and any(term in normalized for term in _EVIDENCE_DELIVERY_INTENT_TERMS)
+    )
+
+
+def _ensure_evidence_delivery_step(
+    steps: list[dict[str, Any]],
+    *,
+    question: str,
+    allowed_skills: set[str],
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Make an explicit grounded-report request executable, not advisory."""
+
+    if (
+        limit < 2
+        or _EVIDENCE_DELIVERY_SKILLS.isdisjoint(allowed_skills)
+        or not _requires_verified_evidence_delivery(question)
+        or any(step.get("skill") in _EVIDENCE_DELIVERY_SKILLS for step in steps)
+    ):
+        return steps
+
+    if len(steps) >= limit:
+        removable = next(
+            (
+                index
+                for index in range(len(steps) - 1, -1, -1)
+                if steps[index].get("skill") != _QUALITY_ADVISOR_SKILL
+            ),
+            None,
+        )
+        if removable is None:
+            return steps
+        steps.pop(removable)
+
+    steps.append(
+        {
+            "title": "生成逐结论有依据的研究报告",
+            "skill": "generate_verified_research_report",
+            "success_criteria": (
+                "报告通过逐结论依据性、引用正确性与冲突检查，"
+                "或在证据不足时明确拒答"
+            ),
+            "status": "pending",
+            "attempts": 0,
+        }
+    )
+    return _reindex_steps(steps)
+
+
 def _inject_quality_selection_step(
     steps: list[dict[str, Any]],
     *,
@@ -184,6 +264,35 @@ def _inject_quality_selection_step(
     return _reindex_steps(steps)
 
 
+def _fallback_with_evidence_delivery(
+    question: str,
+    *,
+    allowed_skills: set[str],
+    limit: int,
+) -> dict[str, Any]:
+    """Keep an explicit grounded-report intent intact after planner fallback."""
+
+    fallback = _fallback_plan(
+        question,
+        requested_skill=None,
+        allowed_skills=allowed_skills,
+    )
+    steps = _ensure_evidence_delivery_step(
+        list(fallback["steps"]),
+        question=question,
+        allowed_skills=allowed_skills,
+        limit=limit,
+    )
+    fallback["steps"] = _inject_quality_selection_step(
+        steps,
+        allowed_skills=allowed_skills,
+        limit=limit,
+    )
+    if fallback["steps"]:
+        fallback["mode"] = "explicit"
+    return fallback
+
+
 def create_task_plan(
     *,
     question: str,
@@ -235,17 +344,17 @@ def create_task_plan(
         raw = _FENCE_RE.sub("", str(response.content or "").strip())
         payload = json.loads(raw)
     except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
-        return _fallback_plan(
+        return _fallback_with_evidence_delivery(
             question,
-            requested_skill=requested_skill,
             allowed_skills=allowed_skills,
+            limit=limit,
         )
 
     if not isinstance(payload, dict):
-        return _fallback_plan(
+        return _fallback_with_evidence_delivery(
             question,
-            requested_skill=requested_skill,
             allowed_skills=allowed_skills,
+            limit=limit,
         )
 
     rows = payload.get("steps")
@@ -262,6 +371,12 @@ def create_task_plan(
             if step is not None:
                 steps.append(step)
     steps = _deduplicate_evidence_delivery_steps(steps)
+    steps = _ensure_evidence_delivery_step(
+        steps,
+        question=question,
+        allowed_skills=allowed_skills,
+        limit=limit,
+    )
     steps = _inject_quality_selection_step(
         steps,
         allowed_skills=allowed_skills,

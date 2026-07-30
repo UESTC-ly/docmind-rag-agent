@@ -568,6 +568,81 @@ function recoveryCard(result) {
   ]);
 }
 
+function telemetryValue(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "未提供";
+  return new Intl.NumberFormat("zh-CN").format(value);
+}
+
+function renderProviderTelemetry(result) {
+  const usage = result?.provider_usage;
+  const cost = result?.provider_cost;
+  const model = result?.provider_model;
+  if (!usage && !cost && !model) return null;
+
+  const providerModels = model?.provider_reported_models || [];
+  const configuredModels = model?.configured_request_models || [];
+  const modelValue = providerModels.join(", ")
+    || configuredModels.join(", ")
+    || "未提供";
+  const modelHint = providerModels.length
+    ? "上游返回"
+    : configuredModels.length
+      ? "请求配置；上游未回传模型名"
+      : "无模型遥测";
+  const costValue = typeof cost?.amount === "number" && cost?.currency
+    ? `${cost.currency} ${cost.amount.toFixed(6)}`
+    : "未提供";
+  const requests = telemetryValue(usage?.request_count ?? model?.request_count);
+  const retries = telemetryValue(usage?.retry_count);
+
+  return el("section", {
+    class: "agent-telemetry",
+    "aria-label": "Agent 模型、Token 与成本",
+  }, [
+    el("div", { class: "agent-telemetry__head" }, [
+      el("div", { class: "section-kicker", text: "Run telemetry" }),
+      el("span", {
+        class: `telemetry-status telemetry-status--${usage?.status || "unavailable"}`,
+        text: usage?.status === "observed"
+          ? "Token 完整观测"
+          : usage?.status === "partial"
+            ? "Token 部分观测"
+            : "Token 未提供",
+      }),
+    ]),
+    el("div", { class: "agent-telemetry__grid" }, [
+      el("div", { class: "telemetry-card" }, [
+        el("span", { text: "模型" }),
+        el("strong", { text: modelValue }),
+        el("small", { text: modelHint }),
+      ]),
+      el("div", { class: "telemetry-card" }, [
+        el("span", { text: "总 Token" }),
+        el("strong", { text: telemetryValue(usage?.total_tokens) }),
+        el("small", {
+          text: `输入 ${telemetryValue(usage?.input_tokens)} · 输出 ${telemetryValue(usage?.output_tokens)}`,
+        }),
+      ]),
+      el("div", { class: "telemetry-card" }, [
+        el("span", { text: "Provider 请求" }),
+        el("strong", { text: requests }),
+        el("small", { text: `重试 ${retries}` }),
+      ]),
+      el("div", { class: "telemetry-card" }, [
+        el("span", { text: "货币成本" }),
+        el("strong", { text: costValue }),
+        el("small", {
+          text: cost?.status === "observed"
+            ? "Provider 明确返回"
+            : cost?.status === "partial"
+              ? "Provider 仅对部分响应明确返回"
+              : "不使用模型定价进行推算",
+        }),
+      ]),
+    ]),
+  ]);
+}
+
 function renderAgentResult(result) {
   if (
     (result.status === "waiting_approval" || result.recoverable) &&
@@ -589,10 +664,12 @@ function renderAgentResult(result) {
   const trace = renderTrace(result.trace);
   const plan = renderPlan(result.plan);
   const artifacts = renderArtifacts(result.artifacts);
+  const telemetry = renderProviderTelemetry(result);
   const approval = approvalCard(result);
   const recovery = recoveryCard(result);
   if (approval) children.push(approval);
   if (recovery) children.push(recovery);
+  if (telemetry) children.push(telemetry);
   if (plan) children.push(plan);
   if (trace) children.push(trace);
   if (artifacts) children.push(artifacts);

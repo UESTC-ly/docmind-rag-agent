@@ -1,0 +1,25 @@
+.env
+.env.*
+!.env.example
+!.env.production.example
+.git
+.github
+.omx
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+data
+uploads
+skill_workspaces
+learn
+benchmarks/results
+frontend/node_modules
+frontend/playwright-report
+frontend/test-results
+# The production web image never copies desktop sources; excluding the whole
+# tree keeps legacy Docker builders from transferring multi-gigabyte Rust
+# artifacts before Dockerfile COPY filtering is applied.
+desktop

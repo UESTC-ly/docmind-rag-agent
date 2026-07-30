@@ -1,0 +1,391 @@
+{
+  "contract": "agent_pipeline_selection_audit_v1",
+  "generated_at": "2026-07-30T07:06:20.459381+00:00",
+  "agent_report": {
+    "path": "benchmarks/results/agent/ms-marco-v21-terra-final-20260730/report.json",
+    "sha256": "4697fca76658a6b6efe6bce0549351935b7d678fef1833211fd7195892b264f2",
+    "suite_fingerprint": "41cfafe957bb3bc0e777fb77bd1c1c544c4862072e39e489ef25023fa11c7ea5",
+    "release_gate_passed": true
+  },
+  "retrieval_report_reference": "benchmarks/results/retrieval/ms-marco-v21-release-20260730/report.json",
+  "decision_snapshot": {
+    "contract": "evaluated_pipeline_selection_v1",
+    "status": "selected",
+    "target": "retrieval",
+    "selection_policy": "latest_public_dataset_then_approved_lexicographic_v1",
+    "reason": "先锁定同一公开语料快照，再按 release 状态、nDCG、MAP、Recall、MRR、延迟和运行 ID 依次排序",
+    "dataset": {
+      "id": 4,
+      "name": "MS MARCO v2.1",
+      "source_name": "MS MARCO",
+      "source_uri": "https://microsoft.github.io/msmarco/",
+      "source_version": "2.1",
+      "license_name": "MS MARCO non-commercial research terms",
+      "split": "validation",
+      "corpus_fingerprint": "6c7b8e1118a0feda46290223c475896eb4c1df7a0f18fd6492dc773a82e0740c",
+      "source_snapshot_fingerprint": "00db40255754f0064f6d9fa503426bae53af4e58806a89ff2ea6912ff6300836",
+      "language": "en",
+      "task_type": "rag_qa"
+    },
+    "selected": {
+      "run_id": 39,
+      "dataset_id": 4,
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "run_label": "ms-marco-v21-public-20260730:hybrid-rerank",
+      "comparison_role": "candidate",
+      "release_status": "approved",
+      "metrics": {
+        "ndcg_at_k": 0.622081,
+        "map_at_k": 0.53,
+        "recall_at_k": 0.883333,
+        "mrr": 0.541167
+      },
+      "metric_versions": {
+        "ndcg_at_k": "retrieval_v1",
+        "map_at_k": "retrieval_v1",
+        "recall_at_k": "retrieval_v1",
+        "mrr": "retrieval_v1"
+      },
+      "latency_ms": 23343.84,
+      "regression_gates": [
+        {
+          "gate_id": 6,
+          "name": "public-retrieval-v1:hit_rate:max_drop",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "hit_rate",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.040000 >= -0.020000"
+        },
+        {
+          "gate_id": 7,
+          "name": "public-retrieval-v1:recall:max_drop",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "recall_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.045000 >= -0.020000"
+        },
+        {
+          "gate_id": 8,
+          "name": "public-retrieval-v1:map_at_k:max_drop",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "map_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.011833 >= -0.020000"
+        },
+        {
+          "gate_id": 9,
+          "name": "public-retrieval-v1:ndcg_at_k:max_drop",
+          "severity": "error",
+          "comparison": "max_drop",
+          "metric_name": "ndcg_at_k",
+          "metric_version": "retrieval_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta 0.018735 >= -0.020000"
+        },
+        {
+          "gate_id": 10,
+          "name": "public-retrieval-v1:badcase_count:max_increase",
+          "severity": "error",
+          "comparison": "max_increase",
+          "metric_name": "badcase_count",
+          "metric_version": "retrieval_badcase_v1",
+          "applicable": true,
+          "passed": true,
+          "reason": "delta -8.000000 <= 5.000000"
+        }
+      ]
+    },
+    "candidates": [
+      {
+        "run_id": 39,
+        "dataset_id": 4,
+        "pipeline_id": "hybrid-rerank",
+        "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+        "run_label": "ms-marco-v21-public-20260730:hybrid-rerank",
+        "comparison_role": "candidate",
+        "release_status": "approved",
+        "metrics": {
+          "ndcg_at_k": 0.622081,
+          "map_at_k": 0.53,
+          "recall_at_k": 0.883333,
+          "mrr": 0.541167
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 23343.84,
+        "regression_gates": [
+          {
+            "gate_id": 6,
+            "name": "public-retrieval-v1:hit_rate:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.040000 >= -0.020000"
+          },
+          {
+            "gate_id": 7,
+            "name": "public-retrieval-v1:recall:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.045000 >= -0.020000"
+          },
+          {
+            "gate_id": 8,
+            "name": "public-retrieval-v1:map_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.011833 >= -0.020000"
+          },
+          {
+            "gate_id": 9,
+            "name": "public-retrieval-v1:ndcg_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.018735 >= -0.020000"
+          },
+          {
+            "gate_id": 10,
+            "name": "public-retrieval-v1:badcase_count:max_increase",
+            "severity": "error",
+            "comparison": "max_increase",
+            "metric_name": "badcase_count",
+            "metric_version": "retrieval_badcase_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -8.000000 <= 5.000000"
+          }
+        ]
+      },
+      {
+        "run_id": 38,
+        "dataset_id": 4,
+        "pipeline_id": "hybrid",
+        "pipeline_fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+        "run_label": "ms-marco-v21-public-20260730:hybrid",
+        "comparison_role": "candidate",
+        "release_status": "approved",
+        "metrics": {
+          "ndcg_at_k": 0.614951,
+          "map_at_k": 0.527333,
+          "recall_at_k": 0.863333,
+          "mrr": 0.54
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 23714.185,
+        "regression_gates": [
+          {
+            "gate_id": 6,
+            "name": "public-retrieval-v1:hit_rate:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.020000 >= -0.020000"
+          },
+          {
+            "gate_id": 7,
+            "name": "public-retrieval-v1:recall:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.025000 >= -0.020000"
+          },
+          {
+            "gate_id": 8,
+            "name": "public-retrieval-v1:map_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.009166 >= -0.020000"
+          },
+          {
+            "gate_id": 9,
+            "name": "public-retrieval-v1:ndcg_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta 0.011605 >= -0.020000"
+          },
+          {
+            "gate_id": 10,
+            "name": "public-retrieval-v1:badcase_count:max_increase",
+            "severity": "error",
+            "comparison": "max_increase",
+            "metric_name": "badcase_count",
+            "metric_version": "retrieval_badcase_v1",
+            "applicable": true,
+            "passed": true,
+            "reason": "delta -3.000000 <= 5.000000"
+          }
+        ]
+      },
+      {
+        "run_id": 37,
+        "dataset_id": 4,
+        "pipeline_id": "dense",
+        "pipeline_fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+        "run_label": "ms-marco-v21-public-20260730:dense",
+        "comparison_role": "baseline",
+        "release_status": "observational",
+        "metrics": {
+          "ndcg_at_k": 0.603346,
+          "map_at_k": 0.518167,
+          "recall_at_k": 0.838333,
+          "mrr": 0.538333
+        },
+        "metric_versions": {
+          "ndcg_at_k": "retrieval_v1",
+          "map_at_k": "retrieval_v1",
+          "recall_at_k": "retrieval_v1",
+          "mrr": "retrieval_v1"
+        },
+        "latency_ms": 23524.643,
+        "regression_gates": [
+          {
+            "gate_id": 6,
+            "name": "public-retrieval-v1:hit_rate:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "hit_rate",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 7,
+            "name": "public-retrieval-v1:recall:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "recall_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 8,
+            "name": "public-retrieval-v1:map_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "map_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 9,
+            "name": "public-retrieval-v1:ndcg_at_k:max_drop",
+            "severity": "error",
+            "comparison": "max_drop",
+            "metric_name": "ndcg_at_k",
+            "metric_version": "retrieval_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          },
+          {
+            "gate_id": 10,
+            "name": "public-retrieval-v1:badcase_count:max_increase",
+            "severity": "error",
+            "comparison": "max_increase",
+            "metric_name": "badcase_count",
+            "metric_version": "retrieval_badcase_v1",
+            "applicable": false,
+            "passed": null,
+            "reason": "gate result unavailable"
+          }
+        ]
+      }
+    ]
+  },
+  "run_manifests": [
+    {
+      "run_id": 39,
+      "pipeline_id": "hybrid-rerank",
+      "pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+      "code_revision": null,
+      "environment_fingerprint": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "experiment_key": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "completed_at": "2026-07-30T03:35:43.067083+00:00"
+    },
+    {
+      "run_id": 38,
+      "pipeline_id": "hybrid",
+      "pipeline_fingerprint": "5bb854efa7f72070544ab2e40e3ad257577ec2b7f728c4f6f4b3a50c79eafddb",
+      "code_revision": null,
+      "environment_fingerprint": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "experiment_key": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "completed_at": "2026-07-30T03:35:43.022573+00:00"
+    },
+    {
+      "run_id": 37,
+      "pipeline_id": "dense",
+      "pipeline_fingerprint": "9a40ae5cb95ab4c505091f8968c49bb79d9c59205da87ba4be4637fbffb529d9",
+      "code_revision": null,
+      "environment_fingerprint": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "experiment_key": "94b0dfbd9b82180967f1310305fd8e45fe0b315b478071d8f124fcb0ddb3dc1e",
+      "completed_at": "2026-07-30T03:35:42.969171+00:00"
+    }
+  ],
+  "cross_checks": {
+    "dataset_provenance_matched": true,
+    "agent_pipeline_fingerprints": [
+      "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8"
+    ],
+    "selected_pipeline_fingerprint": "fc8177cc1896635b36c0fef33b14f8305d3b66316c52aca63b97a60f012207f8",
+    "selected_pipeline_matched_agent_evidence": true
+  },
+  "evidence_boundary": {
+    "post_run_snapshot": true,
+    "note": "The Agent report predates embedded selection receipts. This audit re-resolved the same frozen public dataset and verified that every reported Agent pipeline fingerprint equals the current selected evaluation run.",
+    "product_release_approval": false
+  }
+}
