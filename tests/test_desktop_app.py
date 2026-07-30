@@ -17,7 +17,7 @@ def test_desktop_release_keeps_tauri_backend_and_frontend_contracts():
         )
     )
 
-    assert config["version"] == "3.1.0"
+    assert config["version"] == "3.2.0"
     assert config["build"]["frontendDist"] == "../dist"
     assert "resources" not in config["bundle"]
     macos = config["bundle"]["macOS"]
@@ -44,7 +44,7 @@ def test_api_allows_only_declared_desktop_webview_origins():
     middleware = next(item for item in app.user_middleware if item.cls is CORSMiddleware)
     origins = middleware.kwargs["allow_origins"]
 
-    assert app.version == "3.1.0"
+    assert app.version == "3.2.0"
     assert "tauri://localhost" in origins
     assert "http://tauri.localhost" in origins
     assert "https://tauri.localhost" in origins

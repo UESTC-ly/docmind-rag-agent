@@ -53,7 +53,7 @@ def test_secret_is_stable_and_not_exposed_by_manifest(tmp_path):
     assert manifest["task_executor"] == "local"
     assert manifest["agent_checkpointer"] == "sqlite"
     assert manifest["agent_run_lock"] == "sqlite-lease"
-    assert manifest["version"] == "3.1.0"
+    assert manifest["version"] == "3.2.0"
     assert manifest["package_script_confinement"] == "macos-sandbox-exec"
 
 

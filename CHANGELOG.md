@@ -1,5 +1,42 @@
 # Changelog
 
+## v3.2.0 - 2026-07-30
+
+### Evaluation-driven document task Agent
+
+- Repositioned DocMind around task completion rather than single-turn RAG answers. Agent runs now retain an explicit plan, step/tool trace, quality strategy, artifacts, provider telemetry, approval state, and recoverable checkpoint as one auditable lifecycle.
+- Added evaluated `PipelineSpec` selection to Agent execution. A pipeline is eligible for automatic use only after a comparable public regression run passes its release gate; diagnostic subset runs cannot silently become production evidence.
+- Added bounded quality adaptation for weak retrieval, missing evidence, stale sources, and conflicting documents. The Agent can rewrite a query, expand retrieval, switch to an approved pipeline, retrieve again, or refuse instead of delivering an unsupported answer.
+- Added evidence-closed research report execution. Claim verification can repair or remove unsupported claims, preserves explicit model inferences, and fails closed when required public evaluation evidence or semantic verification is unavailable.
+
+### RAG EvalOps and public benchmark evidence
+
+- Added a pluggable pipeline registry for dense, hybrid, and hybrid-rerank strategies with immutable configuration and index fingerprints. Online Agent execution, document Skills, evaluation, and release selection use the same retrieval surface.
+- Added versioned public-dataset provenance, document/chunk qrels, retrieval and generation metrics, baseline/candidate comparisons, release gates, Badcase taxonomy, and selective reruns linked to their immutable source run.
+- Added reproducible public benchmark tooling and retained raw reports for SciFact, MS MARCO v2.1, and CMRC 2018. BEIR-format corpora can be imported with explicit upstream source and license metadata.
+- Added separate public judge-calibration paths for RAGTruth faithfulness and ALCE/ARES citation/relevance labels. Calibration coverage, confusion matrices, disagreement cases, and release eligibility are persisted instead of reducing judge quality to one opaque score.
+- Added Agent-level benchmark and load harnesses that distinguish task completion, artifact validity, evidence closure, provider outages, Token usage, latency, retries, and concurrency. Retrieval quality is not reported as Agent success.
+
+### Claim-level evidence closure
+
+- Added atomic-claim Groundedness, Faithfulness, Citation Correctness, Citation Completeness, Answer Relevance, refusal, conflict, freshness, and fact-versus-inference checks.
+- Extended source locators to document/chunk identity, PDF page, paragraph, and character spans. The frontend can open the exact source block and highlight the cited span.
+- Added document provenance and validity policy. Superseded or expired sources cannot silently support a current claim, and contradictory evidence must be disclosed.
+- Preserved fail-closed behavior: unavailable judges, missing support, failed artifact verification, or provider outages cannot be converted into a passing release result.
+
+### Product and operations
+
+- Unified Agent plans, execution trace, approvals, artifacts, evidence, evaluation runs, Badcases, pipeline selection, model, Token, request, retry, latency, and failure data in the browser product surface.
+- Added OpenAI-compatible relay adaptation with bounded transient retries and honest provider telemetry. Currency cost remains unavailable unless the provider reports a usable price; DocMind does not invent one from Token counts.
+- Added a production Compose candidate with a migration gate, non-root/read-only application containers, internal database networking, health checks, and a retained Colima smoke receipt.
+- Updated FastAPI, frontend, desktop, Tauri, Rust, MCP client, and sidecar version declarations to `3.2.0`.
+
+### Verification boundary
+
+- Release automation covers the Python coverage gate, runtime-error lint, API/model type checking, JavaScript syntax, Chromium mock/visual and real FastAPI E2E, sidecar tests, and Rust fmt/clippy/tests.
+- Retained public benchmark and production-smoke receipts are release evidence for their recorded datasets, model, configuration, and environment only. They do not prove future provider availability.
+- TLS/domain setup, managed secret storage, backup/restore drills, multi-host shared LangGraph checkpointing, long-duration soak/fault injection, signed installers, and provider-reported currency cost remain deployment work rather than completed v3.2 guarantees.
+
 ## v3.1.0 - 2026-07-20
 
 ### Cross-worker Agent run coordination

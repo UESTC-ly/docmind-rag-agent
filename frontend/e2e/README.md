@@ -29,7 +29,7 @@ UI/视觉 HTML 报告位于 `frontend/playwright-report/`，全栈报告位于 `
 npm run test:e2e:update
 ```
 
-该命令先在 `test-results/visual-baselines/` 生成 PNG。审核图片后，将 PNG 的 Base64 内容更新到对应的 `.png.base64` 文件，再重新运行 `npm run test:e2e:ci`。v3.1 版本化基线与 CI 都固定使用 macOS Chromium，并仅保留 0.1% 抗锯齿余量。套件还会主动把登录卡背景改成洋红色，并要求同一个 `toHaveScreenshot` 断言确实拒绝该变化，防止视觉门禁退化成永远通过。Linux 基线和 Windows 浏览器不在本次验收范围内。
+该命令先在 `test-results/visual-baselines/` 生成 PNG。审核图片后，将 PNG 的 Base64 内容更新到对应的 `.png.base64` 文件，再重新运行 `npm run test:e2e:ci`。v3.2 版本化基线与 CI 都固定使用 macOS Chromium，并仅保留 0.1% 抗锯齿余量。套件还会主动把登录卡背景改成洋红色，并要求同一个 `toHaveScreenshot` 断言确实拒绝该变化，防止视觉门禁退化成永远通过。Linux 基线和 Windows 浏览器不在本次验收范围内。
 
 ## CI
 

@@ -16,7 +16,7 @@ export default defineConfig({
     toHaveScreenshot: {
       animations: "disabled",
       caret: "hide",
-      // v3.1 发布门禁固定在 macOS Chromium；仅保留 0.1% 抗锯齿余量。
+      // v3.2 发布门禁固定在 macOS Chromium；仅保留 0.1% 抗锯齿余量。
       maxDiffPixelRatio: 0.001,
     },
   },

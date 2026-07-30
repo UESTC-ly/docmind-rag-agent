@@ -84,7 +84,7 @@ still binds only to loopback, and no arbitrary executable path is accepted.
 `.github/workflows/desktop-release.yml` runs the same frozen-binary checks and
 installer build on a native macOS runner. Pull requests that change a desktop
 runtime input exercise that build; manual runs retain the macOS bundle as a CI
-verification artifact. Windows and Linux packages are outside the v3.1 acceptance
+verification artifact. Windows and Linux packages are outside the v3.2 acceptance
 scope. These artifacts are intentionally not called releases: a protected publishing
 job must inject the platform signing/notarization credentials and verify the
 native signature before distributing the same build.

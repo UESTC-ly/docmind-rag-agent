@@ -10,8 +10,10 @@ DocMind 是面向文档与知识工作的 **Agent 系统**；RAG 是 Agent 可�
 重跑）和 **Evidence Navigator**（逐结论引用、原文跳转、版本/时效、冲突与推测标签）。
 
 配套一个 **原生单页前端**（编辑/瑞士极简风，FastAPI 直接托管、运行时零构建），覆盖
-登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.1.0 在 v3.0 LangGraph
-外层编排、人工审批和 checkpoint 恢复基础上，增加了**跨 worker 运行租约**与**定期清理**：
+登录、流式对话、文档管理、Skills/审批、评估看板界面。v3.2.0 在 v3.1 的 durable Agent
+基础上，把**任务执行、公开回归评测和逐结论证据验证**连成同一交付闭环：Agent 只能自动
+选择通过公开回归门禁的 `PipelineSpec`，并在弱检索、无依据、冲突或过期证据出现时改写
+查询、切换管线、再次检索或拒答。v3.1 已有的跨 worker 运行租约与定期清理继续保留：
 Web 使用 Redis 对同一 `run_id` 互斥，桌面/本地形态使用 SQLite owner-token lease；完成态和
 未完成态 checkpoint 按不同保留期分批清理。桌面版
 保留同一套前端与 FastAPI API，通过 PyInstaller sidecar 内置 Python 后端，使用 SQLite、
@@ -33,7 +35,7 @@ Qdrant Server、uv 或系统 Python。
 - [技术栈](#技术栈)
 - [核心设计](#核心设计)
 - [快速启动](#快速启动)
-- [桌面 App（v3.1）](#桌面-appv31)
+- [桌面 App（v3.2）](#桌面-appv32)
 - [Web 开发启动](#web-开发启动)
 - [生产 Compose 部署](#生产-compose-部署)
 - [使用流程](#使用流程)
@@ -95,7 +97,7 @@ Qdrant Server、uv 或系统 Python。
 - **鉴权**：JWT（python-jose）+ bcrypt 密码哈希（passlib）
 - **文档解析**：pymupdf（PDF）+ python-docx（Word）+ 纯文本
 - **联网搜索**：ddgs（DuckDuckGo，无需 API key）
-- **评估数据集**：HuggingFace `datasets`（MS MARCO / CMRC 2018 / RAGTruth）
+- **评估数据集**：SciFact、MS MARCO v2.1、CMRC 2018、BEIR、RAGTruth、ALCE/ARES
 
 ## 核心设计
 
@@ -169,7 +171,7 @@ fencing token。实现、配置、故障语义与运维边界见
 安装 `uv` 可参考：<https://docs.astral.sh/uv/>。Windows 建议在 PowerShell 中执行；
 Linux 用户需确保当前用户有 Docker 权限，或自行在 Docker 命令前加 `sudo`。
 
-## 桌面 App（v3.1）
+## 桌面 App（v3.2）
 
 桌面版使用 **Tauri 2** 把现有单页前端放进系统 WebView，不重写业务 UI。生产安装包携带
 一个由 PyInstaller 冻结的 `docmind-sidecar`，其中包含 Python 解释器、FastAPI 和后端依赖。
@@ -182,7 +184,9 @@ Rust 宿主只启动这个 sidecar；桌面数据层使用 SQLite + Qdrant local
 
 ### 日常使用
 
-从 GitHub Release 下载与当前操作系统/架构匹配的安装包后直接启动 `DocMind`。桌面 App 会：
+若某版本另行提供 GitHub Release，可下载与当前操作系统/架构匹配的安装包后直接启动
+`DocMind`。**v3.2.0 本次只发布源码分支与 Git tag，不创建 GitHub Release，也不附带
+v3.2.0 安装包**；需要桌面版时应从该 tag 在目标平台原生构建。桌面 App 会：
 
 1. 创建独立、卸载不删除的用户数据目录与随机 JWT 密钥；
 2. 首次生成 `desktop.env`，并强制注入本地 SQLite、Qdrant path 与 local task 配置；
@@ -217,7 +221,7 @@ npm run build     # 验证 sidecar 后在当前操作系统生成安装包
 环境、冻结并自检 sidecar、运行本地 SQLite/Qdrant/任务 smoke，再把目标三元组命名的
 可执行文件写入 Tauri `externalBin`。PyInstaller 原生扩展不能跨平台冻结，因此 macOS、
 Windows、Linux/不同架构都必须使用对应原生 runner，并配置平台签名/公证凭据。
-v3.1 的自动验收只运行 macOS arm64：默认 ad-hoc 签名通过 bundle 完整性检查，公开分发时
+v3.2 的自动验收只运行 macOS arm64：默认 ad-hoc 签名通过 bundle 完整性检查，公开分发时
 仍须用 Developer ID 覆盖该身份并完成 Apple notarization/stapling。Linux/Windows 不在本次
 验证范围。
 
@@ -485,7 +489,7 @@ curl --fail http://127.0.0.1:8000/health
 
 ## Skills 技能系统
 
-技能是 Agent 的能力单元。v3.1.0 保持**两条执行路径并存**：
+技能是 Agent 的能力单元。v3.2.0 保持**两条执行路径并存**：
 
 ```text
 Python-backed Skill：BaseSkill 子类 + run()，适合强确定性/强业务边界
@@ -650,8 +654,10 @@ interrupt 请求“是否重试”，不会静默执行第二次。
   - **CMRC 2018**：中文阅读理解，去重 context 建段落池，每题指向自己的段落
   - **BEIR 标准目录**：`corpus.jsonl + queries.jsonl + qrels/<split>.tsv`，支持 graded qrels；
     上游来源和许可证必须显式提供，不能套用 BEIR 的代码许可证
+  - **SciFact**：科学论断核验语料，用于同时验证真实检索、证据闭环和 Agent 任务完成
   - **RAGTruth**：官方 `source_info.jsonl + response.jsonl` 不进入检索索引，而是校准
     faithfulness judge；`implicit_true` 会保留为“可能真实但没有上下文依据”
+  - **ALCE / ARES**：公开人工标签用于独立校准引用正确性、完整性和回答相关性 Judge
 
 ### 指标
 
@@ -717,10 +723,10 @@ uv run python scripts/benchmark_retrieval.py \
   --output /tmp/retrieval-evidence.json
 ```
 
-RAGTruth 校准当前只证明 generation-level faithfulness judge；claim/citation 和
-answer-relevance judge 的完整公共校准尚未完成前，`grounded_generation` 自动发布选择会
-fail closed。脚本生成文件本身也不是通过证据，必须读取其中的 coverage、混淆矩阵、
-balanced accuracy 与 `release_gate_eligible`。
+RAGTruth、ALCE/ARES 校准分别覆盖 generation-level faithfulness 与 citation/relevance；
+任何未达到最小 coverage、balanced accuracy 或标签完整性要求的 Judge 都不会进入自动发布
+选择。脚本生成文件本身也不是通过证据，必须读取其中的 coverage、混淆矩阵、disagreement
+Badcase 与 `release_gate_eligible`。
 
 ## 多路召回
 
@@ -783,7 +789,7 @@ runtime-error lint、模型/API contract typecheck、pytest 覆盖率门槛、Ja
 以及 Rust fmt/clippy/test。`.github/workflows/frontend-e2e.yml` 在 macOS Chromium 上分别运行
 Page Object 驱动的 mock/视觉回归与真实 FastAPI 全栈路径；失败时上传 HTML report、trace、
 截图、视频和 JUnit 结果。E2E 使用稳定 API fixture 与网络/状态等待，不依赖固定 sleep。
-Linux/Windows 安装包不属于 v3.1 本地验收矩阵。
+Linux/Windows 安装包不属于 v3.2 本地验收矩阵。
 
 ```bash
 uv run pytest --cov=app --cov-report=term-missing   # 本地跑测 + 覆盖率

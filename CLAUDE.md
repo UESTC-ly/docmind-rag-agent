@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-DocMind v3.1.0 is an agentic document intelligence system. Its outer Agent orchestration runs as a durable LangGraph with human approval before high-risk Skills, renewable cross-worker run leases, SQLite checkpoint recovery, and retention-based checkpoint cleanup. Users upload documents; the Agent autonomously selects and chains Python-backed or Codex-style Skills through OpenAI Function Calling. Online chat, document-grounded Skills, and evaluation share the same hybrid retrieval pipeline: dense candidates, database-side keyword candidates, scored RRF fusion, and bounded reranking.
+DocMind v3.2.0 is an evaluation-driven, evidence-closed document task Agent. Its outer Agent orchestration runs as a durable LangGraph with explicit plans, human approval before high-risk Skills, renewable cross-worker run leases, SQLite checkpoint recovery, and retention-based checkpoint cleanup. Public regression gates control which pluggable RAG pipeline the Agent may select, while weak retrieval, conflict, freshness, refusal, and claim-level citation checks can drive another retrieval attempt or block delivery. Online chat, document-grounded Skills, Agent execution, and evaluation share the same dense, database-keyword, scored-RRF, and bounded-reranking surface.
 
 The repository supports two deployment profiles:
 
@@ -100,7 +100,7 @@ Document upload calls `dispatch_document()`. Web mode sends `process_document` t
 
 `run_agent()` is synchronous and is called from the async service layer via `asyncio.to_thread`. The outer orchestration is a LangGraph with supervisor, tool-selection, approval, and single-tool execution nodes. It is capped by `settings.agent_max_steps`. HTTP runs use a persistent SQLite saver and a random run/thread ID; `POST /agent/resume` resumes an interrupt after ownership validation.
 
-High-risk Python Skills may set `requires_approval = True`. Generic packages that declare configured high-risk capabilities are approved before the whole outer Skill invocation. The internal Generic Skill ReAct runner is not a LangGraph subgraph in v3.1, and full Multi-Agent decomposition is explicitly deferred.
+High-risk Python Skills may set `requires_approval = True`. Generic packages that declare configured high-risk capabilities are approved before the whole outer Skill invocation. The internal Generic Skill ReAct runner is not a LangGraph subgraph in v3.2, and full Multi-Agent decomposition is explicitly deferred.
 
 Every mutating Agent entrypoint acquires an exclusive run lease before inspecting or advancing its checkpoint. Web/Celery profiles resolve `AGENT_RUN_LOCK_BACKEND=auto` to Redis; desktop/local profiles resolve it to SQLite. The lease has an owner token, TTL, heartbeat renewal, and conditional release. Do not remove the lease from initial/idempotent execution, resume, or recover paths, and do not make status GETs take the mutating lease.
 
@@ -125,7 +125,7 @@ All adapters return the normalized `status`, `summary`, `next_actions`, and `art
 
 All settings are in `app/config.py` via pydantic-settings.
 
-Required application values are `DATABASE_URL`, `SECRET_KEY`, and `OPENAI_API_KEY`. Important v3.1 groups are:
+Required application values are `DATABASE_URL`, `SECRET_KEY`, and `OPENAI_API_KEY`. Important v3.2 groups are:
 
 - Retrieval: `DENSE_CANDIDATES`, `KEYWORD_CANDIDATES`, `RRF_K`, `RERANKER_MODE`, and optional `RERANKER_HTTP_*`.
 - Tasks/storage: `TASK_EXECUTION_MODE` and optional `QDRANT_PATH` for desktop local persistence.

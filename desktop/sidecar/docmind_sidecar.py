@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Protocol, Sequence
 
-SIDECAR_VERSION = "3.1.0"
+SIDECAR_VERSION = "3.2.0"
 
 
 class _Closable(Protocol):
